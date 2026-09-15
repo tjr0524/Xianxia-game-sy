@@ -13,7 +13,7 @@ const HN=['하급','중급','상급'];
 const VERSION='11';
 
 const UI={
-  game:$('#game'),ov:$('#ov'),ot:$('#ot'),ox:$('#ox'),start:$('#start'),ret:$('#ret'),
+  game:$('#game'),controls:$('.controls'),ov:$('#ov'),ot:$('#ot'),ox:$('#ox'),start:$('#start'),ret:$('#ret'),
   hp:$('#hp'),hpFill:$('#hpFill'),loot:$('#loot'),time:$('#time'),combo:$('#combo'),
   objective:$('#objective'),notice:$('#notice'),stone:$('#stone'),herb:$('#herb'),
   realm:$('#realm'),realm2:$('#realm2'),realmInfo:$('#realmInfo'),cap:$('#cap'),
@@ -115,6 +115,7 @@ let run=null;
 let hazards=[];
 let pointerDown=false;
 let keys=new Set();
+let mobileMenuOpen=false;
 
 const P={x:EXIT.x,y:EXIT.y,r:11,hp:36,max:36,tx:EXIT.x,ty:EXIT.y,target:null,cd:0};
 
@@ -749,6 +750,10 @@ function begin(){
   }
   setupVein();
   UI.ov.classList.add('hide');
+  if(window.matchMedia?.('(max-width:920px)').matches){
+    mobileMenuOpen=false;
+    UI.controls.classList.remove('open');
+  }
   UI.ret.disabled=false;
   UI.notice.textContent=`${planCopy(plan)[0]} 시작. 배치를 읽고 목표와 귀환 동선을 함께 잡으세요.`;
   syncHud();
@@ -1491,9 +1496,17 @@ function setDestination(point,allowTarget=true){
   P.ty=target?target.y:point.y;
 }
 
-function activateTab(name,persist=true){
+function activateTab(name,persist=true,toggleMenu=false){
   const valid=['train','skills','areas','tree'].includes(name)?name:'train';
-  document.querySelectorAll('.tab-btn').forEach(button=>button.classList.toggle('active',button.dataset.tab===valid));
+  const previous=M.settings.tab||'train';
+  const compact=!!window.matchMedia?.('(max-width:920px)').matches;
+  if(compact&&toggleMenu)mobileMenuOpen=valid===previous?!mobileMenuOpen:true;
+  UI.controls.classList.toggle('open',compact?mobileMenuOpen:true);
+  document.querySelectorAll('.tab-btn').forEach(button=>{
+    const active=button.dataset.tab===valid;
+    button.classList.toggle('active',active);
+    button.setAttribute?.('aria-expanded',String(active&&(!compact||mobileMenuOpen)));
+  });
   document.querySelectorAll('.panel').forEach(panel=>panel.classList.toggle('active',panel.dataset.panel===valid));
   if(persist){M.settings.tab=valid;save()}
 }
@@ -1517,7 +1530,7 @@ $('#devReset').onclick=()=>{
   location.reload();
 };
 document.querySelectorAll('.tab-btn').forEach(button=>{
-  button.onclick=()=>activateTab(button.dataset.tab);
+  button.onclick=()=>activateTab(button.dataset.tab,true,true);
 });
 cv.addEventListener('pointerdown',event=>{
   if(phase!=='run')return;
@@ -1542,6 +1555,10 @@ window.addEventListener('keydown',event=>{
 });
 window.addEventListener('keyup',event=>keys.delete(event.key.toLowerCase()));
 window.addEventListener('blur',()=>keys.clear());
+window.addEventListener('resize',()=>{
+  const compact=!!window.matchMedia?.('(max-width:920px)').matches;
+  UI.controls.classList.toggle('open',compact?mobileMenuOpen:true);
+});
 
 // iOS Safari can interpret rapid game taps as a page-zoom gesture even when
 // the viewport is locked. Keep every tap available to pointer controls while
