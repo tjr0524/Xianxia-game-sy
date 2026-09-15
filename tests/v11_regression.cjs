@@ -29,6 +29,7 @@ class Element{
   appendChild(child){this.children.push(child);return child}
   addEventListener(){}
   closest(){return this}
+  setAttribute(){}
   getBoundingClientRect(){return {left:0,top:0,width:700,height:460}}
   setPointerCapture(){}
 }
@@ -52,7 +53,7 @@ const tabNames=['train','skills','areas','tree'];
 const tabs=tabNames.map(name=>{const node=new Element();node.dataset.tab=name;return node});
 const panels=tabNames.map(name=>{const node=new Element();node.dataset.panel=name;return node});
 global.document={
-  querySelector(selector){return selector.startsWith('#')?element(selector.slice(1)):null},
+  querySelector(selector){return selector.startsWith('#')?element(selector.slice(1)):selector==='.controls'?element('controls'):null},
   querySelectorAll(selector){return selector==='.tab-btn'?tabs:selector==='.panel'?panels:[]},
   createElement(){return new Element()},
   addEventListener(){}
@@ -66,6 +67,7 @@ global.localStorage={
 };
 global.window=global;
 global.window.addEventListener=()=>{};
+global.window.matchMedia=()=>({matches:false});
 global.location={reload(){}};
 global.confirm=()=>true;
 global.requestAnimationFrame=()=>0;
@@ -257,6 +259,8 @@ for(const match of code.matchAll(/\$\('#([^']+)'\)/g)){
 assert.match(html,/game_v11\.js/);
 assert.doesNotMatch(html,/game_v10\.js|late_warning\.js/);
 assert.match(html,/\.plan-grid\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/,'mobile plans stay in one compact row');
+assert.match(html,/\.controls\{position:fixed;z-index:30/,'mobile progression menu is a fixed bottom sheet');
+assert.match(code,/mobileMenuOpen=valid===previous\?!mobileMenuOpen:true/,'active mobile tab toggles the bottom sheet');
 assert.match(code,/addEventListener\('dblclick'.*preventDefault/,'double-tap zoom prevention is installed');
 
-console.log(`v11 regression: 29 assertions passed; mortal ${mortalReturns}/24 safe, ${mortalProgress}/24 entry-ready; initiate ${initiateReturns}/24 safe, ${initiateStoneRuns}/24 with stones`);
+console.log(`v11 regression: 31 assertions passed; mortal ${mortalReturns}/24 safe, ${mortalProgress}/24 entry-ready; initiate ${initiateReturns}/24 safe, ${initiateStoneRuns}/24 with stones`);
