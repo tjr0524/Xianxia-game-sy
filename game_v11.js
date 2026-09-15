@@ -1543,6 +1543,19 @@ window.addEventListener('keydown',event=>{
 window.addEventListener('keyup',event=>keys.delete(event.key.toLowerCase()));
 window.addEventListener('blur',()=>keys.clear());
 
+// iOS Safari can interpret rapid game taps as a page-zoom gesture even when
+// the viewport is locked. Keep every tap available to pointer controls while
+// cancelling only the browser's follow-up zoom gesture.
+let lastTouchEnd=0;
+document.addEventListener('dblclick',event=>event.preventDefault(),{passive:false});
+document.addEventListener('touchend',event=>{
+  if(!event.target.closest?.('.shell'))return;
+  const now=Date.now();
+  if(now-lastTouchEnd<350)event.preventDefault();
+  lastTouchEnd=now;
+},{passive:false});
+document.addEventListener('gesturestart',event=>event.preventDefault(),{passive:false});
+
 window.__xianxiaDebug={
   version:VERSION,
   constants:{RUN_TIME,AREAS,TREE,SKILLS,PLANS},
