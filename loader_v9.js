@@ -14,7 +14,6 @@ post("let rad=190,dmg=(6.8+(M.cult.atk-1)*2.7)","let rad=220,dmg=(16+(M.cult.atk
 post("scd=3.8;burst=.24;burstR=rad","scd=3.2;burst=.24;burstR=rad","wave cooldown");
 post("let dmg=(13+(M.cult.atk-1)*5.1)","let dmg=(20+(M.cult.atk-1)*9)","sword power");
 post("if(P.hp<=0){P.hp=0;return end('dead')}","if(!isMortal()&&scd<=0){let ar=M.skill==='wave'?220:150;if(E.some(a=>host(a)&&D(P,a)<ar))u.skill.click()}if(P.hp<=0){P.hp=0;return end('dead')}","auto active skill");
-post("u.skill.textContent=isMortal()?'⚔ 입문 후 사용':scd>0?`⚔ ${sk} ${scd.toFixed(1)}`:`⚔ ${sk}`","u.skill.textContent=isMortal()?'⚔ 입문 후 자동 사용':scd>0?`⚔ AUTO ${sk} ${scd.toFixed(1)}`:`⚔ AUTO ${sk}`","auto skill label");
 if(!document.getElementById('hpBarV9')){
   const hp=document.getElementById('hp');
   if(hp){
