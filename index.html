@@ -1,1 +1,233 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>수선 비경</title><style> :root{color-scheme:dark;--b:#0f1115;--p:#191d24;--c:#222733;--t:#f2f4f7;--m:#aab1bd;--l:#343b48;--a:#294f7d;--ok:#557862;--warn:#926d3d;--gold:#c9a65b}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:var(--b);color:var(--t);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overscroll-behavior:none}main{max-width:1040px;margin:auto;padding:7px}.g{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:9px}.top,.row{display:flex;justify-content:space-between;gap:8px}.sm{font-size:12px;color:var(--m);line-height:1.45}.box,.stat{border:1px solid var(--l);border-radius:11px;background:var(--p);padding:10px}.game{position:relative;border:1px solid var(--l);border-radius:13px;overflow:hidden}canvas{display:block;width:100%;height:auto;touch-action:none}.ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#0009;padding:14px}.hide{display:none}.dlg{text-align:center;max-width:390px}.side{display:flex;flex-direction:column;gap:7px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}.stat{text-align:center;padding:7px 3px}.act{display:flex;gap:6px;margin-top:6px}.act button{flex:1}button{width:100%;margin-top:6px;min-height:43px;border:1px solid var(--l);border-radius:9px;background:var(--c);color:var(--t);padding:8px 10px;font-size:14px;font-weight:650;text-align:left}button.main{background:var(--a);text-align:center}button:disabled{opacity:.4}.badge{font-size:11px;padding:2px 7px;border:1px solid var(--l);border-radius:99px}.cap{font-size:11px;color:#9fc7ff}.warn{border-color:var(--warn);background:#2b251c}.areaBtn.active{border-color:#608bc0;background:#202a37}.areaBtn.ready{border-color:var(--ok)}.areaBtn.locked{opacity:.62}.event{border:1px solid #6a5a34;background:#2a251a;border-radius:8px;padding:7px;margin-top:6px;color:#e5ce91}#notice{min-height:20px;margin-top:5px}.treeWrap{margin-top:8px;border:1px solid #2d3440;border-radius:10px;background:#141820;padding:8px;overflow:hidden}.treeRoot{width:104px;margin:0 auto 15px;padding:7px 4px;text-align:center;border:1px solid #657080;border-radius:10px;background:#202631;font-size:12px;font-weight:700;position:relative}.treeRoot:after{content:"";position:absolute;left:50%;top:100%;width:1px;height:9px;background:#59616e}.branches{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;position:relative}.branches:before{content:"";position:absolute;left:16.5%;right:16.5%;top:-6px;height:1px;background:#59616e}.branch{position:relative;padding-top:7px}.branch:before{content:"";position:absolute;left:50%;top:-7px;width:1px;height:14px;background:#59616e}.branchTitle{text-align:center;font-size:10px;color:#aeb8c7;margin-bottom:4px}.treeNode{position:relative;width:100%;min-height:62px;margin:10px 0 0;padding:6px 4px;border-radius:10px;text-align:center;font-size:11px;line-height:1.2;background:#20242d}.treeNode+.treeNode:before{content:"";position:absolute;left:50%;bottom:100%;width:1px;height:11px;background:#505966}.treeNode .nodeName{display:block;font-weight:700}.treeNode .nodeCost{display:block;margin-top:4px;font-size:9px;color:#aab1bd}.treeNode.available{border-color:#5681b6;box-shadow:0 0 0 1px #5681b633 inset}.treeNode.on{border-color:#5f8b6c;background:#1d2a22}.treeNode.on .nodeCost{color:#87b995}.treeNode.locked{opacity:.45}.treeNode.core{border-color:#8b7443}.skillPick.active{border-color:#5f8b6c;background:#1d2a22}.hpbar{height:15px;border:1px solid #46505e;border-radius:99px;background:#0d1015;overflow:hidden;margin:5px 5px 3px}.hpbar>i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#8e3030,#d85a4e);transition:width .12s linear}.skillRun{flex:1;border:1px solid var(--l);border-radius:9px;background:#171b22;padding:8px;font-size:11px;color:#aeb8c7;line-height:1.35;min-height:43px}.skillTreeV{display:flex;flex-direction:column;gap:6px;margin-top:7px}.skillCard{border:1px solid #343b48;border-radius:9px;padding:7px;background:#171b22}.skillCard.lock{opacity:.58}.skillHead{display:flex;justify-content:space-between;gap:6px;align-items:center}.skillHead span{font-size:10px;color:#9aa4b2}.skillUps{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:5px}.skillUps button{min-height:38px;margin:0;padding:5px 3px;text-align:center;font-size:10px;white-space:pre-line}.skillUnlock{min-height:35px;margin-top:5px;text-align:center}.treeHint{font-size:10px;color:#8f98a5;text-align:center;margin-top:7px}.devReset{position:fixed;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);z-index:50;width:auto;min-height:28px;margin:0;padding:5px 8px;border-radius:7px;background:#251b1bcc;border-color:#6f4242;color:#c99191;font-size:10px;opacity:.48;text-align:center}.devReset:active{opacity:1}@media(max-width:780px){.g{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr}.wide{grid-column:1/-1}}@media(max-width:540px){.side{grid-template-columns:1fr}.wide{grid-column:auto}.stats{grid-template-columns:repeat(3,1fr)}.treeNode{min-height:58px;padding:5px 2px;font-size:10px}.treeNode .nodeCost{font-size:8px}} </style></head><body><main id="r"><div class="g"><section><div class="top"><div><div><span id="realm" class="badge">범인</span> <b id="area">청운산 후산</b></div><div id="desc" class="sm"></div></div><div class="sm" style="text-align:right">영석 <b id="stone">0</b><br>영초 <b id="herb">0</b></div></div><div class="game"><canvas id="cv" width="700" height="460"></canvas><div id="ov" class="ov"><div class="box dlg"><div id="ot" style="font-size:20px;font-weight:750">청운산 후산</div><div id="ox" class="sm" style="margin:7px 0 10px">범인은 요수와 싸울 수 없습니다.<br>입장 시 배치를 보고 영초를 챙겨 살아 돌아오세요.</div><button id="start" class="main">비경 진입</button></div></div></div><div class="stats"><div class="stat"><span class="sm">체력</span><div class="hpbar"><i id="hpFill"></i></div><b id="hp" class="sm">24 / 24</b></div><div class="stat"><span class="sm">이번 원정</span><br><b id="loot">영석 0 · 영초 0</b></div><div class="stat"><span class="sm">안정도</span><br><b id="time">25.0초</b></div></div><div class="act"><div id="skillRun" class="skillRun">해금된 법술 없음</div><button id="ret" class="main" disabled>↩ 출구로 이동</button></div><div id="notice" class="sm">범인으로 시작합니다. 요수를 피해서 살아 돌아오세요.</div></section><aside class="side"> <section class="box"><div class="row"><b>경지 · 성장 관문</b><span id="realm2" class="badge"></span></div><div id="realmInfo" class="sm"></div><button id="breakthrough" class="warn"><b id="btTitle">수선 입문</b><div id="btCost" class="sm"></div></button><div id="eventInfo" class="event sm" style="display:none"></div></section> <section class="box"><div class="row"><b>세부 수련</b><span id="cap" class="cap"></span></div><div class="sm">입문 후, 현재 경지의 상한까지만 수련할 수 있습니다.</div><button id="atk">검결 <span style="float:right" id="al"></span><div class="sm" id="ac"></div></button><button id="mov">경신법 <span style="float:right" id="ml"></span><div class="sm" id="mc"></div></button><button id="sen">신식 <span style="float:right" id="sl"></span><div class="sm" id="sc"></div></button><button id="hpb">체수련 <span style="float:right" id="hl"></span><div class="sm" id="hc"></div></button></section> <section class="box"><div class="row"><b>법술 트리</b><span class="sm">해금한 법술 전부 자동 발동</span></div><div class="sm">경지 조건을 만족한 뒤 자원을 써서 해금해야 합니다. 각 법술은 독립 쿨타임을 가집니다.</div><div id="skillTree" class="skillTreeV"></div></section> <section class="box wide"><div class="row"><b>비경 선택</b><span class="sm">이전 비경 재입장 가능</span></div><div id="areas"></div></section> <section class="box wide"><div class="row"><b>비경 인연 트리</b><span id="nc" class="sm"></span></div><div class="sm">강해질수록 비경을 더 위험하고 풍부하게 키웁니다. 비경마다 별도 저장됩니다.</div><div class="treeWrap"><div class="treeRoot">비경 개척</div><div id="tree" class="branches"></div><div id="treeHint" class="treeHint"></div></div></section> <section class="box sm wide">초반 흐름: 범인 생환 → 영초로 수선 입문 → 첫 요수 격파 → 세부 수련 → 비경 강화<br>🌿 바닥에는 영초만 존재 · 영석은 요수/산수/영맥에서 획득<br>⚔ 기본 공격은 자동 · 해금한 모든 법술은 각자 쿨타임으로 자동 발동<br>✦ 기연은 원정을 끊지 않고 귀환 정산에서 발생<br>🚪 출구는 남쪽 중앙 고정 · 직접 돌아와야 귀환<br>사망·붕괴 시 이번 전리품 40% 회수</section> </aside></div><button id="devReset" class="devReset">DEV · 진행 초기화</button></main><script src="game_v10.js"></script><script src="late_warning.js"></script></body></html>
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#081116">
+  <meta name="description" content="직접 비경을 누비고 영구적으로 성장하는 선협 액티브 증분 게임">
+  <title>수선 비경 · 검로 개척록</title>
+  <style>
+    :root{
+      color-scheme:dark;
+      --bg:#071014;--bg2:#0c171c;--panel:#101b20;--panel2:#15242a;--line:#2b4147;
+      --text:#edf5f1;--muted:#91a5a2;--jade:#7bd8bf;--jade2:#2f927e;--gold:#dfc77f;
+      --red:#ef766a;--blue:#82b8df;--ink:#061014;--shadow:#0009;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;min-height:100%;background:
+      radial-gradient(circle at 50% -10%,#193039 0,#0b171c 34%,#071014 72%);
+      color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Pretendard",sans-serif}
+    body{overscroll-behavior:none;padding-bottom:env(safe-area-inset-bottom)}
+    button{font:inherit;color:inherit;cursor:pointer}
+    button:disabled{cursor:not-allowed;opacity:.42}
+    .shell{width:min(1440px,100%);margin:auto;padding:14px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px}
+    .brand{display:flex;align-items:center;gap:11px;min-width:215px}
+    .brand-mark{width:44px;height:44px;border:1px solid #7d724d;border-radius:50%;display:grid;
+      place-items:center;color:var(--gold);font:25px serif;background:#111b1d;box-shadow:0 0 28px #d8bd7130}
+    .brand h1{font:700 21px serif;letter-spacing:.12em;margin:0}
+    .brand p{font-size:11px;color:var(--muted);margin:3px 0 0}
+    .resources{display:flex;justify-content:flex-end;gap:7px;flex-wrap:wrap}
+    .resource{min-width:88px;padding:7px 10px;border:1px solid var(--line);border-radius:10px;
+      background:#101b20cc;box-shadow:0 8px 24px #0004}
+    .resource span{display:block;font-size:10px;color:var(--muted);margin-bottom:2px}
+    .resource b{font-size:13px}
+    .layout{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:12px;align-items:start}
+    .card{border:1px solid var(--line);border-radius:14px;background:linear-gradient(155deg,#122027ee,#0c151aee);
+      box-shadow:0 14px 44px #0005;overflow:hidden}
+    .arena-card{padding:11px}
+    .arena-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px}
+    .arena-head h2{font-size:17px;margin:0 0 3px}.arena-head p{margin:0;color:var(--muted);font-size:11px}
+    .badge{display:inline-flex;align-items:center;white-space:nowrap;border:1px solid #536970;border-radius:999px;
+      padding:4px 9px;background:#10191d;color:#dce9e5;font-size:11px}
+    .game{position:relative;border:1px solid #32494f;border-radius:13px;overflow:hidden;background:#10191d;
+      box-shadow:inset 0 0 40px #0007}
+    canvas{display:block;width:100%;height:auto;touch-action:none}
+    .game::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .18s;
+      box-shadow:inset 0 0 85px #c52e22aa;background:#961b1214}
+    .game.danger::after{opacity:1;animation:dangerPulse .8s ease-in-out infinite alternate}
+    @keyframes dangerPulse{from{background:#961b1208}to{background:#c52e2228}}
+    .danger-label{position:absolute;z-index:5;left:12px;top:10px;display:none;color:#ffafa6;
+      font-size:12px;font-weight:800;text-shadow:0 2px 5px #000}
+    .game.danger .danger-label{display:block}
+    .overlay{position:absolute;z-index:8;inset:0;display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(#031014b8,#030a0ed9);padding:14px;backdrop-filter:blur(2px)}
+    .overlay.hide{display:none}
+    .dialog{width:min(470px,100%);max-height:96%;overflow:auto;padding:15px;border:1px solid #466067;
+      border-radius:14px;background:#101c21f2;box-shadow:0 18px 50px #000a;text-align:center}
+    .dialog h3{margin:0;font:700 21px serif;color:#f1e2b1}.dialog .intro{margin:7px 0 12px;color:#aabbb8;font-size:12px;line-height:1.5}
+    .plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:left}
+    .plan-card{min-height:84px;margin:0;padding:8px;border:1px solid #33484f;border-radius:10px;background:#14232a}
+    .plan-card.active{border-color:var(--gold);background:#2a281d;box-shadow:0 0 0 1px #d8bd7140 inset}
+    .plan-card b{display:block;font-size:12px;margin-bottom:4px}.plan-card span{display:block;font-size:9px;line-height:1.35;color:#9fb0ad}
+    .primary,.soft,.node,.area-btn,.train-btn,.skill-btn,.tab-btn{border:1px solid var(--line);border-radius:9px;background:#18262c}
+    .primary{width:100%;min-height:43px;margin-top:9px;border-color:#477a70;background:linear-gradient(180deg,#287f6f,#1d5f55);
+      font-weight:750;text-align:center;box-shadow:0 7px 20px #0b554633}
+    .hud{display:grid;grid-template-columns:1.05fr 1.2fr .78fr .85fr;gap:7px;margin-top:8px}
+    .hud-item{min-height:55px;padding:7px;border:1px solid var(--line);border-radius:10px;background:#0d171bcc;text-align:center}
+    .hud-item span{display:block;font-size:10px;color:var(--muted);margin-bottom:4px}.hud-item b{font-size:12px}
+    .hpbar{height:10px;border:1px solid #3d5158;border-radius:99px;overflow:hidden;background:#071014;margin:3px 2px 4px}
+    .hpbar i{display:block;height:100%;background:linear-gradient(90deg,#b44842,#ec7468);transition:width .15s}
+    .run-row{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:7px;margin-top:7px}
+    .skill-status,.objective{min-height:42px;border:1px solid var(--line);border-radius:9px;background:#0e181d;padding:7px 9px;
+      font-size:10px;color:#aab9b6;line-height:1.4}
+    .objective{margin-top:7px;border-color:#4a523c;color:#d9d5ac}
+    .soft{min-height:42px;padding:7px 10px;background:#20343a;text-align:center;font-weight:700}
+    .notice{min-height:22px;margin-top:6px;color:#a9b8b5;font-size:11px;line-height:1.45}
+    .controls{min-height:650px}
+    .tabs{position:sticky;top:0;z-index:6;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:8px;
+      border-bottom:1px solid var(--line);background:#0d181df2;backdrop-filter:blur(8px)}
+    .tab-btn{min-height:38px;padding:5px 3px;margin:0;font-size:11px;background:#142128}
+    .tab-btn.active{border-color:#5aa997;background:#1d4b43;color:#e8fff8}
+    .panel{display:none;padding:10px}.panel.active{display:block}
+    .section{padding:10px;border:1px solid #2a3e44;border-radius:11px;background:#0d171c;margin-bottom:8px}
+    .section:last-child{margin-bottom:0}.section-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+    .section-head b{font-size:13px}.small{font-size:10px;color:var(--muted);line-height:1.45}
+    .train-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .train-btn,.skill-btn,.area-btn{width:100%;min-height:54px;margin:0;padding:8px;text-align:left}
+    .train-btn strong,.area-btn strong{font-size:12px}.train-btn .meta,.area-btn .meta{float:right;font-size:10px;color:#a6bab5}
+    .train-btn small,.area-btn small{display:block;clear:both;margin-top:5px;color:#91a5a2;font-size:9px;line-height:1.35}
+    .breakthrough{width:100%;min-height:52px;padding:8px;margin-top:7px;border:1px solid #8a6841;border-radius:9px;
+      background:#2b2419;text-align:left}.breakthrough strong{font-size:12px}.breakthrough small{display:block;margin-top:4px;color:#c7ad80}
+    .event{border:1px solid #6b5c37;background:#292419;border-radius:8px;padding:8px;margin-top:7px;color:#e5d39b;font-size:10px;line-height:1.45}
+    .skill-card{border:1px solid #30434a;border-radius:10px;background:#111d22;padding:8px;margin-top:6px}
+    .skill-card.lock{opacity:.68}.skill-head{display:flex;justify-content:space-between;gap:6px;align-items:center}
+    .skill-head b{font-size:12px}.skill-head span{font-size:9px;color:#98aaa7}.skill-card p{font-size:9px;color:#91a5a2;margin:4px 0}
+    .skill-ups{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.skill-ups button,.skill-unlock{
+      min-height:38px;margin:3px 0 0;padding:5px 3px;text-align:center;font-size:9px;white-space:pre-line}
+    .area-list{display:grid;gap:6px}.area-btn.active{border-color:#549c8d;background:#193d37}.area-btn.ready{border-color:#8c7843}.area-btn.locked{opacity:.58}
+    .tree-wrap{overflow-x:auto;padding:7px;border:1px solid #293b41;border-radius:10px;background:#091317}
+    .tree-root{width:110px;margin:0 auto 14px;padding:7px;text-align:center;border:1px solid #67797e;border-radius:9px;
+      background:#17252b;font-size:11px;position:relative}.tree-root::after{content:"";position:absolute;left:50%;top:100%;height:9px;border-left:1px solid #59696e}
+    .branches{display:grid;gap:7px;min-width:250px}.branch{position:relative;padding-top:8px}.branch-title{text-align:center;font-size:9px;color:#acbbb8}
+    .node{position:relative;width:100%;min-height:59px;margin-top:10px;padding:6px 3px;text-align:center;background:#142127;font-size:9px}
+    .node+.node::before{content:"";position:absolute;left:50%;bottom:100%;height:11px;border-left:1px solid #526268}
+    .node.on{border-color:#4e8d70;background:#173027}.node.available{box-shadow:0 0 0 1px #6c9f923d inset;border-color:#649b8e}
+    .node b{display:block;font-size:10px}.node small{display:block;color:#92a5a1;margin-top:4px;font-size:8px;line-height:1.25}
+    .record-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:7px}
+    .record-grid div{border:1px solid #2b3f45;border-radius:8px;padding:6px;text-align:center}.record-grid span{display:block;color:#809591;font-size:8px}.record-grid b{font-size:11px}
+    details.dev{margin:10px;color:#728784;font-size:9px}details.dev button{margin-top:6px;border:1px solid #633e3e;border-radius:7px;
+      background:#241717;color:#c89191;padding:6px 9px}
+    .footer{padding:10px 4px;color:#718683;font-size:9px;text-align:center;line-height:1.5}
+    @media(max-width:920px){.layout{grid-template-columns:1fr}.controls{min-height:0}.tabs{position:static}}
+    @media(max-width:560px){
+      .shell{padding:7px}.topbar{align-items:flex-start}.brand-mark{width:38px;height:38px}.brand h1{font-size:18px}
+      .brand p{display:none}.resources{gap:4px}.resource{min-width:0;padding:5px 7px}.resource span{font-size:8px}.resource b{font-size:10px}
+      .arena-card{padding:7px}.arena-head h2{font-size:14px}.arena-head p{font-size:9px}
+      .hud{grid-template-columns:1fr 1fr}.hud-item{min-height:48px}.run-row{grid-template-columns:1fr 112px}
+      .plan-grid{grid-template-columns:1fr}.plan-card{min-height:54px}.plan-card span{font-size:9px}
+      .dialog{padding:11px}.controls{border-radius:11px}.panel{padding:7px}.train-grid{gap:5px}
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">劍</div>
+        <div><h1>수선 비경</h1><p>직접 길을 고르고, 살아 돌아와, 영구히 강해진다</p></div>
+      </div>
+      <div class="resources">
+        <div class="resource"><span>경지</span><b id="realm">범인</b></div>
+        <div class="resource"><span>영석</span><b id="stone">0</b></div>
+        <div class="resource"><span>영초</span><b id="herb">下0 · 中0 · 上0</b></div>
+      </div>
+    </header>
+    <main class="layout">
+      <section class="card arena-card">
+        <div class="arena-head">
+          <div><h2 id="area">청운산 후산</h2><p id="desc">요수만 존재하는 초입 비경.</p></div>
+          <span id="realm2" class="badge">범인</span>
+        </div>
+        <div id="game" class="game">
+          <canvas id="cv" width="700" height="460" aria-label="비경 전투 화면"></canvas>
+          <div class="danger-label">비경 불안정 · 출구로 복귀하십시오</div>
+          <div id="ov" class="overlay">
+            <div class="dialog">
+              <h3 id="ot">청운산 후산</h3>
+              <div id="ox" class="intro">범인은 요수와 싸울 수 없습니다.<br>동선을 보고 영초를 챙겨 살아 돌아오세요.</div>
+              <div id="planChoices" class="plan-grid"></div>
+              <button id="start" class="primary">선택한 방침으로 진입</button>
+            </div>
+          </div>
+        </div>
+        <div class="hud">
+          <div class="hud-item"><span>체력</span><div class="hpbar"><i id="hpFill"></i></div><b id="hp">36 / 36</b></div>
+          <div class="hud-item"><span>이번 원정</span><b id="loot">영석 0 · 영초 0</b></div>
+          <div class="hud-item"><span>안정도</span><b id="time">25.0초</b></div>
+          <div class="hud-item"><span>검세</span><b id="combo">0단</b></div>
+        </div>
+        <div id="objective" class="objective">원정 방침을 선택하십시오.</div>
+        <div class="run-row">
+          <div id="skillRun" class="skill-status">해금된 법술 없음</div>
+          <button id="ret" class="soft" disabled>출구로 복귀</button>
+        </div>
+        <div id="notice" class="notice">범인으로 시작합니다. 요수를 피해서 살아 돌아오세요.</div>
+      </section>
+      <aside class="card controls">
+        <nav class="tabs" aria-label="수련 메뉴">
+          <button class="tab-btn active" data-tab="train">수련</button>
+          <button class="tab-btn" data-tab="skills">법술</button>
+          <button class="tab-btn" data-tab="areas">비경</button>
+          <button class="tab-btn" data-tab="tree">인연</button>
+        </nav>
+        <section class="panel active" data-panel="train">
+          <div class="section">
+            <div class="section-head"><b>경지 · 성장 관문</b><span id="cap" class="badge">수련 잠김</span></div>
+            <div id="realmInfo" class="small"></div>
+            <button id="breakthrough" class="breakthrough"><strong id="btTitle">수선 입문</strong><small id="btCost"></small></button>
+            <div id="eventInfo" class="event" style="display:none"></div>
+          </div>
+          <div class="section">
+            <div class="section-head"><b>세부 수련</b><span class="small">경지별 상한</span></div>
+            <div class="train-grid">
+              <button id="atk" class="train-btn"><strong>검결</strong><span id="al" class="meta"></span><small id="ac"></small></button>
+              <button id="mov" class="train-btn"><strong>경신법</strong><span id="ml" class="meta"></span><small id="mc"></small></button>
+              <button id="sen" class="train-btn"><strong>신식</strong><span id="sl" class="meta"></span><small id="sc"></small></button>
+              <button id="hpb" class="train-btn"><strong>체수련</strong><span id="hl" class="meta"></span><small id="hc"></small></button>
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-head"><b>현재 비경 기록</b><span id="runCount" class="small"></span></div>
+            <div class="record-grid">
+              <div><span>최고 영석</span><b id="bestStone">0</b></div>
+              <div><span>최고 영초</span><b id="bestHerb">0</b></div>
+              <div><span>최다 격파</span><b id="bestKills">0</b></div>
+            </div>
+          </div>
+        </section>
+        <section class="panel" data-panel="skills">
+          <div class="section">
+            <div class="section-head"><b>법술 전승</b><span class="small">모두 독립 쿨타임 자동 발동</span></div>
+            <div class="small">경지에 도달한 뒤 자원으로 해금해야 합니다. 위력·범위·순환을 따로 강화할 수 있습니다.</div>
+            <div id="skillTree"></div>
+          </div>
+        </section>
+        <section class="panel" data-panel="areas">
+          <div class="section">
+            <div class="section-head"><b>비경 선택</b><span class="small">이전 비경 재입장 가능</span></div>
+            <div id="areas" class="area-list"></div>
+          </div>
+        </section>
+        <section class="panel" data-panel="tree">
+          <div class="section">
+            <div class="section-head"><b>비경 인연</b><span id="nc" class="small"></span></div>
+            <div class="small">강해질수록 비경도 위험하고 풍부해집니다. 비경마다 진행도가 별도로 보존됩니다.</div>
+            <div class="tree-wrap">
+              <div class="tree-root">비경 개척</div>
+              <div id="tree" class="branches"></div>
+            </div>
+            <div id="treeHint" class="small" style="text-align:center;margin-top:7px"></div>
+          </div>
+        </section>
+        <details class="dev">
+          <summary>개발·복구 도구</summary>
+          <button id="devReset">모든 진행 초기화</button>
+        </details>
+      </aside>
+    </main>
+    <div class="footer">탭 또는 드래그로 이동 · 검과 해금 법술은 자동 공격 · 출구는 남쪽 중앙 고정 · 실패 시 이번 전리품 40% 회수</div>
+  </div>
+  <script src="game_v11.js"></script>
+</body>
+</html>
