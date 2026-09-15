@@ -28,6 +28,7 @@ class Element{
   }
   appendChild(child){this.children.push(child);return child}
   addEventListener(){}
+  closest(){return this}
   getBoundingClientRect(){return {left:0,top:0,width:700,height:460}}
   setPointerCapture(){}
 }
@@ -53,7 +54,8 @@ const panels=tabNames.map(name=>{const node=new Element();node.dataset.panel=nam
 global.document={
   querySelector(selector){return selector.startsWith('#')?element(selector.slice(1)):null},
   querySelectorAll(selector){return selector==='.tab-btn'?tabs:selector==='.panel'?panels:[]},
-  createElement(){return new Element()}
+  createElement(){return new Element()},
+  addEventListener(){}
 };
 
 const storage=new Map();
@@ -254,5 +256,7 @@ for(const match of code.matchAll(/\$\('#([^']+)'\)/g)){
 }
 assert.match(html,/game_v11\.js/);
 assert.doesNotMatch(html,/game_v10\.js|late_warning\.js/);
+assert.match(html,/\.plan-grid\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/,'mobile plans stay in one compact row');
+assert.match(code,/addEventListener\('dblclick'.*preventDefault/,'double-tap zoom prevention is installed');
 
-console.log(`v11 regression: 27 assertions passed; mortal ${mortalReturns}/24 safe, ${mortalProgress}/24 entry-ready; initiate ${initiateReturns}/24 safe, ${initiateStoneRuns}/24 with stones`);
+console.log(`v11 regression: 29 assertions passed; mortal ${mortalReturns}/24 safe, ${mortalProgress}/24 entry-ready; initiate ${initiateReturns}/24 safe, ${initiateStoneRuns}/24 with stones`);
