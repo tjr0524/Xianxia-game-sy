@@ -10,12 +10,13 @@ const js=read('visual_v11_24.js');
 
 assert.match(html,/<meta name="theme-color" content="#f4f2e9">/);
 assert.match(html,/<body class="v24-theme">/);
-assert.match(html,/<link id="v1124-theme"[^>]+visual_v11_24\.css\?v=11\.24/);
+assert.match(html,/<link id="v1124-theme"[^>]+visual_v11_24\.css\?v=11\.24\.1/);
 assert.match(html,/<script src="visual_v11_24\.js\?v=11\.24"><\/script>\s*<\/body>/);
 assert.match(css,/:root\{[\s\S]*color-scheme:light/);
 assert.match(css,/--v24-paper:#f4f2e9/);
 assert.match(css,/body\.v24-theme\{[\s\S]*linear-gradient\(180deg,#fbfaf5/);
 assert.match(css,/body\.v24-theme::after\{[\s\S]*clip-path:polygon/);
+assert.match(css,/\.v24-theme \.overlay::before,[\s\S]*\.v24-theme \.overlay::after[\s\S]*clip-path:polygon/);
 assert.match(css,/\.v24-theme \.card\{[\s\S]*rgba\(255,254,250/);
 assert.match(css,/\.v24-theme \.dialog,[\s\S]*#fff/);
 assert.match(css,/\.v24-theme \.controls\{[\s\S]*#fffefa/);
@@ -36,4 +37,4 @@ for(const char of css){
 }
 assert.equal(depth,0,'CSS block braces are balanced');
 
-console.log('v11.24 light visual regression: 20 assertions passed');
+console.log('v11.24 light visual regression: 21 assertions passed');
