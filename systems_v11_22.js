@@ -79,6 +79,7 @@ function bindTabs(){
     const wasOpen=controls.classList.contains('open');
     const wasActive=b.classList.contains('active');
     requestAnimationFrame(()=>{
+      // 코어의 내부 mobileMenuOpen 값과 무관하게 사용자가 기대한 결과를 보장한다.
       setOpen(wasOpen&&wasActive?false:true);
     });
   },true);
@@ -106,14 +107,4 @@ function boot(){
   if(compact())desiredOpen=controls.classList.contains('open');
 }
 boot();
-})();
-
-(()=>{
-'use strict';
-if(window.__xianxiaSpriteRuntime||document.querySelector('script[data-v1128-sprites]'))return;
-const s=document.createElement('script');
-s.src='sprite_runtime_v11_28.js?v=11.28';
-s.dataset.v1128Sprites='1';
-s.async=false;
-document.head.appendChild(s);
 })();
