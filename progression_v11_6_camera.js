@@ -19,4 +19,11 @@ const areaLabel=$('#area');if(areaLabel)new MutationObserver(()=>afterPaint(()=>
 window.addEventListener('resize',()=>afterPaint(()=>realmPanel?.classList.contains('active')?focusCurrentRealm({selectDetail:false}):fitTrain()));
 afterPaint(()=>realmPanel?.classList.contains('active')?focusCurrentRealm():fitTrain());
 P.fitRealmAll=fitRealmAll;P.focusCurrentRealm=focusCurrentRealm;
+
+if(!document.querySelector('script[data-v117-ui]')){
+  const next=document.createElement('script');
+  next.src='ui_v11_7.js?v=11.7';
+  next.dataset.v117Ui='1';
+  document.head.appendChild(next);
+}
 })();
