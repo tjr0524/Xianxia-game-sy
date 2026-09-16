@@ -25,7 +25,7 @@ assert.match(runtime,/prepare\('player'/);
 assert.match(runtime,/anchored\('player'/);
 assert.match(runtime,/function spansFor/);
 assert.match(runtime,/function largestOpaqueBox/);
-assert.match(runtime,/isolated=beast\|\|key==='player'/);
+assert.doesNotMatch(runtime,/isolated=beast\|\|key==='player'/);
 assert.match(runtime,/document\.currentScript/);
 assert.match(runtime,/anchored\('player',[^\n]+,53,/);
 assert.match(runtime,/function resetRunVisuals/);
