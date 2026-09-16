@@ -18,7 +18,8 @@ const UI={
   objective:$('#objective'),notice:$('#notice'),stone:$('#stone'),herb:$('#herb'),
   realm:$('#realm'),realm2:$('#realm2'),realmInfo:$('#realmInfo'),cap:$('#cap'),
   bt:$('#breakthrough'),btTitle:$('#btTitle'),btCost:$('#btCost'),eventInfo:$('#eventInfo'),
-  area:$('#area'),desc:$('#desc'),areas:$('#areas'),tree:$('#tree'),treeHint:$('#treeHint'),
+  area:$('#area'),desc:$('#desc'),areas:$('#areas'),tree:$('#tree'),treeViewport:$('#treeViewport'),treeWorld:$('#treeWorld'),
+  treeZoomOut:$('#treeZoomOut'),treeReset:$('#treeReset'),treeZoomIn:$('#treeZoomIn'),treeDetail:$('#treeDetail'),treeHint:$('#treeHint'),
   nc:$('#nc'),skillTree:$('#skillTree'),skillRun:$('#skillRun'),planChoices:$('#planChoices'),
   atk:$('#atk'),mov:$('#mov'),sen:$('#sen'),hpb:$('#hpb'),
   al:$('#al'),ml:$('#ml'),sl:$('#sl'),hl:$('#hl'),ac:$('#ac'),mc:$('#mc'),sc:$('#sc'),hc:$('#hc'),
@@ -116,6 +117,10 @@ let hazards=[];
 let pointerDown=false;
 let keys=new Set();
 let mobileMenuOpen=false;
+let selectedTreeNode='eco1';
+const treeCamera={x:0,y:0,scale:1,ready:false,pointers:new Map(),gesture:null,dragged:false,suppressClick:false};
+const TREE_SCALE_MIN=.55;
+const TREE_SCALE_MAX=1.9;
 
 const P={x:EXIT.x,y:EXIT.y,r:11,hp:36,max:36,tx:EXIT.x,ty:EXIT.y,target:null,cd:0};
 
@@ -441,6 +446,7 @@ function renderAreas(){
       }
       if(!unlocked)M.unlocked[area.id]=1;
       M.area=area.id;
+      treeCamera.ready=false;
       ensurePlan();
       UI.notice.textContent=`${area.name} 선택. 이 비경의 인연과 기록이 복원되었습니다.`;
       render();
@@ -453,7 +459,10 @@ function renderAreas(){
 function renderTree(){
   UI.tree.innerHTML='';
   const activeBranches=branches();
-  UI.tree.style.gridTemplateColumns=`repeat(${activeBranches.length},minmax(72px,1fr))`;
+  const activeNodes=NODES.filter(node=>allowedNode(node.id));
+  if(!activeNodes.some(node=>node.id===selectedTreeNode))selectedTreeNode=activeNodes[0]?.id||'eco1';
+  UI.tree.style.gridTemplateColumns=`repeat(${activeBranches.length},minmax(90px,1fr))`;
+  UI.tree.style.setProperty?.('--branch-count',activeBranches.length);
   const names={
     eco:['생태','🩸'],fate:['산수·기연','✦'],res:['영맥','⛏'],storm:['천뢰','⚡']
   };
@@ -463,24 +472,51 @@ function renderTree(){
     branch.innerHTML=`<div class="branch-title">${names[key][1]} ${names[key][0]}</div>`;
     for(const node of TREE[key]){
       const level=rank(node.id);
-      const price=nodeCost(node);
       const ready=nodeReady(node);
-      const req=nodeReq(node);
+      const wrap=document.createElement('div');
+      wrap.className='tree-node-wrap'+(level?' reached':'')+(level>=5?' complete':'');
       const button=document.createElement('button');
-      button.className='node'+(level?' on':'')+(ready?' available':' locked');
-      let status;
-      if(level>=5)status='5/5 · 완성';
-      else if(!meets(req))status=`${MAJORS[req.major]} ${req.stage}층 필요`;
-      else if(node.p&&rank(node.p)<3)status='이전 노드 3/5 필요';
-      else status=`${level}/5 → ${level+1}/5 · ${price.s}석${price.h?` · ${HN[price.hg]} ${price.h}초`:''}`;
-      button.innerHTML=`<b>${node.n} ${level}/5</b><small>${status}</small>`;
-      button.title=node.d;
-      button.disabled=phase==='run'||!ready;
-      button.onclick=()=>buyNode(node);
-      branch.appendChild(button);
+      button.className='tree-node'+(level?' on':'')+(level>=5?' complete':ready?' available':' locked')+(selectedTreeNode===node.id?' selected':'');
+      button.innerHTML=`<span class="node-glyph">${level>=5?'完':['Ⅰ','Ⅱ','Ⅲ'][node.tier-1]}</span>`;
+      button.title=`${node.n} · ${node.d}`;
+      button.setAttribute?.('aria-label',`${node.n} ${level}/5`);
+      button.setAttribute?.('aria-pressed',String(selectedTreeNode===node.id));
+      button.onclick=()=>{selectedTreeNode=node.id;renderTree()};
+      const label=document.createElement('div');
+      label.className='node-name';
+      label.textContent=node.n;
+      const rankLabel=document.createElement('div');
+      rankLabel.className='node-rank';
+      rankLabel.textContent=`${level}/5`;
+      const pips=document.createElement('div');
+      pips.className='node-pips';
+      pips.innerHTML=Array.from({length:5},(_,index)=>`<i class="${index<level?'on':''}"></i>`).join('');
+      wrap.appendChild(button);wrap.appendChild(label);wrap.appendChild(rankLabel);wrap.appendChild(pips);
+      branch.appendChild(wrap);
     }
     UI.tree.appendChild(branch);
   }
+
+  const selected=NODES.find(node=>node.id===selectedTreeNode)||activeNodes[0];
+  if(selected){
+    const level=rank(selected.id);
+    const price=nodeCost(selected);
+    const ready=nodeReady(selected);
+    const req=nodeReq(selected);
+    let status;
+    if(level>=5)status='이 인연은 완성되었습니다.';
+    else if(!meets(req))status=`해금 조건 · ${MAJORS[req.major]} ${req.stage}층`;
+    else if(selected.p&&rank(selected.p)<3)status=`선행 조건 · ${NODES.find(node=>node.id===selected.p)?.n||'이전 노드'} 3/5`;
+    else status=`다음 단계 비용 · 영석 ${price.s}${price.h?` · ${HN[price.hg]} 영초 ${price.h}`:''}`;
+    UI.treeDetail.innerHTML=`<div class="tree-detail-head"><b>${selected.n}</b><span>${level}/5 · ${names[branchOf(selected.id)][0]}</span></div><p>${selected.d}</p><div class="tree-detail-state">${status}</div>`;
+    const upgrade=document.createElement('button');
+    upgrade.className='tree-upgrade'+(ready?' ready':'');
+    upgrade.textContent=level>=5?'인연 완성':ready?`${level+1}단계 강화`:'조건 미충족';
+    upgrade.disabled=phase==='run'||!ready;
+    upgrade.onclick=()=>buyNode(selected);
+    UI.treeDetail.appendChild(upgrade);
+  }
+  requestAnimationFrame(()=>{if(!treeCamera.ready)resetTreeView()});
   const max=activeBranches.length*3;
   UI.nc.textContent=`${treeCount()}/${max}노드 · 강화 ${treeLevels()}/${max*5}`;
   UI.treeHint.textContent=M.area==='qingyun'
@@ -490,6 +526,50 @@ function renderTree(){
       :M.area==='blood'
         ?'적혈비경: 요수 + 산수 + 영맥·정예'
         :'천뢰봉: 요수 + 산수 + 영맥 + 낙뢰 회피';
+}
+
+function applyTreeCamera(){
+  UI.treeWorld.style.transform=`translate(${treeCamera.x}px,${treeCamera.y}px) scale(${treeCamera.scale})`;
+}
+
+function resetTreeView(){
+  const width=UI.treeViewport.clientWidth;
+  const height=UI.treeViewport.clientHeight;
+  const worldWidth=UI.treeWorld.scrollWidth;
+  const worldHeight=UI.treeWorld.scrollHeight;
+  if(width<40||height<40||worldWidth<40)return;
+  treeCamera.scale=clamp(Math.min(1,(width-18)/worldWidth,(height-18)/worldHeight),TREE_SCALE_MIN,1);
+  treeCamera.x=Math.max(8,(width-worldWidth*treeCamera.scale)/2);
+  treeCamera.y=Math.max(8,(height-worldHeight*treeCamera.scale)/2);
+  treeCamera.ready=true;
+  applyTreeCamera();
+}
+
+function zoomTreeAt(clientX,clientY,factor){
+  const bounds=UI.treeViewport.getBoundingClientRect();
+  const px=clientX-bounds.left;
+  const py=clientY-bounds.top;
+  const next=clamp(treeCamera.scale*factor,TREE_SCALE_MIN,TREE_SCALE_MAX);
+  const contentX=(px-treeCamera.x)/treeCamera.scale;
+  const contentY=(py-treeCamera.y)/treeCamera.scale;
+  treeCamera.x=px-contentX*next;
+  treeCamera.y=py-contentY*next;
+  treeCamera.scale=next;
+  treeCamera.ready=true;
+  applyTreeCamera();
+}
+
+function zoomTreeCenter(factor){
+  const bounds=UI.treeViewport.getBoundingClientRect();
+  zoomTreeAt(bounds.left+bounds.width/2,bounds.top+bounds.height/2,factor);
+}
+
+function treeGesture(){
+  const points=[...treeCamera.pointers.values()];
+  if(!points.length)return null;
+  const center={x:points.reduce((sum,point)=>sum+point.x,0)/points.length,y:points.reduce((sum,point)=>sum+point.y,0)/points.length};
+  const distance=points.length>1?Math.hypot(points[0].x-points[1].x,points[0].y-points[1].y):0;
+  return {count:points.length,center,distance};
 }
 
 function buyNode(node){
@@ -1508,6 +1588,7 @@ function activateTab(name,persist=true,toggleMenu=false){
     button.setAttribute?.('aria-expanded',String(active&&(!compact||mobileMenuOpen)));
   });
   document.querySelectorAll('.panel').forEach(panel=>panel.classList.toggle('active',panel.dataset.panel===valid));
+  if(valid==='tree'&&(!compact||mobileMenuOpen))requestAnimationFrame(()=>{if(!treeCamera.ready)resetTreeView()});
   if(persist){M.settings.tab=valid;save()}
 }
 
@@ -1558,7 +1639,79 @@ window.addEventListener('blur',()=>keys.clear());
 window.addEventListener('resize',()=>{
   const compact=!!window.matchMedia?.('(max-width:920px)').matches;
   UI.controls.classList.toggle('open',compact?mobileMenuOpen:true);
+  if(!compact||mobileMenuOpen){treeCamera.ready=false;requestAnimationFrame(resetTreeView)}
 });
+
+UI.treeZoomOut.onclick=()=>zoomTreeCenter(1/1.2);
+UI.treeZoomIn.onclick=()=>zoomTreeCenter(1.2);
+UI.treeReset.onclick=resetTreeView;
+UI.treeViewport.addEventListener('wheel',event=>{
+  event.preventDefault();
+  zoomTreeAt(event.clientX,event.clientY,event.deltaY<0?1.12:1/1.12);
+},{passive:false});
+UI.treeViewport.addEventListener('dblclick',event=>{
+  event.preventDefault();
+  event.stopPropagation();
+  zoomTreeAt(event.clientX,event.clientY,1.3);
+},{passive:false});
+UI.treeViewport.addEventListener('pointerdown',event=>{
+  if(event.pointerType==='mouse'&&event.button!==0)return;
+  UI.treeViewport.setPointerCapture?.(event.pointerId);
+  treeCamera.pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  treeCamera.gesture=treeGesture();
+  treeCamera.dragged=false;
+  UI.treeViewport.classList.add('dragging');
+},{passive:false});
+UI.treeViewport.addEventListener('pointermove',event=>{
+  if(!treeCamera.pointers.has(event.pointerId))return;
+  event.preventDefault();
+  const previous=treeCamera.gesture;
+  treeCamera.pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  const next=treeGesture();
+  if(previous&&next){
+    const dx=next.center.x-previous.center.x;
+    const dy=next.center.y-previous.center.y;
+    if(Math.hypot(dx,dy)>1)treeCamera.dragged=true;
+    if(previous.count>1&&next.count>1&&previous.distance>0){
+      const bounds=UI.treeViewport.getBoundingClientRect();
+      const oldScale=treeCamera.scale;
+      const newScale=clamp(oldScale*next.distance/previous.distance,TREE_SCALE_MIN,TREE_SCALE_MAX);
+      const oldX=previous.center.x-bounds.left;
+      const oldY=previous.center.y-bounds.top;
+      const newX=next.center.x-bounds.left;
+      const newY=next.center.y-bounds.top;
+      const contentX=(oldX-treeCamera.x)/oldScale;
+      const contentY=(oldY-treeCamera.y)/oldScale;
+      treeCamera.x=newX-contentX*newScale;
+      treeCamera.y=newY-contentY*newScale;
+      treeCamera.scale=newScale;
+      if(Math.abs(next.distance-previous.distance)>1)treeCamera.dragged=true;
+    }else{
+      treeCamera.x+=dx;
+      treeCamera.y+=dy;
+    }
+    treeCamera.ready=true;
+    applyTreeCamera();
+  }
+  treeCamera.gesture=next;
+},{passive:false});
+const endTreePointer=event=>{
+  if(!treeCamera.pointers.has(event.pointerId))return;
+  treeCamera.pointers.delete(event.pointerId);
+  treeCamera.gesture=treeGesture();
+  if(treeCamera.dragged){
+    treeCamera.suppressClick=true;
+    requestAnimationFrame(()=>{treeCamera.suppressClick=false});
+  }
+  if(!treeCamera.pointers.size)UI.treeViewport.classList.remove('dragging');
+};
+UI.treeViewport.addEventListener('pointerup',endTreePointer);
+UI.treeViewport.addEventListener('pointercancel',endTreePointer);
+UI.treeViewport.addEventListener('click',event=>{
+  if(!treeCamera.suppressClick)return;
+  event.preventDefault();
+  event.stopPropagation();
+},{capture:true});
 
 // iOS Safari can interpret rapid game taps as a page-zoom gesture even when
 // the viewport is locked. Keep every tap available to pointer controls while
