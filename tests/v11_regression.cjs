@@ -266,7 +266,7 @@ for(const match of code.matchAll(/\$\('#([^']+)'\)/g)){
 }
 assert.match(html,/game_v11\.js/);
 assert.match(html,/game_v11\.js\?v=11\.23/,'entrypoint uses the current cache-busting version');
-assert.match(html,/visual_v11_23\.css\?v=11\.23/,'v11.23 visual theme is loaded');
+assert.match(html,/visual_v11_23\.css\?v=11\.23\.1/,'latest v11.23 visual theme revision is loaded');
 assert.match(html,/visual_v11_23\.js\?v=11\.23/,'v11.23 visual state layer is loaded last');
 assert.doesNotMatch(html,/game_v10\.js|late_warning\.js/);
 assert.match(freeExpedition,/#planChoices,.expedition-plan-label,#objective\{display:none!important\}/,'removed expedition plans stay hidden');
