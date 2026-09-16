@@ -168,7 +168,6 @@ function loadState(){
   if(!AREAS.some(area=>area.id===state.area))state.area='qingyun';
   if(!PLANS.some(plan=>plan.id===state.settings.plan))state.settings.plan='harvest';
   if(!['train','areas'].includes(state.settings.tab))state.settings.tab='train';
-  if(state.realm.major>=0&&!Object.values(state.skills).some(skill=>skill.u))state.skills.sword.u=1;
   return state;
 }
 
@@ -1782,7 +1781,6 @@ function loadNormalized(value){
   state.skills=skillBlank();
   for(const id of Object.keys(state.skills))state.skills[id]={...state.skills[id],...(value.skills?.[id]||{})};
   for(const area of AREAS)state.zones[area.id]={...zoneBlank(),...(value.zones?.[area.id]||{}),tree:{...(value.zones?.[area.id]?.tree||{})}};
-  if(state.realm.major>=0&&!Object.values(state.skills).some(skill=>skill.u))state.skills.sword.u=1;
   return state;
 }
 
