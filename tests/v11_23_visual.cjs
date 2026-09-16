@@ -13,7 +13,7 @@ assert.match(html,/<script src="visual_v11_23\.js\?v=11\.23"><\/script>\s*<\/bod
 assert.match(css,/body\.v23-theme\[data-v23-area="blackwind"\]/);
 assert.match(css,/body\.v23-theme\[data-v23-area="blood"\]/);
 assert.match(css,/body\.v23-theme\[data-v23-area="thunder"\]/);
-assert.match(css,/\.v23-theme \.controls\{[\s\S]*height:calc\(100dvh - 28px\)/);
+assert.match(css,/\.v23-theme \.controls\{[\s\S]*height:clamp\(650px,calc\(100dvh - 118px\),860px\)/);
 assert.match(css,/@media\(max-width:920px\)[\s\S]*\.v23-theme \.controls\{/);
 assert.match(css,/\.v23-theme \.v22-close-handle\{[\s\S]*height:34px!important/);
 assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
