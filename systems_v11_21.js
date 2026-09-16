@@ -44,29 +44,37 @@ function costHtml(c){
   if(c?.h)a.push(`<span class="cost-chip herb g${c.hg}"><i>❧</i>${c.h}</span>`);
   return a.join('')||'<span class="cost-chip free">무료</span>';
 }
+function ensureClose(detail){
+  if(detail.querySelector('.v17close'))return;
+  const b=document.createElement('button');
+  b.className='v17close';
+  b.textContent='×';
+  b.onclick=e=>{e.stopPropagation();detail.classList.remove('open')};
+  detail.appendChild(b);
+}
+function setDetail(detail,html){detail.innerHTML=html;ensureClose(detail)}
 
 function rewriteStageDetail(idx){
   const detail=$('#ascDetail');
   if(!detail||!TRAIN[idx])return;
   const m=D.snapshot().M,cur=currentStageIndex(m),stage=TRAIN[idx],done=completed(m,stage),st=stageStatus(idx);
-  detail.querySelectorAll('.v17close').forEach(x=>x.remove());
   if(idx<cur){
-    detail.innerHTML=`<div class="node-kicker">${stage.name} · ${done}/${stage.nodes.length}</div><div class="node-effect">이미 개방한 경지입니다.</div><div class="node-expect">이 층의 수련 노드를 눌러 완료한 수련과 효과를 확인할 수 있습니다.</div>`;
+    setDetail(detail,`<div class="node-kicker">${stage.name} · ${done}/${stage.nodes.length}</div><div class="node-effect">이미 개방한 경지입니다.</div><div class="node-expect">이 층의 수련 노드를 눌러 완료한 수련과 효과를 확인할 수 있습니다.</div>`);
     return;
   }
   if(idx===cur){
-    detail.innerHTML=`<div class="node-kicker">${stage.name} · ${done}/${stage.nodes.length}</div><div class="node-effect">현재 경지입니다. 주변 수련 노드를 선택해 도맥을 완성하세요.</div><div class="node-expect">다음 경지 돌파는 위쪽의 다음 경지 노드를 직접 눌러 진행합니다.</div>`;
+    setDetail(detail,`<div class="node-kicker">${stage.name} · ${done}/${stage.nodes.length}</div><div class="node-effect">현재 경지입니다. 주변 수련 노드를 선택해 도맥을 완성하세요.</div><div class="node-expect">다음 경지 돌파는 위쪽의 다음 경지 노드를 직접 눌러 진행합니다.</div>`);
     return;
   }
   const price=st.price||breakthroughCost(idx);
   const next=idx===cur+1;
-  detail.innerHTML=`<div class="node-kicker">${stage.name} · ${done}/${stage.nodes.length}</div><div class="node-effect">${next?`${stage.name}을 개방하고 새로운 수련 가지를 연다.`:'아직 도달할 수 없는 경지입니다.'}</div><div class="node-expect">${st.text}</div><div class="cost-row">${next?costHtml(price):'<span class="cost-chip free">선행 경지 필요</span>'}</div>`;
+  setDetail(detail,`<div class="node-kicker">${stage.name} · ${done}/${stage.nodes.length}</div><div class="node-effect">${next?`${stage.name}을 개방하고 새로운 수련 가지를 연다.`:'아직 도달할 수 없는 경지입니다.'}</div><div class="node-expect">${st.text}</div><div class="cost-row">${next?costHtml(price):'<span class="cost-chip free">선행 경지 필요</span>'}</div>`);
   const b=document.createElement('button');
   b.className=`detail-action ${st.can?'ready':''}`;
   b.disabled=!st.can;
   b.textContent=next?`${stage.name} 개방`:'조건 미충족';
   b.onclick=e=>{e.stopPropagation();P.breakthroughStage(idx)};
-  detail.appendChild(b);
+  detail.insertBefore(b,detail.querySelector('.v17close'));
 }
 function bindStageNodes(){
   const v=$('#ascViewport');
@@ -109,8 +117,6 @@ function preserveJournalTab(){
 function boot(){
   preserveJournalTab();
   bindStageNodes();
-  const root=$('#ascViewport');
-  if(root)new MutationObserver(bindStageNodes).observe(root,{childList:true,subtree:true});
 }
 boot();
 })();
