@@ -5,7 +5,6 @@ window.__xianxiaVisualVersion='11.25.1';
 
 const $=s=>document.querySelector(s);
 const GLYPHS={qingyun:'青',blackwind:'風',blood:'血',thunder:'雷'};
-const TAB_GLYPHS={'수련':'氣','법술':'法','비경 지도':'圖','비경':'圖','도행록':'錄','인연':'緣'};
 
 function promoteTheme(){
   document.querySelector('#v1123-theme')?.remove();
@@ -99,9 +98,8 @@ function decorateTabs(){
   document.querySelectorAll('.tab-btn:not(.v1117-hide)').forEach(button=>{
     const label=button.querySelector('.v23-tab-label,.v25-tab-label')?.textContent?.trim()||button.textContent.trim();
     if(!label)return;
-    const glyph=TAB_GLYPHS[label]||'卷';
     button.setAttribute('aria-label',label);
-    button.innerHTML=`<span class="v25-tab-glyph" aria-hidden="true">${glyph}</span><span class="v25-tab-label">${label}</span>`;
+    button.innerHTML=`<span class="v25-tab-label">${label}</span>`;
   });
 }
 
