@@ -1,43 +1,37 @@
 (()=>{
 'use strict';
-const P=window.__xianxiaProgression;
-if(!P)return;
-const $=selector=>document.querySelector(selector);
-const ROOT_Y={qingyun:100,blackwind:545,blood:1025,thunder:1560};
-const WORLD_W=900,WORLD_H=2050;
-function visible(el){if(!el)return false;const r=el.getBoundingClientRect();return r.width>40&&r.height>40}
-function setRealmTransform(scale,x,y){const world=$('#realmProgWorld');if(world)world.style.transform=`translate(${x}px,${y}px) scale(${scale})`}
-function fitRealmAll(){const viewport=$('#realmProgViewport');if(!visible(viewport))return false;const r=viewport.getBoundingClientRect(),scale=Math.max(.12,Math.min(.82,(r.width-18)/WORLD_W,(r.height-18)/WORLD_H));setRealmTransform(scale,(r.width-WORLD_W*scale)/2,Math.max(8,(r.height-WORLD_H*scale)/2));return true}
-function focusCurrentRealm({selectDetail=false}={}){const viewport=$('#realmProgViewport'),world=$('#realmProgWorld'),debug=window.__xianxiaDebug;if(!visible(viewport)||!world||!debug)return false;const area=debug.snapshot().M.area||'qingyun',y=ROOT_Y[area]??ROOT_Y.qingyun,r=viewport.getBoundingClientRect(),scale=.58;setRealmTransform(scale,r.width/2-(WORLD_W/2)*scale,r.height/2-(y+120)*scale);if(selectDetail)world.querySelector('.prog-node.area-root.current')?.click();return true}
-const afterPaint=fn=>requestAnimationFrame(fn);
-$('.tab-btn[data-tab="tree"]')?.addEventListener('click',()=>afterPaint(()=>focusCurrentRealm()));
-const realmPanel=$('[data-panel="tree"]'),fitButton=realmPanel?.querySelector('[data-cam="fit"]');
-if(fitButton){fitButton.textContent='전체';fitButton.onclick=fitRealmAll}
-const areaLabel=$('#area');if(areaLabel)new MutationObserver(()=>{if(realmPanel?.classList.contains('active'))afterPaint(()=>focusCurrentRealm())}).observe(areaLabel,{childList:true,characterData:true,subtree:true});
-window.addEventListener('resize',()=>afterPaint(()=>realmPanel?.classList.contains('active')?focusCurrentRealm():P.focusStageTraining?.()));
-afterPaint(()=>realmPanel?.classList.contains('active')?focusCurrentRealm():P.focusStageTraining?.());
-P.fitRealmAll=fitRealmAll;P.focusCurrentRealm=focusCurrentRealm;
-
-if(!document.querySelector('script[data-v119-ui]')){
-  const next=document.createElement('script');
-  next.src='ui_v11_9.js?v=11.10';
-  next.dataset.v119Ui='1';
-  next.async=false;
-  next.onload=()=>{
-    if(!document.querySelector('script[data-v1110-stagehub]')){
-      const hub=document.createElement('script');
-      hub.src='ui_v11_10.js?v=11.10';
-      hub.dataset.v1110Stagehub='1';
-      hub.async=false;
-      document.head.appendChild(hub);
-    }
-  };
-  document.head.appendChild(next);
-}else if(!document.querySelector('script[data-v1110-stagehub]')){
-  const hub=document.createElement('script');
-  hub.src='ui_v11_10.js?v=11.10';
-  hub.dataset.v1110Stagehub='1';
-  hub.async=false;
-  document.head.appendChild(hub);
+function load13(){
+  if(window.__xianxiaUiVersion==='11.13'||document.querySelector('script[data-v1113-ui]'))return;
+  const u=document.createElement('script');
+  u.src='ui_v11_13.js?v=11.13.1';
+  u.dataset.v1113Ui='1';
+  u.async=false;
+  document.head.appendChild(u);
 }
+function cleanLegacy(){
+  document.querySelector('#trainProgViewport')?.closest('.prog-section')?.remove();
+  document.querySelector('#stagePathViewport')?.closest('.stagepath-section')?.remove();
+}
+if(window.__xianxiaProgression?.version==='11.11'){
+  cleanLegacy();
+  load13();
+  return;
+}
+if(document.querySelector('script[data-v1111-main]')){
+  const wait=setInterval(()=>{
+    if(window.__xianxiaProgression?.version==='11.11'){
+      clearInterval(wait);
+      cleanLegacy();
+      load13();
+    }
+  },30);
+  setTimeout(()=>clearInterval(wait),5000);
+  return;
+}
+const s=document.createElement('script');
+s.src='progression_v11_11.js?v=11.11.1';
+s.dataset.v1111Main='1';
+s.async=false;
+s.onload=()=>{cleanLegacy();load13()};
+document.head.appendChild(s);
 })();
