@@ -31,7 +31,7 @@ function addStyle(){
 
   /* 수련 상세는 도맥 아래가 아니라 도맥 안에 뜨는 작은 창으로 사용한다. */
   #ascViewport{position:relative}
-  #ascDetail.asc-float-detail{position:absolute;z-index:40;width:min(260px,calc(100% - 18px));min-height:0;max-height:230px;overflow:auto;margin:0!important;padding:9px 10px!important;box-shadow:0 12px 32px #000c;border-color:#55706c;background:#0b171bdd;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:auto;display:none}
+  #ascDetail.asc-float-detail{position:absolute;z-index:40;width:min(260px,calc(100% - 18px));min-height:0;max-height:230px;overflow:auto;margin:0!important;padding:9px 10px!important;box-shadow:0 12px 32px #000c;border-color:#55706c;background:#0b171bdd;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:auto;touch-action:pan-y;display:none}
   #ascDetail.asc-float-detail.open{display:block}
   #ascDetail.asc-float-detail .detail-head{padding-right:22px}
   #ascDetail.asc-float-detail p{margin:4px 0!important;font-size:8.5px!important;line-height:1.35!important}
@@ -137,6 +137,7 @@ function installTrainingPopover(){
     if(!e.target.closest('#ascDetail'))detail.classList.remove('open');
   },true);
 
+  detail.addEventListener('pointerdown',e=>e.stopPropagation());
   detail.addEventListener('click',e=>e.stopPropagation());
   window.addEventListener('resize',()=>detail.classList.remove('open'));
 }
