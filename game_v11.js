@@ -1656,7 +1656,7 @@ UI.treeViewport.addEventListener('dblclick',event=>{
 },{passive:false});
 UI.treeViewport.addEventListener('pointerdown',event=>{
   if(event.pointerType==='mouse'&&event.button!==0)return;
-  UI.treeViewport.setPointerCapture?.(event.pointerId);
+  if(event.target.closest?.('.tree-camera'))return;
   treeCamera.pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
   treeCamera.gesture=treeGesture();
   treeCamera.dragged=false;
@@ -1671,7 +1671,10 @@ UI.treeViewport.addEventListener('pointermove',event=>{
   if(previous&&next){
     const dx=next.center.x-previous.center.x;
     const dy=next.center.y-previous.center.y;
-    if(Math.hypot(dx,dy)>1)treeCamera.dragged=true;
+    if(Math.hypot(dx,dy)>1){
+      treeCamera.dragged=true;
+      UI.treeViewport.setPointerCapture?.(event.pointerId);
+    }
     if(previous.count>1&&next.count>1&&previous.distance>0){
       const bounds=UI.treeViewport.getBoundingClientRect();
       const oldScale=treeCamera.scale;
