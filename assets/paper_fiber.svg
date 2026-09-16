@@ -1,12 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180">
   <rect width="180" height="180" fill="#f6f2e7"/>
-  <g stroke="#657b78" stroke-opacity=".055" stroke-width="1">
-    <path d="M8 22c29 7 53-4 82 2s47 4 79-5"/><path d="M-6 64c38-9 67 9 105 2s54-6 87 3"/><path d="M11 112c31 8 64-6 94 1s48 5 71-2"/><path d="M-8 154c37-7 65 7 96 1s56-4 96 5"/>
-  </g>
-  <g stroke="#9b824c" stroke-opacity=".035" stroke-width=".8">
-    <path d="M24-4c-4 35 9 61 4 91s-3 55 7 96"/><path d="M91-8c8 34-5 60 2 91s5 55-3 103"/><path d="M151-4c-6 37 6 59 1 91s-2 57 8 98"/>
-  </g>
-  <g fill="#203c3d" fill-opacity=".035">
-    <circle cx="31" cy="41" r="1"/><circle cx="79" cy="19" r=".8"/><circle cx="137" cy="52" r="1"/><circle cx="52" cy="133" r=".9"/><circle cx="162" cy="121" r=".8"/><circle cx="105" cy="158" r="1"/>
+  <g fill="#617673" fill-opacity=".018">
+    <circle cx="28" cy="32" r=".7"/><circle cx="79" cy="19" r=".5"/><circle cx="137" cy="52" r=".6"/>
+    <circle cx="52" cy="133" r=".5"/><circle cx="162" cy="121" r=".5"/><circle cx="105" cy="158" r=".6"/>
   </g>
 </svg>
