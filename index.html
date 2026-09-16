@@ -18,9 +18,9 @@
 <main class="layout">
 <section class="card arena-card">
 <div class="arena-head"><div><h2 id="area">청운산 후산</h2><p id="desc">요수만 존재하는 초입 비경.</p></div><span id="realm2" class="badge">범인</span></div>
-<div id="game" class="game"><canvas id="cv" width="700" height="460" aria-label="비경 전투 화면"></canvas><div class="danger-label">비경 불안정 · 출구로 복귀하십시오</div><div id="ov" class="overlay"><div class="dialog"><h3 id="ot">청운산 후산</h3><div id="ox" class="intro">범인은 요수와 싸울 수 없습니다.<br>동선을 보고 영초를 챙겨 살아 돌아오세요.</div><div id="planChoices" class="plan-grid"></div><button id="start" class="primary">선택한 방침으로 진입</button></div></div></div>
+<div id="game" class="game"><canvas id="cv" width="700" height="460" aria-label="비경 전투 화면"></canvas><div class="danger-label">비경 불안정 · 출구로 복귀하십시오</div><div id="ov" class="overlay"><div class="dialog"><h3 id="ot">청운산 후산</h3><div id="ox" class="intro">범인은 요수와 싸울 수 없습니다.<br>동선을 보고 영초를 챙겨 살아 돌아오세요.</div><div id="planChoices" class="plan-grid"></div><button id="start" class="primary">비경 진입</button></div></div></div>
 <div class="hud"><div class="hud-item"><span>체력</span><div class="hpbar"><i id="hpFill"></i></div><b id="hp">36 / 36</b></div><div class="hud-item"><span>이번 원정</span><b id="loot">영석 0 · 영초 下0 · 中0 · 上0</b></div><div class="hud-item"><span>안정도</span><b id="time">25.0초</b></div><div class="hud-item"><span>검세</span><b id="combo">0단</b></div></div>
-<div id="objective" class="objective">원정 방침을 선택하십시오.</div><div class="run-row"><div id="skillRun" class="skill-status">기본 검격</div><button id="ret" class="soft" disabled>출구로 복귀</button></div><div id="notice" class="notice">범인으로 시작합니다. 요수를 피해서 살아 돌아오세요.</div>
+<div id="objective" class="objective"></div><div class="run-row"><div id="skillRun" class="skill-status">기본 검격</div><button id="ret" class="soft" disabled>출구로 복귀</button></div><div id="notice" class="notice">범인으로 시작합니다. 요수를 피해서 살아 돌아오세요.</div>
 </section>
 <aside class="card controls">
 <nav class="tabs"><button class="tab-btn active" data-tab="train">수련</button><button class="tab-btn" data-tab="skills">법술</button><button class="tab-btn" data-tab="areas">비경</button><button class="tab-btn" data-tab="tree">인연</button></nav>
@@ -33,10 +33,11 @@
 </main>
 <div class="footer">탭 또는 드래그로 이동 · 기본 검격과 전승한 법술은 자동 공격 · 출구는 남쪽 중앙 고정</div>
 </div>
-<script src="game_v11.js?v=11.19"></script>
-<script src="progression_v11_17.js?v=11.19"></script>
-<script src="ui_v11_17.js?v=11.19"></script>
-<script src="map_v11_18.js?v=11.19"></script>
-<script src="systems_v11_19.js?v=11.19"></script>
+<script src="game_v11.js?v=11.20"></script>
+<script src="progression_v11_17.js?v=11.20"></script>
+<script src="systems_v11_20.js?v=11.20"></script>
+<script src="ui_v11_17.js?v=11.20"></script>
+<script src="map_v11_18.js?v=11.20"></script>
+<script src="systems_v11_19.js?v=11.20"></script>
 </body>
 </html>
