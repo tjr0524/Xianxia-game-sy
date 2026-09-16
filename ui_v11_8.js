@@ -138,9 +138,19 @@ function bindBalance(){
   }
 }
 
+function loadStageHub(){
+  if(document.querySelector('script[data-v1110-stagehub]'))return;
+  const s=document.createElement('script');
+  s.src='ui_v11_10.js?v=11.10';
+  s.dataset.v1110Stagehub='1';
+  s.async=false;
+  document.head.appendChild(s);
+}
+
 addStyle();
 renderAreaPicker(true);
 bindBalance();
+loadStageHub();
 
 // Area selection changes #area text. Watch only that tiny label; never observe
 // the expedition dialog subtree, because rebuilding the picker would otherwise
