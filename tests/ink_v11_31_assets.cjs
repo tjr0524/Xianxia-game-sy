@@ -1,0 +1,18 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const root=path.resolve(__dirname,'..');
+const manifest=JSON.parse(fs.readFileSync(path.join(root,'assets/ink_v1/manifest.json'),'utf8'));
+assert.equal(manifest.version,'1.0.0');
+assert.deepEqual(Object.keys(manifest.backgrounds),['qingyun','blackwind','blood','thunder']);
+assert.equal(Object.keys(manifest.sprites).filter(k=>/_guard$|_chaser$/.test(k)).length,8);
+const files=[];
+for(const rel of Object.values(manifest.backgrounds))files.push(rel);
+for(const value of Object.values(manifest.sprites))files.push(value.file);
+for(const rel of Object.values(manifest.ui))files.push(rel);
+for(const rel of files){const file=path.join(root,'assets/ink_v1',rel);assert.ok(fs.existsSync(file),`missing ${rel}`);assert.ok(fs.statSync(file).size>1024,`empty ${rel}`)}
+const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+assert.match(html,/ink_assets_v11_31\.css/);
+assert.match(html,/ink_runtime_v11_31\.js/);
+assert.doesNotMatch(html,/sprite_runtime_v11_30\.js/);
+console.log(`ink v11.31 assets: ${files.length} files and runtime entrypoints verified`);
