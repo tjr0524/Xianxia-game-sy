@@ -260,14 +260,15 @@ assert.ok(initiateStoneRuns>=12,`starter sword art earns spirit stones (${initia
 const html=fs.readFileSync(new URL('../index.html',`file://${__filename}`),'utf8');
 const freeExpedition=fs.readFileSync(new URL('../systems_v11_20.js',`file://${__filename}`),'utf8');
 const panelUx=fs.readFileSync(new URL('../systems_v11_22.js',`file://${__filename}`),'utf8');
-const visualUx=fs.readFileSync(new URL('../visual_v11_23.js',`file://${__filename}`),'utf8');
+const visualUx=fs.readFileSync(new URL('../visual_v11_24.js',`file://${__filename}`),'utf8');
 for(const match of code.matchAll(/\$\('#([^']+)'\)/g)){
   assert.match(html,new RegExp(`id=["']${match[1]}["']`),`HTML contains #${match[1]}`);
 }
 assert.match(html,/game_v11\.js/);
-assert.match(html,/game_v11\.js\?v=11\.23/,'entrypoint uses the current cache-busting version');
+assert.match(html,/game_v11\.js\?v=11\.24/,'entrypoint uses the current cache-busting version');
 assert.match(html,/visual_v11_23\.css\?v=11\.23\.1/,'latest v11.23 visual theme revision is loaded');
-assert.match(html,/visual_v11_23\.js\?v=11\.23/,'v11.23 visual state layer is loaded last');
+assert.match(html,/visual_v11_24\.css\?v=11\.24/,'v11.24 light ink-wash theme is loaded');
+assert.match(html,/visual_v11_24\.js\?v=11\.24"><\/script>\s*<\/body>/,'v11.24 visual state layer is loaded last');
 assert.doesNotMatch(html,/game_v10\.js|late_warning\.js/);
 assert.match(freeExpedition,/#planChoices,.expedition-plan-label,#objective\{display:none!important\}/,'removed expedition plans stay hidden');
 assert.match(html,/\.controls\{position:fixed;z-index:30/,'mobile progression menu is a fixed bottom sheet');
@@ -282,4 +283,4 @@ assert.match(code,/treeCamera\.pointers/,'affinity tree supports pointer pan and
 assert.match(code,/zoomTreeAt\(event\.clientX,event\.clientY,1\.3\)/,'affinity tree supports double-tap zoom');
 assert.match(code,/closest\?\.\('\.tree-camera'\)/,'tree camera buttons are excluded from drag capture');
 
-console.log(`v11 regression: 38 assertions passed; mortal ${mortalReturns}/24 safe, ${mortalProgress}/24 entry-ready; initiate ${initiateReturns}/24 safe, ${initiateStoneRuns}/24 with stones`);
+console.log(`v11 regression: 39 assertions passed; mortal ${mortalReturns}/24 safe, ${mortalProgress}/24 entry-ready; initiate ${initiateReturns}/24 safe, ${initiateStoneRuns}/24 with stones`);

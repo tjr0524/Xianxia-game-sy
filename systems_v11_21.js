@@ -86,7 +86,7 @@ function bindStageNodes(){
     const idx=Number(node.dataset.nodeId.slice(6));
     if(!Number.isInteger(idx))return;
     requestAnimationFrame(()=>rewriteStageDetail(idx));
-  });
+  },true);
 }
 
 function activateJournal(){

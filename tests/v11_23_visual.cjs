@@ -9,7 +9,7 @@ const css=read('visual_v11_23.css');
 const js=read('visual_v11_23.js');
 
 assert.match(html,/<link id="v1123-theme"[^>]+visual_v11_23\.css\?v=11\.23\.1/);
-assert.match(html,/<script src="visual_v11_23\.js\?v=11\.23"><\/script>\s*<\/body>/);
+assert.match(html,/<script src="visual_v11_23\.js\?v=11\.24"><\/script>\s*<script src="visual_v11_24\.js\?v=11\.24">/);
 assert.match(css,/body\.v23-theme\[data-v23-area="blackwind"\]/);
 assert.match(css,/body\.v23-theme\[data-v23-area="blood"\]/);
 assert.match(css,/body\.v23-theme\[data-v23-area="thunder"\]/);
