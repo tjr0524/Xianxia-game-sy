@@ -4,13 +4,14 @@
 const debug=window.__xianxiaDebug;
 const P=window.__xianxiaProgression;
 if(!debug||!P)return;
-P.version='11.8';
+P.version='11.10';
 
 const $=s=>document.querySelector(s);
 const C=debug.constants;
 const AREA_GLYPH={qingyun:'青',blackwind:'風',blood:'血',thunder:'雷'};
 const SAVE_KEY='xianxia_proto_v11';
 let savedSkills=null;
+let pickerSignature='';
 
 function addStyle(){
   if($('#v118style'))return;
@@ -48,15 +49,18 @@ function areaPicker(){
   return wrap;
 }
 
-function renderAreaPicker(){
+function renderAreaPicker(force=false){
   const wrap=areaPicker();
   if(!wrap)return;
   const shot=debug.snapshot();
   const state=shot.M;
+  const unlocked=C.AREAS.filter(area=>state.unlocked?.[area.id]);
+  const signature=`${state.area}|${shot.phase}|${unlocked.map(a=>a.id).join(',')}`;
+  if(!force&&signature===pickerSignature)return;
+  pickerSignature=signature;
   const grid=wrap.querySelector('.expedition-area-grid');
-  grid.innerHTML='';
-  for(const area of C.AREAS){
-    if(!state.unlocked?.[area.id])continue;
+  grid.replaceChildren();
+  for(const area of unlocked){
     const b=document.createElement('button');
     b.type='button';
     b.className='expedition-area-btn'+(state.area===area.id?' active':'');
@@ -67,7 +71,8 @@ function renderAreaPicker(){
       debug.selectArea(area.id);
       const n=$('#notice');
       if(n)n.textContent=`${area.name}을 다음 원정지로 선택했습니다.`;
-      requestAnimationFrame(renderAreaPicker);
+      pickerSignature='';
+      requestAnimationFrame(()=>renderAreaPicker(true));
     };
     grid.appendChild(b);
   }
@@ -99,7 +104,7 @@ function applyRunBalance(){
     const persisted=clone(state);
     persisted.skills=clone(savedSkills);
     localStorage.setItem(SAVE_KEY,JSON.stringify(persisted));
-  }catch(error){console.warn('v11.8 balance persist guard failed',error)}
+  }catch(error){console.warn('v11.10 balance persist guard failed',error)}
 }
 
 function restoreRunBalance(){
@@ -110,7 +115,8 @@ function restoreRunBalance(){
   state.skills=clone(savedSkills);
   savedSkills=null;
   debug.replaceState(state);
-  requestAnimationFrame(renderAreaPicker);
+  pickerSignature='';
+  requestAnimationFrame(()=>renderAreaPicker(true));
 }
 
 function bindBalance(){
@@ -122,19 +128,29 @@ function bindBalance(){
   const ov=$('#ov');
   if(ov&&!ov.dataset.v118Balance){
     ov.dataset.v118Balance='1';
-    new MutationObserver(()=>requestAnimationFrame(restoreRunBalance)).observe(ov,{attributes:true,attributeFilter:['class']});
+    new MutationObserver(()=>{
+      requestAnimationFrame(()=>{
+        restoreRunBalance();
+        pickerSignature='';
+        renderAreaPicker(true);
+      });
+    }).observe(ov,{attributes:true,attributeFilter:['class']});
   }
 }
 
 addStyle();
-renderAreaPicker();
+renderAreaPicker(true);
 bindBalance();
 
+// Area selection changes #area text. Watch only that tiny label; never observe
+// the expedition dialog subtree, because rebuilding the picker would otherwise
+// trigger its own observer again and create an infinite render loop.
 const areaLabel=$('#area');
-if(areaLabel)new MutationObserver(()=>requestAnimationFrame(renderAreaPicker)).observe(areaLabel,{childList:true,subtree:true,characterData:true});
-const overlay=$('#ov');
-if(overlay)new MutationObserver(()=>requestAnimationFrame(()=>{renderAreaPicker();bindBalance()})).observe(overlay,{childList:true,subtree:true});
+if(areaLabel)new MutationObserver(()=>{
+  pickerSignature='';
+  requestAnimationFrame(()=>renderAreaPicker(true));
+}).observe(areaLabel,{childList:true,subtree:true,characterData:true});
 
-P.renderAreaPicker=renderAreaPicker;
+P.renderAreaPicker=()=>renderAreaPicker(true);
 P.restoreRunBalance=restoreRunBalance;
 })();
