@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
-if(window.__xianxiaVisualVersion==='11.25')return;
-window.__xianxiaVisualVersion='11.25';
+if(window.__xianxiaVisualVersion==='11.25.1')return;
+window.__xianxiaVisualVersion='11.25.1';
 
 const $=s=>document.querySelector(s);
 const GLYPHS={qingyun:'青',blackwind:'風',blood:'血',thunder:'雷'};
@@ -15,9 +15,50 @@ function promoteTheme(){
     link=document.createElement('link');
     link.id='v1125-theme';
     link.rel='stylesheet';
-    link.href='visual_v11_25.css?v=11.25';
     document.head.appendChild(link);
-  }else document.head.appendChild(link);
+  }
+  link.href='visual_v11_25.css?v=11.25.1';
+  document.head.appendChild(link);
+}
+
+function installCorrections(){
+  let style=$('#v1125-corrections');
+  if(style)return;
+  style=document.createElement('style');
+  style.id='v1125-corrections';
+  style.textContent=`
+body.v25-theme{
+  background:linear-gradient(180deg,#faf8f1 0,#f3efe3 64%,#eceee8 100%)!important;
+}
+body.v25-theme::before{opacity:.18!important}
+body.v25-theme::after{color:rgba(41,70,69,.014)!important}
+.v25-theme .card::after,.v25-theme .controls::before{opacity:.07!important}
+.v25-theme .asc-viewport,.v25-theme .map-viewport,.v25-theme .skill17view{
+  background:#f8f6ee!important;
+}
+.v25-theme .skill17view{
+  background:radial-gradient(circle at 50% 78%,rgba(99,83,133,.045),transparent 48%),#f8f6ee!important;
+}
+.v25-theme .asc-viewport::before,.v25-theme .map-viewport::before,.v25-theme .skill17view::before{
+  opacity:.09!important;
+}
+.v25-theme .overlay::before{opacity:.18!important}
+@media(max-width:920px){
+  body.v25-theme .controls{
+    position:fixed!important;
+    z-index:30!important;
+    left:6px!important;
+    right:6px!important;
+    top:auto!important;
+    bottom:calc(env(safe-area-inset-bottom) + 7px)!important;
+    width:auto!important;
+    min-height:0!important;
+    max-height:min(72dvh,640px)!important;
+    overflow:auto!important;
+  }
+}
+`;
+  document.head.appendChild(style);
 }
 
 function installArenaChrome(){
@@ -56,7 +97,7 @@ function installArenaChrome(){
 
 function decorateTabs(){
   document.querySelectorAll('.tab-btn:not(.v1117-hide)').forEach(button=>{
-    let label=button.querySelector('.v23-tab-label,.v25-tab-label')?.textContent?.trim()||button.textContent.trim();
+    const label=button.querySelector('.v23-tab-label,.v25-tab-label')?.textContent?.trim()||button.textContent.trim();
     if(!label)return;
     const glyph=TAB_GLYPHS[label]||'卷';
     button.setAttribute('aria-label',label);
@@ -116,7 +157,8 @@ function observe(){
 }
 function boot(){
   promoteTheme();
-  document.documentElement.dataset.visualVersion='11.25';
+  installCorrections();
+  document.documentElement.dataset.visualVersion='11.25.1';
   document.body.classList.remove('v23-theme','v24-theme');
   document.body.classList.add('v25-theme');
   installArenaChrome();
