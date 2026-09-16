@@ -1,6 +1,8 @@
 {
   "version": "1.0.0",
   "style": "expressive ink wash with pale mineral color",
+  "arena_camera": "three-quarter top-down orthographic",
+  "anchor_policy": "alpha-bounds with fixed bottom-center ground anchor",
   "canvas": { "width": 700, "height": 460 },
   "backgrounds": {
     "qingyun": "runtime/backgrounds/qingyun.png",
@@ -8,6 +10,7 @@
     "blood": "runtime/backgrounds/blood.png",
     "thunder": "runtime/backgrounds/thunder.png"
   },
+  "background_source": "source/region_backgrounds_topdown_v2.png",
   "sprites": {
     "player": { "file": "source/player_core.png", "rows": [{ "name": "idle", "frames": 4 }, { "name": "move", "frames": 6 }, { "name": "attack", "frames": 6 }] },
     "qingyun_guard": { "file": "source/qingyun_stone_boar.png", "rows": [{ "name": "move", "frames": 6 }, { "name": "attack", "frames": 6 }, { "name": "death", "frames": 4 }] },
