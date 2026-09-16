@@ -96,14 +96,42 @@
     .skill-ups{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.skill-ups button,.skill-unlock{
       min-height:38px;margin:3px 0 0;padding:5px 3px;text-align:center;font-size:9px;white-space:pre-line}
     .area-list{display:grid;gap:6px}.area-btn.active{border-color:#549c8d;background:#193d37}.area-btn.ready{border-color:#8c7843}.area-btn.locked{opacity:.58}
-    .tree-wrap{overflow-x:auto;padding:7px;border:1px solid #293b41;border-radius:10px;background:#091317}
-    .tree-root{width:110px;margin:0 auto 14px;padding:7px;text-align:center;border:1px solid #67797e;border-radius:9px;
-      background:#17252b;font-size:11px;position:relative}.tree-root::after{content:"";position:absolute;left:50%;top:100%;height:9px;border-left:1px solid #59696e}
-    .branches{display:grid;gap:7px;min-width:250px}.branch{position:relative;padding-top:8px}.branch-title{text-align:center;font-size:9px;color:#acbbb8}
-    .node{position:relative;width:100%;min-height:59px;margin-top:10px;padding:6px 3px;text-align:center;background:#142127;font-size:9px}
-    .node+.node::before{content:"";position:absolute;left:50%;bottom:100%;height:11px;border-left:1px solid #526268}
-    .node.on{border-color:#4e8d70;background:#173027}.node.available{box-shadow:0 0 0 1px #6c9f923d inset;border-color:#649b8e}
-    .node b{display:block;font-size:10px}.node small{display:block;color:#92a5a1;margin-top:4px;font-size:8px;line-height:1.25}
+    .tree-viewport{position:relative;height:clamp(290px,42dvh,410px);overflow:hidden;border:1px solid #293b41;border-radius:10px;
+      background:radial-gradient(circle at 50% 0,#18302d66,#091317 45%);touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none}
+    .tree-viewport.dragging{cursor:grabbing}.tree-world{position:absolute;left:0;top:0;width:max-content;min-width:100%;padding:38px 12px 15px;
+      transform-origin:0 0;will-change:transform}.tree-camera{position:absolute;z-index:5;right:7px;top:7px;display:flex;gap:3px;padding:3px;
+      border:1px solid #344a4c;border-radius:9px;background:#081216cc;backdrop-filter:blur(5px)}
+    .tree-camera button{width:31px;height:29px;min-height:0;margin:0;padding:0;border:1px solid #3b5153;border-radius:6px;background:#152529;text-align:center;font-size:12px}
+    .tree-camera button:nth-child(2){width:43px;font-size:9px;color:#afbfbc}
+    .tree-root{width:116px;margin:0 auto 17px;padding:8px;text-align:center;border:1px solid #77958d;border-radius:999px;
+      background:#172b2b;color:#d9eee8;font-size:11px;font-weight:750;position:relative;box-shadow:0 0 18px #69b9a022}
+    .tree-root::after{content:"";position:absolute;left:50%;top:100%;height:18px;border-left:2px solid #526c68}
+    .branches{display:grid;gap:17px;min-width:290px;position:relative;padding-top:15px}
+    .branches::before{content:"";position:absolute;left:calc(50% / var(--branch-count));right:calc(50% / var(--branch-count));top:0;border-top:2px solid #526c68}
+    .branch{position:relative;min-width:90px;padding-top:15px}.branch::before{content:"";position:absolute;left:50%;top:-15px;height:26px;border-left:2px solid #526c68}
+    .branch-title{position:relative;z-index:1;width:max-content;max-width:100%;margin:0 auto 3px;padding:4px 7px;border:1px solid #425b59;
+      border-radius:999px;background:#122323;text-align:center;font-size:9px;color:#c0d2ce;white-space:nowrap}
+    .tree-node-wrap{position:relative;display:flex;min-height:100px;padding-top:13px;flex-direction:column;align-items:center;text-align:center}
+    .tree-node-wrap::before{content:"";position:absolute;left:50%;top:0;height:16px;border-left:2px solid #425754}
+    .tree-node-wrap+.tree-node-wrap::before{height:25px;top:-9px}.tree-node-wrap.reached::before{border-color:#4f9c83}
+    .tree-node{position:relative;width:58px;height:58px;margin:0;padding:0;border:1px solid #46555a;border-radius:0;
+      clip-path:polygon(29% 0,71% 0,100% 29%,100% 71%,71% 100%,29% 100%,0 71%,0 29%);
+      background:linear-gradient(145deg,#182328,#0d1519);display:grid;place-items:center;color:#71817f;box-shadow:none}
+    .tree-node::before{content:"";position:absolute;inset:4px;border:1px solid #38474b;
+      clip-path:inherit;background:#101a1e}.tree-node .node-glyph{position:relative;z-index:1;font:700 14px serif}
+    .tree-node.on{border-color:#63b394;color:#c9f6df;background:#285c4a;box-shadow:0 0 17px #54c39833}
+    .tree-node.on::before{border-color:#4b8b74;background:#17382f}.tree-node.complete{border-color:#d9bd6e;color:#fff0b9;background:#675426;box-shadow:0 0 20px #e6c66b4d}
+    .tree-node.complete::before{border-color:#b99b4e;background:#40361d}.tree-node.available{border-color:#d2b861;color:#f4dfa0;animation:nodeReady 1.5s ease-in-out infinite alternate}
+    .tree-node.selected{outline:2px solid #e9f5ef;outline-offset:3px}.tree-node.locked{filter:saturate(.35);opacity:.55}
+    @keyframes nodeReady{from{box-shadow:0 0 5px #dfc77f22}to{box-shadow:0 0 18px #dfc77f66}}
+    .node-name{max-width:94px;margin-top:6px;color:#d4dfdc;font-size:9px;line-height:1.2}.node-rank{font-size:8px;color:#839691;margin-top:2px}
+    .node-pips{display:flex;gap:2px;margin-top:4px}.node-pips i{display:block;width:5px;height:3px;border-radius:3px;background:#263438}
+    .node-pips i.on{background:#69c19f;box-shadow:0 0 4px #69c19f55}.tree-node-wrap.complete .node-pips i{background:#d8bd70}
+    .tree-detail{margin-top:8px;padding:9px;border:1px solid #354c4c;border-radius:10px;background:#0d191d}
+    .tree-detail-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.tree-detail-head b{font-size:12px}.tree-detail-head span{font-size:9px;color:#a5b7b3}
+    .tree-detail p{margin:5px 0;color:#91a5a2;font-size:9px;line-height:1.4}.tree-detail-state{font-size:9px;color:#d7ca91}
+    .tree-upgrade{width:100%;min-height:38px;margin-top:7px;padding:6px;border:1px solid #647b67;border-radius:8px;background:#23463b;text-align:center;font-size:10px;font-weight:750}
+    .tree-upgrade.ready{border-color:#b89c50;background:#4a3e20;color:#fff0bc}
     .record-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:7px}
     .record-grid div{border:1px solid #2b3f45;border-radius:8px;padding:6px;text-align:center}.record-grid span{display:block;color:#809591;font-size:8px}.record-grid b{font-size:11px}
     details.dev{margin:10px;color:#728784;font-size:9px}details.dev button{margin-top:6px;border:1px solid #633e3e;border-radius:7px;
@@ -128,6 +156,7 @@
       .plan-card{min-height:62px;padding:5px 3px;text-align:center}.plan-card b{font-size:10px;margin-bottom:3px}.plan-card span{font-size:7.5px;line-height:1.25}
       .primary{min-height:35px;margin-top:5px;font-size:11px}
       .controls{border-radius:11px}.tabs{padding:5px}.tab-btn{min-height:36px}.panel{padding:7px}.train-grid{gap:5px}
+      .tree-viewport{height:310px}
     }
   </style>
 </head>
@@ -224,10 +253,18 @@
           <div class="section">
             <div class="section-head"><b>비경 인연</b><span id="nc" class="small"></span></div>
             <div class="small">강해질수록 비경도 위험하고 풍부해집니다. 비경마다 진행도가 별도로 보존됩니다.</div>
-            <div class="tree-wrap">
-              <div class="tree-root">비경 개척</div>
-              <div id="tree" class="branches"></div>
+            <div id="treeViewport" class="tree-viewport" aria-label="이동 및 확대 가능한 비경 인연 트리">
+              <div id="treeWorld" class="tree-world">
+                <div class="tree-root">비경 개척</div>
+                <div id="tree" class="branches"></div>
+              </div>
+              <div class="tree-camera" aria-label="트리 화면 조절">
+                <button id="treeZoomOut" type="button" aria-label="축소">−</button>
+                <button id="treeReset" type="button">맞춤</button>
+                <button id="treeZoomIn" type="button" aria-label="확대">＋</button>
+              </div>
             </div>
+            <div id="treeDetail" class="tree-detail"></div>
             <div id="treeHint" class="small" style="text-align:center;margin-top:7px"></div>
           </div>
         </section>
