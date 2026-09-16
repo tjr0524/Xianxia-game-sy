@@ -22,7 +22,9 @@ function css(){
 }
 function layer(){
  const game=document.querySelector('#game'),base=document.querySelector('#cv');if(!game||!base)return false;
- const c=document.createElement('canvas');c.id='v1129SpriteLayer';c.width=W;c.height=H;c.setAttribute('aria-hidden','true');base.insertAdjacentElement('afterend',c);state.layer=c;state.ctx=c.getContext('2d');state.ctx.imageSmoothingEnabled=true;return true;
+ let c=document.querySelector('#v1129SpriteLayer');
+ if(!c){c=document.createElement('canvas');c.id='v1129SpriteLayer';c.width=W;c.height=H;c.setAttribute('aria-hidden','true');base.insertAdjacentElement('afterend',c)}
+ state.layer=c;state.ctx=c.getContext('2d');state.ctx.imageSmoothingEnabled=true;return true;
 }
 function img(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('atlas load failed: '+src));i.src=src})}
 function frame(name,t,off=0){const a=META[name];return Math.floor((t+off)*a.fps)%a.frame_count}
@@ -38,6 +40,6 @@ function draw(now){requestAnimationFrame(draw);if(!state.ready||!state.ctx)retur
  for(let i=deaths.length-1;i>=0;i--){const z=deaths[i],age=performance.now()/1000-z.start;if(age>.62){deaths.splice(i,1);continue}shadow(z.x,z.y+17,21,4,.14*(1-age/.62));sprite('red_wolf_death',prog('red_wolf_death',age/.62),z.x,z.y+19,76,52,z.facing<0,1-age*.35)}
  const p=s.P;if(p){let moving=false,dx=0;if(prevP){dx=p.x-prevP.x;moving=Math.hypot(dx,p.y-prevP.y)>.18}if(Math.abs(dx)>.12)pFacing=dx<0?-1:1;if(p.cd>0.01&&p.tx!==undefined&&Math.abs(p.tx-p.x)>2)pFacing=p.tx<p.x?-1:1;const mortal=(s.M?.realm?.major??-1)<0,atk=s.M?.cult?.atk||1,maxCd=Math.max(.2,.55-(atk-1)*.02),att=!mortal&&p.cd>0.01;let name='player_move',ff=0,w=38,h=65;if(att){name='player_attack';ff=prog(name,1-Math.min(maxCd,p.cd)/maxCd);w=54;h=72}else if(moving)ff=frame(name,t);shadow(p.x,p.y+15,13,3.5,.18);sprite(name,ff,p.x,p.y+17,w,h,pFacing<0,1);prevP={x:p.x,y:p.y}}
 }
-async function boot(){try{css();if(!layer())throw new Error('game canvas not found');state.atlas=await img('assets/brush_v1/brush_v1_atlas_v2.png?v=11.29');state.ready=true;document.documentElement.dataset.spriteRuntime='11.29-ready';console.info('[xianxia] sprite runtime 11.29 ready');requestAnimationFrame(draw)}catch(e){state.error=String(e?.message||e);document.documentElement.dataset.spriteRuntime='11.29-error';console.warn('[xianxia] sprite runtime 11.29 failed',e)}}
+async function boot(){try{css();if(!layer())throw new Error('game canvas not found');state.atlas=await img('assets/brush_v1/brush_v1_atlas.png?v=11.29');state.ready=true;document.documentElement.dataset.spriteRuntime='11.29-ready';console.info('[xianxia] sprite runtime 11.29 ready');requestAnimationFrame(draw)}catch(e){state.error=String(e?.message||e);document.documentElement.dataset.spriteRuntime='11.29-error';console.warn('[xianxia] sprite runtime 11.29 failed',e)}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
