@@ -167,6 +167,7 @@ function loadState(){
   state.herb3=Number(state.herb3)||0;
   if(!AREAS.some(area=>area.id===state.area))state.area='qingyun';
   if(!PLANS.some(plan=>plan.id===state.settings.plan))state.settings.plan='harvest';
+  if(!['train','areas'].includes(state.settings.tab))state.settings.tab='train';
   if(state.realm.major>=0&&!Object.values(state.skills).some(skill=>skill.u))state.skills.sword.u=1;
   return state;
 }
@@ -1585,7 +1586,7 @@ function setDestination(point,allowTarget=true){
 }
 
 function activateTab(name,persist=true,toggleMenu=false){
-  const valid=['train','skills','areas','tree'].includes(name)?name:'train';
+  const valid=['train','areas'].includes(name)?name:'train';
   const previous=M.settings.tab||'train';
   const compact=!!window.matchMedia?.('(max-width:920px)').matches;
   if(compact&&toggleMenu)mobileMenuOpen=valid===previous?!mobileMenuOpen:true;
