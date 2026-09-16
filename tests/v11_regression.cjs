@@ -258,15 +258,22 @@ assert.ok(initiateReturns>=16,`new cultivator can disengage and return (${initia
 assert.ok(initiateStoneRuns>=12,`starter sword art earns spirit stones (${initiateStoneRuns}/24)`);
 
 const html=fs.readFileSync(new URL('../index.html',`file://${__filename}`),'utf8');
+const freeExpedition=fs.readFileSync(new URL('../systems_v11_20.js',`file://${__filename}`),'utf8');
+const panelUx=fs.readFileSync(new URL('../systems_v11_22.js',`file://${__filename}`),'utf8');
+const visualUx=fs.readFileSync(new URL('../visual_v11_23.js',`file://${__filename}`),'utf8');
 for(const match of code.matchAll(/\$\('#([^']+)'\)/g)){
   assert.match(html,new RegExp(`id=["']${match[1]}["']`),`HTML contains #${match[1]}`);
 }
 assert.match(html,/game_v11\.js/);
-assert.match(html,/game_v11\.js\?v=11\.4/,'entrypoint uses an explicit cache-busting version');
+assert.match(html,/game_v11\.js\?v=11\.23/,'entrypoint uses the current cache-busting version');
+assert.match(html,/visual_v11_23\.css\?v=11\.23/,'v11.23 visual theme is loaded');
+assert.match(html,/visual_v11_23\.js\?v=11\.23/,'v11.23 visual state layer is loaded last');
 assert.doesNotMatch(html,/game_v10\.js|late_warning\.js/);
-assert.match(html,/\.plan-grid\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/,'mobile plans stay in one compact row');
+assert.match(freeExpedition,/#planChoices,.expedition-plan-label,#objective\{display:none!important\}/,'removed expedition plans stay hidden');
 assert.match(html,/\.controls\{position:fixed;z-index:30/,'mobile progression menu is a fixed bottom sheet');
-assert.match(code,/mobileMenuOpen=valid===previous\?!mobileMenuOpen:true/,'active mobile tab toggles the bottom sheet');
+assert.match(panelUx,/setOpen\(wasOpen&&wasActive\?false:true\)/,'active mobile tab toggles the bottom sheet');
+assert.match(panelUx,/if\(dy>34\)closePanel\(\)/,'mobile panel supports the v11.22 swipe-close gesture');
+assert.doesNotMatch(visualUx,/replaceState|localStorage|sessionStorage/,'visual layer does not mutate progression or saves');
 assert.match(code,/addEventListener\('dblclick'.*preventDefault/,'double-tap zoom prevention is installed');
 assert.match(html,/id="treeDetail" class="tree-detail"/,'affinity tree has a dedicated node detail panel');
 assert.match(code,/className='tree-node-wrap'/,'affinity upgrades render as connected nodes');
