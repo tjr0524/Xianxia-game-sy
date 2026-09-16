@@ -97,4 +97,8 @@ afterPaint(()=>{
 
 P.fitRealmAll=fitRealmAll;
 P.focusCurrentRealm=focusCurrentRealm;
+
+const next=document.createElement('script');
+next.src='progression_v11_6.js?v=11.6';
+document.head.appendChild(next);
 })();
