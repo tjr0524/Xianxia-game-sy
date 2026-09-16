@@ -20,9 +20,24 @@ P.fitRealmAll=fitRealmAll;P.focusCurrentRealm=focusCurrentRealm;
 
 if(!document.querySelector('script[data-v119-ui]')){
   const next=document.createElement('script');
-  next.src='ui_v11_9.js?v=11.9';
+  next.src='ui_v11_9.js?v=11.10';
   next.dataset.v119Ui='1';
   next.async=false;
+  next.onload=()=>{
+    if(!document.querySelector('script[data-v1110-stagehub]')){
+      const hub=document.createElement('script');
+      hub.src='ui_v11_10.js?v=11.10';
+      hub.dataset.v1110Stagehub='1';
+      hub.async=false;
+      document.head.appendChild(hub);
+    }
+  };
   document.head.appendChild(next);
+}else if(!document.querySelector('script[data-v1110-stagehub]')){
+  const hub=document.createElement('script');
+  hub.src='ui_v11_10.js?v=11.10';
+  hub.dataset.v1110Stagehub='1';
+  hub.async=false;
+  document.head.appendChild(hub);
 }
 })();
