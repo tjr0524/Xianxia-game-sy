@@ -1,6 +1,7 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
+const {execFileSync}=require('node:child_process');
 const root=path.resolve(__dirname,'..');
 const manifest=JSON.parse(fs.readFileSync(path.join(root,'assets/ink_v1/manifest.json'),'utf8'));
 assert.equal(manifest.version,'1.0.0');
@@ -21,4 +22,8 @@ assert.doesNotMatch(html,/sprite_runtime_v11_30\.js/);
 const runtime=fs.readFileSync(path.join(root,'ink_runtime_v11_31.js'),'utf8');
 assert.match(runtime,/prepare\('player'/);
 assert.match(runtime,/anchored\('player'/);
+assert.match(runtime,/function spansFor/);
+assert.match(runtime,/document\.currentScript/);
+assert.doesNotMatch(html,/ASSET_CACHE_TOKEN/);
+execFileSync(process.execPath,[path.join(root,'scripts/stamp_asset_cache.cjs'),'--check'],{stdio:'pipe'});
 console.log(`ink v11.31 assets: ${files.length} files and runtime entrypoints verified`);

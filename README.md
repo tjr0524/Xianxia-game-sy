@@ -68,6 +68,7 @@
 별도 빌드 과정 없이 `index.html`을 실행합니다. 정적 호스팅은 GitHub Pages를 사용합니다.
 
 ```bash
+node scripts/stamp_asset_cache.cjs
 node --check game_v11.js
 node --check visual_v11_25.js
 node tests/v11_regression.cjs
