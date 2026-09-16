@@ -7,6 +7,8 @@ const g=cv.getContext('2d');
 const W=700;
 const H=460;
 const EXIT={x:350,y:438,r:27};
+const PLAYER_GROUND_OFFSET=23;
+const EXIT_APPROACH={x:EXIT.x,y:EXIT.y-PLAYER_GROUND_OFFSET};
 const RUN_TIME=25;
 const MAJORS=['연기','축기','결단','원영'];
 const HN=['하급','중급','상급'];
@@ -713,7 +715,7 @@ function randomPoint(margin=34){
 }
 function edgePoint(){
   const edge=Math.floor(Math.random()*3);
-  const margin=22;
+  const margin=48;
   if(edge===0)return {x:margin,y:58+Math.random()*342};
   if(edge===1)return {x:W-margin,y:58+Math.random()*342};
   return {x:42+Math.random()*616,y:margin};
@@ -770,7 +772,7 @@ function spawnBeast(){
       const anchor=pool[Math.floor(Math.random()*pool.length)];
       const angle=Math.random()*6.28;
       const radius=28+Math.random()*45;
-      point={x:clamp(anchor.x+Math.cos(angle)*radius,24,676),y:clamp(anchor.y+Math.sin(angle)*radius,24,420)};
+      point={x:clamp(anchor.x+Math.cos(angle)*radius,48,652),y:clamp(anchor.y+Math.sin(angle)*radius,40,408)};
     }
   }
   return actor(type,point?{p:point,homeX:point.x,homeY:point.y}:{});
@@ -816,8 +818,8 @@ function begin(){
     lightningTimer:M.area==='thunder'?2.2:999,
     skillCooldowns:Object.fromEntries(SKILLS.map(skill=>[skill.id,0]))
   };
-  P.x=P.tx=EXIT.x;
-  P.y=P.ty=EXIT.y;
+  P.x=P.tx=EXIT_APPROACH.x;
+  P.y=P.ty=EXIT_APPROACH.y;
   P.target=null;
   P.max=isMortal()?36:Math.floor((90+(M.cult.hp-1)*38)*realmPower());
   P.hp=P.max;
@@ -1064,8 +1066,9 @@ function update(dt){
   P.x=clamp(P.x,11,689);
   P.y=clamp(P.y,11,449);
 
-  if(distance(P,EXIT)>68)run.left=1;
-  if(run.left&&distance(P,EXIT)<EXIT.r){finish('return');return}
+  const exitDistance=Math.hypot(P.x-EXIT.x,P.y+PLAYER_GROUND_OFFSET-EXIT.y);
+  if(exitDistance>68)run.left=1;
+  if(run.left&&exitDistance<EXIT.r+9){finish('return');return}
 
   run.herbTimer-=dt;
   if(run.herbLeft>0&&run.herbTimer<=0){
@@ -1601,7 +1604,7 @@ UI.start.onclick=begin;
 UI.ret.onclick=()=>{
   if(phase!=='run')return;
   P.target=null;
-  P.tx=EXIT.x;P.ty=EXIT.y;
+  P.tx=EXIT_APPROACH.x;P.ty=EXIT_APPROACH.y;
   UI.notice.textContent='귀환진으로 복귀합니다. 도중의 전리품은 경로 위에서만 수집됩니다.';
 };
 $('#devReset').onclick=()=>{
