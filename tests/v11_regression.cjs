@@ -20,11 +20,16 @@ class Element{
     this.textContent='';
     this.innerHTML='';
     this.style={};
+    this.style.setProperty=()=>{};
     this.classList=new ClassList();
     this.dataset={};
     this.children=[];
     this.disabled=false;
     this.onclick=null;
+    this.clientWidth=700;
+    this.clientHeight=460;
+    this.scrollWidth=700;
+    this.scrollHeight=460;
   }
   appendChild(child){this.children.push(child);return child}
   addEventListener(){}
@@ -262,5 +267,10 @@ assert.match(html,/\.plan-grid\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\
 assert.match(html,/\.controls\{position:fixed;z-index:30/,'mobile progression menu is a fixed bottom sheet');
 assert.match(code,/mobileMenuOpen=valid===previous\?!mobileMenuOpen:true/,'active mobile tab toggles the bottom sheet');
 assert.match(code,/addEventListener\('dblclick'.*preventDefault/,'double-tap zoom prevention is installed');
+assert.match(html,/id="treeDetail" class="tree-detail"/,'affinity tree has a dedicated node detail panel');
+assert.match(code,/className='tree-node-wrap'/,'affinity upgrades render as connected nodes');
+assert.match(html,/id="treeViewport" class="tree-viewport"/,'affinity tree uses a dedicated pan and zoom viewport');
+assert.match(code,/treeCamera\.pointers/,'affinity tree supports pointer pan and pinch state');
+assert.match(code,/zoomTreeAt\(event\.clientX,event\.clientY,1\.3\)/,'affinity tree supports double-tap zoom');
 
-console.log(`v11 regression: 31 assertions passed; mortal ${mortalReturns}/24 safe, ${mortalProgress}/24 entry-ready; initiate ${initiateReturns}/24 safe, ${initiateStoneRuns}/24 with stones`);
+console.log(`v11 regression: 36 assertions passed; mortal ${mortalReturns}/24 safe, ${mortalProgress}/24 entry-ready; initiate ${initiateReturns}/24 safe, ${initiateStoneRuns}/24 with stones`);
