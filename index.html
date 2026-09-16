@@ -75,7 +75,7 @@
     .soft{min-height:42px;padding:7px 10px;background:#20343a;text-align:center;font-weight:700}
     .notice{min-height:22px;margin-top:6px;color:#a9b8b5;font-size:11px;line-height:1.45}
     .controls{min-height:650px}
-    .tabs{position:sticky;top:0;z-index:6;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:8px;
+    .tabs{position:sticky;top:0;z-index:6;display:grid;grid-template-columns:repeat(2,1fr);gap:4px;padding:8px;
       border-bottom:1px solid var(--line);background:#0d181df2;backdrop-filter:blur(8px)}
     .tab-btn{min-height:38px;padding:5px 3px;margin:0;font-size:11px;background:#142128}
     .tab-btn.active{border-color:#5aa997;background:#1d4b43;color:#e8fff8}
@@ -158,6 +158,12 @@
       .controls{border-radius:11px}.tabs{padding:5px}.tab-btn{min-height:36px}.panel{padding:7px}.train-grid{gap:5px}
       .tree-viewport{height:310px}
     }
+
+    .legacy-ui,.legacy-panel{display:none!important}
+    .unified-section{overflow:hidden}.unified-map{position:relative;height:clamp(390px,58dvh,620px);overflow:hidden;border:1px solid #2d4247;border-radius:11px;background:radial-gradient(circle at 50% 10%,#19312e66,#081216 55%);touch-action:none;cursor:grab}
+    .unified-map:active{cursor:grabbing}.map-world{position:absolute;left:0;top:0;transform-origin:0 0;min-width:980px;min-height:650px}.realm-world{min-width:1660px;min-height:760px}.map-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}.map-line{stroke:#38514f;stroke-width:2}.map-line.right{stroke:#6a5b3d}.map-line.area-link,.map-line.unlock-link{stroke:#9b8048;stroke-width:3;stroke-dasharray:7 5}.map-line.node-link{stroke:#385c55}
+    .map-node{position:absolute;width:130px;min-height:70px;padding:8px;border:1px solid #385057;border-radius:12px;background:#111e23;text-align:center;box-shadow:0 8px 20px #0005;z-index:2}.map-node b{display:block;font-size:11px}.map-node span{display:block;margin-top:4px;font-size:9px;color:#9eb0ac}.map-node small{display:block;margin-top:5px;font-size:8px;color:#c5b987}.map-node.on{border-color:#57a88f;background:#173a32}.map-node.ready{border-color:#c0a255;box-shadow:0 0 16px #d6b75b35}.map-node.realm-node{width:150px;border-color:#b5944f;background:#302819}.map-node.area-node{width:250px;min-height:90px;border-color:#806b42;background:#211e17}.map-node.realm-up-node{width:110px;min-height:68px}.map-node:disabled{opacity:.48}.map-label{position:absolute;color:#a8bbb6;font-size:11px;font-weight:800;letter-spacing:.08em}.map-note{position:absolute;left:60px;top:35px;color:#829691;font-size:10px}.map-mini{display:flex;gap:3px;margin-top:6px}.map-mini button{flex:1;min-width:0;padding:4px 2px;border:1px solid #3c5458;border-radius:5px;background:#17272c;font-size:8px}.map-mini button:disabled{opacity:.35}
+    @media(max-width:560px){.unified-map{height:390px}.map-world{min-width:980px}.realm-world{min-width:1660px}.map-node{width:120px}}
   </style>
 </head>
 <body>
@@ -206,12 +212,9 @@
       </section>
       <aside class="card controls">
         <nav class="tabs" aria-label="수련 메뉴">
-          <button class="tab-btn active" data-tab="train">수련</button>
-          <button class="tab-btn" data-tab="skills">법술</button>
-          <button class="tab-btn" data-tab="areas">비경</button>
-          <button class="tab-btn" data-tab="tree">인연</button>
+          <button class="tab-btn active" data-tab="train">수련</button>\n          <button class="tab-btn" data-tab="areas">비경 개척</button>
         </nav>
-        <section class="panel active" data-panel="train">
+        <section class="panel active" data-panel="train">\n          <div class="section unified-section"><div class="section-head"><b>수련도</b><span class="small">왼쪽 육신·기초 / 오른쪽 법술·전승</span></div><div class="small">경지를 중심으로 두 성장축이 함께 뻗습니다. 노드를 눌러 바로 수련·해금·강화합니다.</div><div id="cultivationMap" class="unified-map"></div></div>\n          <div class="legacy-ui">
           <div class="section">
             <div class="section-head"><b>경지 · 성장 관문</b><span id="cap" class="badge">수련 잠김</span></div>
             <div id="realmInfo" class="small"></div>
@@ -235,21 +238,18 @@
               <div><span>최다 격파</span><b id="bestKills">0</b></div>
             </div>
           </div>
-        </section>
-        <section class="panel" data-panel="skills">
+          </div>\n        </section>\n        <section class="panel legacy-panel" data-panel="skills">
           <div class="section">
             <div class="section-head"><b>법술 전승</b><span class="small">모두 독립 쿨타임 자동 발동</span></div>
             <div class="small">경지에 도달한 뒤 자원으로 해금해야 합니다. 위력·범위·순환을 따로 강화할 수 있습니다.</div>
             <div id="skillTree"></div>
           </div>
         </section>
-        <section class="panel" data-panel="areas">
-          <div class="section">
+        <section class="panel" data-panel="areas">\n          <div class="section unified-section"><div class="section-head"><b>천하 비경도</b><span class="small">드래그 이동 · 휠/핀치 확대</span></div><div class="small">청운산에서 시작해 강화 도중 다음 비경이 가지처럼 열립니다. 모든 비경과 강화 노드를 한 화면에서 확인합니다.</div><div id="realmMap" class="unified-map realm-map"></div></div>\n          <div class="legacy-ui"><div class="section">
             <div class="section-head"><b>비경 선택</b><span class="small">이전 비경 재입장 가능</span></div>
             <div id="areas" class="area-list"></div>
           </div>
-        </section>
-        <section class="panel" data-panel="tree">
+          </div>\n        </section>\n        <section class="panel legacy-panel" data-panel="tree">
           <div class="section">
             <div class="section-head"><b>비경 인연</b><span id="nc" class="small"></span></div>
             <div class="small">강해질수록 비경도 위험하고 풍부해집니다. 비경마다 진행도가 별도로 보존됩니다.</div>
@@ -276,6 +276,6 @@
     </main>
     <div class="footer">탭 또는 드래그로 이동 · 검과 해금 법술은 자동 공격 · 출구는 남쪽 중앙 고정 · 실패 시 이번 전리품 40% 회수</div>
   </div>
-  <script src="game_v11.js?v=11.4"></script>
+  <script src="game_v12.js?v=12.0"></script>\n  <script src="ui_v12.js?v=12.0"></script>
 </body>
 </html>
