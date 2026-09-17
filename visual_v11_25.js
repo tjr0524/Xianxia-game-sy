@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
-if(window.__xianxiaVisualVersion==='11.25.1')return;
-window.__xianxiaVisualVersion='11.25.1';
+if(window.__xianxiaVisualVersion==='11.25.2')return;
+window.__xianxiaVisualVersion='11.25.2';
 
 const $=s=>document.querySelector(s);
 const GLYPHS={qingyun:'青',blackwind:'風',blood:'血',thunder:'雷'};
@@ -16,7 +16,7 @@ function promoteTheme(){
     link.rel='stylesheet';
     document.head.appendChild(link);
   }
-  link.href='visual_v11_25.css?v=11.25.1';
+  link.href='visual_v11_25.css?v=11.25.2';
   document.head.appendChild(link);
 }
 
@@ -43,7 +43,8 @@ body.v25-theme::after{color:rgba(41,70,69,.014)!important}
 }
 .v25-theme .overlay::before{opacity:.18!important}
 @media(max-width:920px){
-  body.v25-theme .controls{
+  /* v11.22 owns the mobile layout. Do not pin its full-screen panels to the bottom. */
+  body.v25-theme:not(.v22-panel-mode):not(.v22-expedition-mode):not(.v22-combat-mode) .controls{
     position:fixed!important;
     z-index:30!important;
     left:6px!important;
@@ -54,6 +55,20 @@ body.v25-theme::after{color:rgba(41,70,69,.014)!important}
     min-height:0!important;
     max-height:min(72dvh,640px)!important;
     overflow:auto!important;
+  }
+  body.v25-theme.v22-panel-mode .controls{
+    position:static!important;
+    z-index:30!important;
+    left:auto!important;
+    right:auto!important;
+    top:auto!important;
+    bottom:auto!important;
+    width:100%!important;
+    height:100%!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow:hidden!important;
+    margin:0!important;
   }
 }
 `;
@@ -156,7 +171,7 @@ function observe(){
 function boot(){
   promoteTheme();
   installCorrections();
-  document.documentElement.dataset.visualVersion='11.25.1';
+  document.documentElement.dataset.visualVersion='11.25.2';
   document.body.classList.remove('v23-theme','v24-theme');
   document.body.classList.add('v25-theme');
   installArenaChrome();
