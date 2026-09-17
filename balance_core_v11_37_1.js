@@ -4,7 +4,7 @@ const PATCH_VERSION='11.50.0';
 const FEEDBACK_VERSION='11.40.0';
 const RESULT_VERSION='11.41.0';
 const MAP_DETAIL_VERSION='11.42.0';
-const COOLDOWN_VERSION='11.45.0';
+const COOLDOWN_VERSION='11.50.0';
 const TREE_CAMERA_VERSION='11.45.0';
 const HYGIENE_VERSION='11.47.1';
 const BASE='balance_core_v11_37.js';
@@ -39,9 +39,6 @@ function installSnapshotGovernor(){
   D.snapshot=()=>{
     calls++;
     const now=performance.now();
-    // Rendering/HUD code only needs display-rate state. The simulation does not use
-    // debug snapshots, so reusing one clone prevents 3-5 RAF consumers from each
-    // JSON-cloning the entire world every frame.
     const running=cached?.phase==='run'||document.body?.classList.contains('v1133-run');
     const ttl=running?48:450;
     if(cached&&now-cachedAt<ttl)return cached;
@@ -102,7 +99,7 @@ function loadCooldownHud(){
   script.src=`combat_cooldown_hud_v11_43.js?v=${encodeURIComponent(COOLDOWN_VERSION)}`;
   script.async=false;
   script.onload=loadUiHygiene;
-  script.onerror=()=>{console.warn('[ui-11.45] cooldown HUD load failed');loadUiHygiene()};
+  script.onerror=()=>{console.warn('[ui-11.50] cooldown HUD load failed');loadUiHygiene()};
   document.body.appendChild(script);
 }
 
