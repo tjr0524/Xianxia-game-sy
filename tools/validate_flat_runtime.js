@@ -5,10 +5,11 @@ const root=process.argv[2]||'.';
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const index=read('index.html');
 const kernel=read('runtime_kernel_v11_45.js');
-if(!index.includes('BUILD 11.46.0'))throw new Error('test build label is not 11.46.0');
-if(!kernel.includes("const BUILD='11.46.0'"))throw new Error('canonical test build is not 11.46.0');
+if(!index.includes('BUILD 11.47.0'))throw new Error('test build label is not 11.47.0');
+if(!kernel.includes("const BUILD='11.47.0'"))throw new Error('canonical test build is not 11.47.0');
 const flat=[
   'game_runtime_v11_45.js',
+  'runtime_frame_hub_v11_47.js',
   'ink_runtime_world_v11_45.js',
   'progression_runtime_v11_45.js',
   'systems21_runtime_v11_45.js',
@@ -37,6 +38,7 @@ const order=[
   'tree_camera_gesture_v11_44.js',
   'tree_touch_fix_v11_37_4.js',
   'game_runtime_v11_45.js',
+  'runtime_frame_hub_v11_47.js',
   'ink_runtime_world_v11_45.js',
   'progression_runtime_v11_45.js',
   'systems_v11_20.js',
