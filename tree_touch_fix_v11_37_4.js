@@ -95,34 +95,46 @@ function closeDeveloperMenu(){
   modal.classList.remove('open');
 }
 
-function badgePointerUp(event){
-  const badge=closest(event.target,'#buildVersion');
-  if(!badge)return;
+function brandClick(event){
+  const brand=closest(event.target,'.brand-mark');
+  if(!brand)return;
   event.preventDefault();
   event.stopImmediatePropagation();
   openDeveloperMenu();
 }
 
-document.addEventListener('pointerup',badgePointerUp,true);
-// Safari fallback if a pointer event is not synthesized for the fixed badge.
-document.addEventListener('touchend',event=>{
-  const badge=closest(event.target,'#buildVersion');
-  if(!badge)return;
+document.addEventListener('click',brandClick,true);
+document.addEventListener('keydown',event=>{
+  const brand=closest(event.target,'.brand-mark');
+  if(!brand||!(event.key==='Enter'||event.key===' '))return;
   event.preventDefault();
   event.stopImmediatePropagation();
   openDeveloperMenu();
-},{capture:true,passive:false});
+},true);
 
-document.addEventListener('DOMContentLoaded',()=>{
+function setupBrandTrigger(){
+  const brand=document.querySelector('.brand-mark');
+  if(brand){
+    brand.setAttribute('role','button');
+    brand.setAttribute('aria-label','개발자 메뉴 열기');
+    brand.tabIndex=0;
+  }
   const badge=document.querySelector('#buildVersion');
-  if(badge){badge.setAttribute('role','button');badge.setAttribute('aria-label','개발자 메뉴 열기');badge.tabIndex=0}
-},{once:true});
+  if(badge){
+    badge.removeAttribute('role');
+    badge.removeAttribute('aria-label');
+    badge.removeAttribute('tabindex');
+    badge.setAttribute('aria-hidden','true');
+  }
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setupBrandTrigger,{once:true});
+else setupBrandTrigger();
 
 const style=document.createElement('style');
 style.id='tree-touch-fix-v11-37-4';
 style.textContent=`
 ${NODE_SELECTOR}{touch-action:manipulation!important;-webkit-user-select:none!important;user-select:none!important}
-.build-version{pointer-events:auto!important;cursor:pointer!important;touch-action:manipulation!important;min-width:96px!important;min-height:30px!important;padding:7px 12px!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:9px!important;z-index:2147483000!important}
+.brand-mark{cursor:pointer!important;touch-action:manipulation!important}
 #buildDevModal{position:fixed;inset:0;z-index:2147483640;display:none;pointer-events:none}
 #buildDevModal.open{display:block;pointer-events:auto}
 .build-dev-backdrop{position:absolute;inset:0;background:#020607b8;backdrop-filter:blur(3px)}
