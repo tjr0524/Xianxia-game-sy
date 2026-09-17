@@ -184,4 +184,12 @@ function boot(){
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
 else boot();
+
+if(!document.querySelector('script[data-v1132-extras]')){
+  const extra=document.createElement('script');
+  extra.src='progression_extras_v11_32.js?v=11.32';
+  extra.dataset.v1132Extras='1';
+  extra.async=false;
+  document.head.appendChild(extra);
+}
 })();
