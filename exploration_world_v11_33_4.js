@@ -8,7 +8,7 @@ const camera={ready:false,x:W/2,y:H/2,prevX:null,prevY:null,leadX:0,leadY:0,last
 let world=null;
 
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
-function badge(text){const el=$('#buildVersion');if(el)el.textContent=text}
+function badge(){}
 
 function installCss(){
   $('#v11334WorldStyle')?.remove();
