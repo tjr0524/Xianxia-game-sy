@@ -1,8 +1,25 @@
 (()=>{
 'use strict';
 const LOCAL_BUILD=window.__XIANXIA_BUILD__||'11.37.2';
+let canonicalBuild=LOCAL_BUILD;
 let checking=false;
 let lastCheck=0;
+let badgeObserver=null;
+
+function pinBuildBadge(){
+  const el=document.querySelector('#buildVersion');
+  if(!el)return;
+  const wanted=`BUILD ${canonicalBuild}`;
+  if(el.textContent!==wanted)el.textContent=wanted;
+}
+
+function installBuildBadgeLock(){
+  pinBuildBadge();
+  if(badgeObserver)return;
+  const root=document.documentElement||document;
+  badgeObserver=new MutationObserver(()=>pinBuildBadge());
+  badgeObserver.observe(root,{subtree:true,childList:true,characterData:true});
+}
 
 async function clearRuntimeCaches(){
   try{
@@ -37,6 +54,11 @@ async function checkForUpdate(force=false){
     if(!res.ok)throw new Error(`version check failed: ${res.status}`);
     const data=await res.json();
     const latest=String(data.build||'').trim();
+    if(latest){
+      canonicalBuild=latest;
+      window.__XIANXIA_BUILD__=latest;
+      pinBuildBadge();
+    }
     if(!latest||latest===LOCAL_BUILD)return;
 
     console.info(`[update] ${LOCAL_BUILD} -> ${latest}`);
@@ -52,9 +74,11 @@ async function checkForUpdate(force=false){
   }
 }
 
+installBuildBadgeLock();
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installBuildBadgeLock,{once:true});
 registerWorker().then(()=>checkForUpdate(true));
 window.addEventListener('pageshow',()=>checkForUpdate(true));
 window.addEventListener('focus',()=>checkForUpdate(false));
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkForUpdate(true)});
-window.__xianxiaUpdateGuard={build:LOCAL_BUILD,check:()=>checkForUpdate(true)};
+window.__xianxiaUpdateGuard={build:LOCAL_BUILD,check:()=>checkForUpdate(true),pinBuildBadge};
 })();
