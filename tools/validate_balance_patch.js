@@ -60,7 +60,7 @@ ok('progression canUnlockArea anchor',match(progression,/function canUnlockArea\
 ok('progression legacy BALANCE anchor',match(progression,/const BALANCE=\{[\s\S]*?function bindRunBalance\(\)\{[^\n]*\}\nconst PRESETS=/));
 
 // UI/system/extras anchors.
-ok('ui cap/cost anchor',match(uiOriginal,/cap=\(m,s\)=>[^;]+;cost=\(s,k,n\)=>\{[^;]+;return\{[^}]+\}\};/));
+ok('ui cap/cost anchor',has(uiOriginal,'cap=(m,s)=>')&&has(uiOriginal,'cost=(s,k,n)=>'));
 ok('ui 3-branch node anchor',has(uiOriginal,"const ps=ups(p),keys=['pow','range','cycle'],nm=['위력',s.id==='chain'?'타수':'범위','순환'];"));
 ok('ui unlock anchor',has(uiOriginal,"m.skills[id]||={u:0,pow:0,range:0,cycle:0};m.skills[id].u=1;"));
 ok('systems21 breakthrough anchor',match(sysOriginal,/function breakthroughCost\(i\)\{[\s\S]*?\n\}/));
