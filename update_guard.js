@@ -1,7 +1,6 @@
 (()=>{
 'use strict';
 const LOCAL_BUILD=String(window.__XIANXIA_BUILD__||'').trim()||'unknown';
-const IOS_WEBKIT=/iP(?:hone|ad|od)/.test(navigator.userAgent)&&/WebKit/i.test(navigator.userAgent);
 
 function cleanLegacyRefreshParams(){
   try{
@@ -27,20 +26,10 @@ async function retireLegacyUpdater(){
   }catch(_){ }
 }
 
-function loadIosStability(){
-  if(!IOS_WEBKIT||window.__xianxiaIosStability)return;
-  if(document.querySelector('script[data-ios-stability-49]'))return;
-  const s=document.createElement('script');
-  s.dataset.iosStability49='1';
-  s.src='ios_stability_v11_48.js?v=11.49.0';
-  s.async=true;
-  s.onerror=()=>console.warn('[ios-stability] bootstrap failed');
-  document.head.appendChild(s);
-}
-
 cleanLegacyRefreshParams();
 retireLegacyUpdater();
-loadIosStability();
+// iOS stability is loaded exactly once by the core loader after __xianxiaDebug exists.
+// Do not dynamically inject another copy here: old copies keep their RAF loop alive.
 window.__XIANXIA_PENDING_BUILD__='';
 window.__xianxiaUpdateGuard={
   build:LOCAL_BUILD,
