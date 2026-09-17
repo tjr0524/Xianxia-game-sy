@@ -2,7 +2,18 @@
 'use strict';
 const VERSION='11.35.0',W=1800,H=2400,EXIT_X=900,EXIT_Y=1200,EXIT_APPROACH_Y=1177;
 const VISIBLE_H=960,SMOOTHING=.14,DEAD_X=.08,DEAD_Y=.06,LOOK_AHEAD=.08;
+const displayBuild=()=>window.__XIANXIA_BUILD__||VERSION;
 const badge=text=>{const e=document.querySelector('#buildVersion');if(e)e.textContent=text};
+function ensureUpdateGuard(){
+  if(window.__xianxiaUpdateGuard)return;
+  window.__XIANXIA_BUILD__=window.__XIANXIA_BUILD__||VERSION;
+  const s=document.createElement('script');
+  s.src=`update_guard.js?boot=${Date.now()}`;
+  s.async=true;
+  s.onerror=()=>console.warn('[update] guard bootstrap failed');
+  document.head.appendChild(s);
+}
+ensureUpdateGuard();
 function load(path){const x=new XMLHttpRequest();x.open('GET',`${path}?v=${encodeURIComponent(VERSION)}`,false);x.send(null);if(!((x.status>=200&&x.status<300)||x.status===0))throw new Error(`${path} load failed: ${x.status}`);return x.responseText}
 function once(src,from,to,label){const i=src.indexOf(from);if(i<0)throw new Error(`exploration patch missing: ${label}`);return src.slice(0,i)+to+src.slice(i+from.length)}
 try{
@@ -95,11 +106,11 @@ const EXIT_APPROACH={x:${EXIT_X},y:${EXIT_APPROACH_Y}};`,'world constants');
     layer.style.right='auto';layer.style.bottom='auto';layer.style.width=\`${'${W*m.scale}'}px\`;layer.style.height=\`${'${H*m.scale}'}px\`;
     layer.style.maxWidth='none';layer.style.maxHeight='none';layer.style.transform='none';layer.style.transformOrigin='0 0';
   }
-  buildBadge(\`BUILD ${'${VERSION}'} · CAM ${'${m.scale.toFixed(2)}'}× · 960H ✓\`);
+  buildBadge(\`BUILD ${'${window.__XIANXIA_BUILD__||VERSION}'} · CAM ${'${m.scale.toFixed(2)}'}× · 960H ✓\`);
 }`,'camera behavior');
   src=once(src,`  const target=worldToScreen(EXIT_APPROACH.x,EXIT_APPROACH.y),p=s.P||{x:350,y:230},player=worldToScreen(p.x,p.y);`,`  const target=worldToScreen(EXIT_APPROACH.x,EXIT_APPROACH.y),p=s.P||{x:W/2,y:H/2},player=worldToScreen(p.x,p.y);`,'guide fallback');
   src=once(src,`function screenToWorld(e){return{x:clamp((e.clientX-state.left)/state.scale,11,689),y:clamp((e.clientY-state.top)/state.scale,11,449)}}`,`function screenToWorld(e){return{x:clamp((e.clientX-state.left)/state.scale,11,W-11),y:clamp((e.clientY-state.top)/state.scale,11,H-11)}}`,'pointer world bounds');
   (0,eval)(`${src}\n//# sourceURL=exploration_mode_v11_33.worldscale.js`);
-  badge(`BUILD ${VERSION} · CAM ✓ · WORLD ${W}×${H}`);
-}catch(error){console.error(error);badge(`BUILD ${VERSION} · CAM LOAD ERR`)}
+  badge(`BUILD ${displayBuild()} · CAM ✓ · WORLD ${W}×${H}`);
+}catch(error){console.error(error);badge(`BUILD ${displayBuild()} · CAM LOAD ERR`)}
 })();
