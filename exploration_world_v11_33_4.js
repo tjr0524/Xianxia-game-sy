@@ -1,9 +1,9 @@
 (()=>{
 'use strict';
-const VERSION='11.33.5';
-const W=700,H=460,PAD_X=260,PAD_Y=390;
+const VERSION='11.34.0';
+const W=1120,H=1200;
 const $=s=>document.querySelector(s);
-const camera={ready:false,x:350,y:230,prevX:null,prevY:null,leadX:0,leadY:0};
+const camera={ready:false,x:W/2,y:H/2,prevX:null,prevY:null,leadX:0,leadY:0};
 let world=null;
 
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
@@ -17,12 +17,11 @@ function installCss(){
   style.textContent=`
 #v11335World{display:none;position:absolute;z-index:1;left:0;top:0;width:${W}px;height:${H}px;transform-origin:0 0;will-change:transform;pointer-events:none}
 body.v1133-run #v11335World{display:block}
-#v11335World #v1133Backdrop{position:absolute!important;z-index:0!important;left:-${PAD_X}px!important;top:-${PAD_Y}px!important;right:auto!important;bottom:auto!important;inset:auto!important;width:${W+PAD_X*2}px!important;height:${H+PAD_Y*2}px!important;transform:none!important;transform-origin:0 0!important;background-position:center!important;background-size:cover!important;background-repeat:no-repeat!important;pointer-events:none!important}
+#v1133Backdrop{display:none!important}
 #v11335World #cv,#v11335World #v1131InkLayer,#v11335World #v1132GatherLayer{position:absolute!important;left:0!important;top:0!important;right:auto!important;bottom:auto!important;inset:auto!important;width:${W}px!important;height:${H}px!important;max-width:none!important;max-height:none!important;transform:none!important;transform-origin:0 0!important}
 #v11335World #cv{z-index:1!important}
 #v11335World #v1131InkLayer{z-index:2!important}
 #v11335World #v1132GatherLayer{z-index:3!important}
-body:not(.v1133-run) #v1133Backdrop{display:none!important}
 `;
   document.head.appendChild(style);
 }
@@ -38,7 +37,7 @@ function ensureWorld(){
       game.prepend(world);
     }
   }
-  const nodes=[$('#v1133Backdrop'),$('#cv'),$('#v1131InkLayer'),$('#v1132GatherLayer')].filter(Boolean);
+  const nodes=[$('#cv'),$('#v1131InkLayer'),$('#v1132GatherLayer')].filter(Boolean);
   for(const node of nodes)if(node.parentElement!==world)world.appendChild(node);
   return world;
 }
@@ -57,6 +56,8 @@ function updateCamera(mode,snap){
   const vh=Math.max(1,window.innerHeight||document.documentElement.clientHeight||844);
   const portrait=vh>vw;
   const scale=Math.max(.01,Number(mode.scale)||1);
+  const anchorX=vw*.5;
+  const anchorY=portrait?vh*.54:vh*.50;
 
   if(!camera.ready){
     camera.x=p.x;camera.y=p.y;
@@ -82,19 +83,19 @@ function updateCamera(mode,snap){
   camera.x+=(targetX-camera.x)*.20;
   camera.y+=(targetY-camera.y)*.20;
 
-  const halfViewW=Math.min(W/2,vw/(2*scale));
-  const minX=Math.max(55,halfViewW),maxX=Math.min(W-55,W-halfViewW);
+  const minX=anchorX/scale;
+  const maxX=W-(vw-anchorX)/scale;
+  const minY=anchorY/scale;
+  const maxY=H-(vh-anchorY)/scale;
   camera.x=minX<=maxX?clamp(camera.x,minX,maxX):W/2;
-  camera.y=clamp(camera.y,70,H-70);
+  camera.y=minY<=maxY?clamp(camera.y,minY,maxY):H/2;
 
-  const anchorX=vw*.5;
-  const anchorY=portrait?vh*.54:vh*.50;
   const left=anchorX-camera.x*scale;
   const top=anchorY-camera.y*scale;
   w.style.setProperty('transform',`matrix(${scale},0,0,${scale},${left},${top})`,'important');
 
   mode.camX=camera.x;mode.camY=camera.y;mode.left=left;mode.top=top;
-  badge(`BUILD ${VERSION} · CAM ${scale.toFixed(2)}× ✓`);
+  badge(`BUILD ${VERSION} · CAM ${scale.toFixed(2)}× · WORLD ${W}×${H}`);
 }
 
 function frame(){
@@ -103,9 +104,9 @@ function frame(){
   try{snap=D?.snapshot?.()}catch{}
   ensureWorld();
   if(mode?.active&&snap?.phase==='run')updateCamera(mode,snap);
-  else{resetCamera();badge(`BUILD ${VERSION} · CAM ✓`)}
+  else{resetCamera();badge(`BUILD ${VERSION} · CAM ✓ · WORLD ${W}×${H}`)}
   requestAnimationFrame(frame);
 }
 
-installCss();ensureWorld();badge(`BUILD ${VERSION} · CAM ✓`);requestAnimationFrame(frame);
+installCss();ensureWorld();badge(`BUILD ${VERSION} · CAM ✓ · WORLD ${W}×${H}`);requestAnimationFrame(frame);
 })();
