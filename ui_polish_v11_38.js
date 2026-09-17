@@ -213,7 +213,9 @@ function decorateMap(){
       const rank=(node.textContent.match(/\d+\/5/)||['0/5'])[0];
       node.innerHTML=`<span class="map-point-glyph38" aria-hidden="true">${branchGlyph(id)}</span><span class="rank">${rank}</span>`;
       const data=Object.values(D.constants.TREE||{}).flat().find(x=>x.id===id);
-      node.setAttribute('aria-label',`${data?.n||'개척 노드'} ${rank}`);
+      const label=data?.n||'개척 노드';
+      node.setAttribute('aria-label',`${label} ${rank}`);
+      if(label!=='개척 노드')node.dataset.v1140Label=label;
     }else if(node.classList.contains('map-gate')){
       const area=node.dataset.area||'';
       const name=compactAreaName(D.constants.AREAS.find(a=>a.id===area)?.name||node.textContent.replace(/^門\s*/,''));
@@ -307,9 +309,6 @@ function observe(){
 }
 function boot(){
   promoteStylesheet();
-  moveRecordsToExpedition();
-  installDetailPopover('#ascViewport','#ascDetail','.asc-node');
-  installDetailPopover('#mapViewport','#mapDetail','.map-node');
   polishPanelCopy();
   renderSpellbook();
   decoratePicker();
