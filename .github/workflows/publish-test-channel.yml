@@ -46,6 +46,8 @@ jobs:
           node --check testsrc/exploration_world_v11_33_4.js
           node --check testsrc/ui_runtime_v11_48.js
           node --check testsrc/ui_polish_v11_38.js
+          node --check testsrc/map_v11_18.js
+          node --check testsrc/visual_v11_25.js
           node --check testsrc/ui_feedback_v11_40.js
           node --check testsrc/result_flow_v11_41.js
           node --check testsrc/combat_cooldown_hud_v11_43.js
