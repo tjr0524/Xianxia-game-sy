@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const PATCH_VERSION='11.37.3';
+const PATCH_VERSION='11.37.4';
 const BASE='balance_core_v11_37.js';
 const SAVE_KEY='xianxia_proto_v11';
 window.__XIANXIA_BUILD__=PATCH_VERSION;
@@ -59,11 +59,12 @@ function restorePersistedBasic(attempt=0){
 
 try{
   try{(0,eval)(load('update_guard.js')+'\n//# sourceURL=update_guard.runtime.js')}catch(updateError){console.warn('[update] guard load failed',updateError)}
+  try{(0,eval)(load('tree_touch_fix_v11_37_4.js')+'\n//# sourceURL=tree_touch_fix_v11_37_4.runtime.js')}catch(touchError){console.warn('[touch-fix] load failed',touchError)}
   const src=load(BASE);
-  (0,eval)(src+'\n//# sourceURL=balance_core_v11_37_3.runtime.js');
+  (0,eval)(src+'\n//# sourceURL=balance_core_v11_37_4.runtime.js');
   setTimeout(()=>restorePersistedBasic(),0);
   const e=document.querySelector('#buildVersion');if(e)e.textContent=`BUILD ${PATCH_VERSION}`;
-  window.__xianxiaEncounterHotfix={version:PATCH_VERSION,compatEntrypoint:'11.37.1',basicSaveFix:true};
+  window.__xianxiaEncounterHotfix={version:PATCH_VERSION,compatEntrypoint:'11.37.1',basicSaveFix:true,treeTouchFix:true};
 }catch(error){
   console.error(error);
   const e=document.querySelector('#buildVersion');if(e)e.textContent=`BUILD ${PATCH_VERSION}`;
