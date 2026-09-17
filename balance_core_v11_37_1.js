@@ -1,16 +1,56 @@
 (()=>{
 'use strict';
-const PATCH_VERSION='11.50.1';
-const FEEDBACK_VERSION='11.40.0';
-const RESULT_VERSION='11.41.0';
-const MAP_DETAIL_VERSION='11.42.0';
-const COOLDOWN_VERSION='11.50.0';
-const TREE_CAMERA_VERSION='11.45.0';
-const HYGIENE_VERSION='11.50.1';
+const PATCH_VERSION='11.50.2';
 const BASE='balance_core_v11_37.js';
 const SAVE_KEY='xianxia_proto_v11';
-const IOS_WEBKIT=/iP(?:hone|ad|od)/.test(navigator.userAgent)&&/WebKit/i.test(navigator.userAgent);
-window.__XIANXIA_BUILD__=PATCH_VERSION;
+
+// One owner for the application build. Legacy feature patches are allowed to read
+// this value, but writes from their internal VERSION constants are ignored.
+try{
+  Object.defineProperty(window,'__XIANXIA_BUILD__',{
+    configurable:true,
+    enumerable:true,
+    get(){return PATCH_VERSION},
+    set(_value){}
+  });
+}catch(_){window.__XIANXIA_BUILD__=PATCH_VERSION}
+
+function installCanonicalHeader(){
+  const badge=document.querySelector('#buildVersion');
+  const title=document.querySelector('.brand h1');
+  if(!badge||!title)return;
+  let row=title.parentElement?.querySelector(':scope > .brand-title-row');
+  if(!row){
+    row=document.createElement('div');
+    row.className='brand-title-row';
+    title.parentNode.insertBefore(row,title);
+    row.appendChild(title);
+  }
+  if(badge.parentElement!==row)row.appendChild(badge);
+  badge.textContent=`BUILD ${PATCH_VERSION}`;
+  badge.setAttribute('aria-hidden','true');
+
+  if(document.querySelector('#canonical-build-style'))return;
+  const style=document.createElement('style');
+  style.id='canonical-build-style';
+  style.textContent=`
+.brand-title-row{display:flex!important;align-items:baseline!important;gap:7px!important;min-width:0!important}
+.brand-title-row h1{flex:0 0 auto!important;white-space:nowrap!important;word-break:keep-all!important}
+#buildVersion.build-version{position:static!important;z-index:auto!important;top:auto!important;left:auto!important;right:auto!important;bottom:auto!important;transform:none!important;display:inline!important;min-width:0!important;min-height:0!important;width:auto!important;height:auto!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;backdrop-filter:none!important;color:#8b918e!important;font:600 0/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:.04em!important;white-space:nowrap!important;pointer-events:none!important;opacity:.82!important}
+#buildVersion.build-version::after{content:"BUILD ${PATCH_VERSION}";font-size:8px!important}
+body.v22-combat-mode #buildVersion,body.v1133-run #buildVersion,body.v1141-result-mode #buildVersion{display:none!important}
+@media(max-width:560px){
+  body.v25-theme .topbar{display:flex!important;flex-wrap:wrap!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important}
+  body.v25-theme .brand{flex:1 1 100%!important;width:100%!important;min-width:0!important}
+  body.v25-theme .brand>div:last-child{min-width:0!important;flex:1 1 auto!important}
+  body.v25-theme .resources{flex:1 1 100%!important;width:100%!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important}
+  body.v25-theme .resource{min-width:0!important;width:auto!important}
+  body.v25-theme .resource>span,body.v25-theme .resource>b{white-space:nowrap!important;word-break:keep-all!important}
+}
+`;
+  (document.head||document.documentElement).appendChild(style);
+}
+installCanonicalHeader();
 
 function load(path,version=PATCH_VERSION){
   const x=new XMLHttpRequest();
@@ -26,35 +66,6 @@ try{
   const raw=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');
   if(raw?.skills?.basic&&typeof raw.skills.basic==='object')persistedBasic={...raw.skills.basic};
 }catch(error){console.warn('[save-fix] basic snapshot failed',error)}
-
-function installSnapshotGovernor(){
-  if(!IOS_WEBKIT)return;
-  const D=window.__xianxiaDebug;
-  if(!D?.snapshot||D.__snapshotGovernor)return;
-  const rawSnapshot=D.snapshot.bind(D);
-  let cached=null;
-  let cachedAt=-Infinity;
-  let calls=0,clones=0;
-  const invalidate=()=>{cached=null;cachedAt=-Infinity};
-  D.snapshot=()=>{
-    calls++;
-    const now=performance.now();
-    const running=cached?.phase==='run'||document.body?.classList.contains('v1133-run');
-    const ttl=running?48:450;
-    if(cached&&now-cachedAt<ttl)return cached;
-    cached=rawSnapshot();
-    cachedAt=now;
-    clones++;
-    return cached;
-  };
-  for(const key of ['replaceState','selectArea','selectPlan']){
-    if(typeof D[key]!=='function')continue;
-    const raw=D[key].bind(D);
-    D[key]=(...args)=>{invalidate();const out=raw(...args);invalidate();return out};
-  }
-  D.__snapshotGovernor={version:PATCH_VERSION,enabled:true,invalidate,get calls(){return calls},get clones(){return clones}};
-  console.info('[ios-stability] snapshot governor enabled',PATCH_VERSION);
-}
 
 function restorePersistedBasic(attempt=0){
   if(!persistedBasic)return;
@@ -77,79 +88,76 @@ function restorePersistedBasic(attempt=0){
       u:1
     };
     D.replaceState(M);
-    console.info('[save-fix] restored basic attack progression',M.skills.basic);
     persistedBasic=null;
   }catch(error){console.warn('[save-fix] basic restore failed',error)}
 }
 
-function loadUiHygiene(){
-  if(document.querySelector('script[data-v1145-hygiene]'))return;
+function cleanupDetailClose(detail){
+  if(!detail)return;
+  const closers=[...detail.querySelectorAll('button')].filter(button=>{
+    const text=(button.textContent||'').trim();
+    return button.classList.contains('detail-close38')||button.getAttribute('aria-label')==='상세정보 닫기'||text==='×';
+  });
+  if(closers.length<2)return;
+  const keep=closers.find(button=>button.classList.contains('detail-close38'))||closers[closers.length-1];
+  for(const button of closers)if(button!==keep)button.remove();
+}
+function cleanupDetailCloses(){
+  cleanupDetailClose(document.querySelector('#ascDetail'));
+  cleanupDetailClose(document.querySelector('#mapDetail'));
+}
+function scheduleDetailCleanup(){
+  requestAnimationFrame(cleanupDetailCloses);
+  setTimeout(cleanupDetailCloses,40);
+}
+document.addEventListener('click',event=>{
+  if(event.target?.closest?.('.asc-node,.map-node'))scheduleDetailCleanup();
+},true);
+
+function appendPatch(path,datasetKey,onload,onerror){
+  if(document.querySelector(`script[${datasetKey}]`)){onload?.();return}
   const script=document.createElement('script');
-  script.dataset.v1145Hygiene='1';
-  script.src=`ui_hygiene_v11_45.js?v=${encodeURIComponent(HYGIENE_VERSION)}`;
+  script.setAttribute(datasetKey,'1');
+  script.src=`${path}?v=${encodeURIComponent(PATCH_VERSION)}`;
   script.async=false;
-  script.onerror=()=>console.warn('[ui-11.50.1] hygiene patch load failed');
+  if(onload)script.onload=onload;
+  if(onerror)script.onerror=onerror;
   document.body.appendChild(script);
 }
-
 function loadCooldownHud(){
-  if(document.querySelector('script[data-v1143-cooldown]')){loadUiHygiene();return}
-  const script=document.createElement('script');
-  script.dataset.v1143Cooldown='1';
-  script.src=`combat_cooldown_hud_v11_43.js?v=${encodeURIComponent(COOLDOWN_VERSION)}`;
-  script.async=false;
-  script.onload=loadUiHygiene;
-  script.onerror=()=>{console.warn('[ui-11.50] cooldown HUD load failed');loadUiHygiene()};
-  document.body.appendChild(script);
+  appendPatch('combat_cooldown_hud_v11_43.js','data-v1143-cooldown',()=>{installCanonicalHeader();scheduleDetailCleanup()},()=>console.warn('[ui] cooldown HUD load failed'));
 }
-
 function loadMapDetailPatch(){
-  if(document.querySelector('script[data-v1142-map-detail]')){loadCooldownHud();return}
-  const script=document.createElement('script');
-  script.dataset.v1142MapDetail='1';
-  script.src=`map_detail_v11_42.js?v=${encodeURIComponent(MAP_DETAIL_VERSION)}`;
-  script.async=false;
-  script.onload=loadCooldownHud;
-  script.onerror=()=>{console.warn('[ui-11.42] map detail patch load failed');loadCooldownHud()};
-  document.body.appendChild(script);
+  appendPatch('map_detail_v11_42.js','data-v1142-map-detail',loadCooldownHud,()=>{console.warn('[ui] map detail load failed');loadCooldownHud()});
 }
-
 function loadResultFlow(){
-  if(document.querySelector('script[data-v1141-result]')){loadMapDetailPatch();return}
-  const result=document.createElement('script');
-  result.dataset.v1141Result='1';
-  result.src=`result_flow_v11_41.js?v=${encodeURIComponent(RESULT_VERSION)}`;
-  result.async=false;
-  result.onload=loadMapDetailPatch;
-  result.onerror=()=>{console.warn('[ui-11.41] result flow load failed');loadMapDetailPatch()};
-  document.body.appendChild(result);
+  appendPatch('result_flow_v11_41.js','data-v1141-result',loadMapDetailPatch,()=>{console.warn('[ui] result flow load failed');loadMapDetailPatch()});
 }
-
 function loadFeedbackPatch(){
-  if(document.querySelector('script[data-v1140-feedback]')){loadResultFlow();return}
-  const script=document.createElement('script');
-  script.dataset.v1140Feedback='1';
-  script.src=`ui_feedback_v11_40.js?v=${encodeURIComponent(FEEDBACK_VERSION)}`;
-  script.async=false;
-  script.onload=loadResultFlow;
-  script.onerror=()=>{console.warn('[ui-11.40] feedback patch load failed');loadResultFlow()};
-  document.body.appendChild(script);
+  appendPatch('ui_feedback_v11_40.js','data-v1140-feedback',loadResultFlow,()=>{console.warn('[ui] feedback patch load failed');loadResultFlow()});
 }
 
 try{
   try{(0,eval)(load('update_guard.js')+'\n//# sourceURL=update_guard.runtime.js')}catch(updateError){console.warn('[update] guard load failed',updateError)}
-  try{(0,eval)(load('tree_camera_gesture_v11_44.js',TREE_CAMERA_VERSION)+'\n//# sourceURL=tree_camera_gesture_v11_45.runtime.js')}catch(cameraError){console.warn('[tree-camera] load failed',cameraError)}
-  try{(0,eval)(load('tree_touch_fix_v11_37_4.js')+'\n//# sourceURL=tree_touch_fix_v11_46.runtime.js')}catch(touchError){console.warn('[touch-fix] load failed',touchError)}
+  try{(0,eval)(load('tree_camera_gesture_v11_44.js')+'\n//# sourceURL=tree_camera_gesture.runtime.js')}catch(cameraError){console.warn('[tree-camera] load failed',cameraError)}
+  try{(0,eval)(load('tree_touch_fix_v11_37_4.js')+'\n//# sourceURL=tree_touch_fix.runtime.js')}catch(touchError){console.warn('[touch-fix] load failed',touchError)}
   const src=load(BASE).replaceAll('11.37.2',PATCH_VERSION);
-  (0,eval)(src+'\n//# sourceURL=balance_core_v11_50_1.entry.runtime.js');
-  installSnapshotGovernor();
-  try{(0,eval)(load('ios_stability_v11_48.js')+'\n//# sourceURL=ios_stability_v11_50.runtime.js')}catch(stabilityError){console.warn('[ios-stability] load failed',stabilityError)}
+  (0,eval)(src+'\n//# sourceURL=balance_core_v11_50_2.entry.runtime.js');
   setTimeout(()=>restorePersistedBasic(),0);
-  const e=document.querySelector('#buildVersion');if(e)e.textContent=`BUILD ${PATCH_VERSION}`;
-  window.__xianxiaEncounterHotfix={version:PATCH_VERSION,compatEntrypoint:'11.37.1',basicSaveFix:true,treeTouchFix:true,treeCameraFix:true,cooldownHudFix:true,uiHygiene:true,devMenuSwordTrigger:true,inlineBuildBadge:true,herbSpatialFix:true,mobileHeaderFix:true,loaderRollback:true,iosStability:true,cacheStable:true,gatherIdleFix:true,areaAssetPrune:true,snapshotGovernor:true,nestedCacheBust:true,legacyWorldLoopDisabled:true,buildUiDecoupled:true};
+  installCanonicalHeader();
+  window.__xianxiaEncounterHotfix={
+    version:PATCH_VERSION,
+    compatEntrypoint:'11.37.1',
+    canonicalBuildOwner:true,
+    globalMutationObserverRemoved:true,
+    iosEmergencyMonkeypatchRemoved:true,
+    legacyWorldLoopDisabled:true,
+    devMenuSwordTrigger:true,
+    inlineBuildBadge:true
+  };
 }catch(error){
   console.error(error);
-  const e=document.querySelector('#buildVersion');if(e)e.textContent=`BUILD ${PATCH_VERSION}`;
+  installCanonicalHeader();
 }
 
 if(document.readyState==='complete')setTimeout(loadFeedbackPatch,0);
