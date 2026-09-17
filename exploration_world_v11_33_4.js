@@ -1,9 +1,10 @@
 (()=>{
 'use strict';
-const VERSION='11.34.0';
-const W=1120,H=1200;
+const VERSION='11.35.0';
+const W=1800,H=2400,VISIBLE_H=960;
+const SMOOTHING=.14,DEAD_X=.08,DEAD_Y=.06,LOOK_AHEAD=.08;
 const $=s=>document.querySelector(s);
-const camera={ready:false,x:W/2,y:H/2,prevX:null,prevY:null,leadX:0,leadY:0};
+const camera={ready:false,x:W/2,y:H/2,prevX:null,prevY:null,leadX:0,leadY:0,lastTime:0};
 let world=null;
 
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
@@ -31,11 +32,7 @@ function ensureWorld(){
   if(!game)return null;
   if(!world){
     world=$('#v11335World');
-    if(!world){
-      world=document.createElement('div');
-      world.id='v11335World';
-      game.prepend(world);
-    }
+    if(!world){world=document.createElement('div');world.id='v11335World';game.prepend(world)}
   }
   const nodes=[$('#cv'),$('#v1131InkLayer'),$('#v1132GatherLayer')].filter(Boolean);
   for(const node of nodes)if(node.parentElement!==world)world.appendChild(node);
@@ -43,9 +40,7 @@ function ensureWorld(){
 }
 
 function resetCamera(){
-  camera.ready=false;
-  camera.prevX=camera.prevY=null;
-  camera.leadX=camera.leadY=0;
+  camera.ready=false;camera.prevX=camera.prevY=null;camera.leadX=camera.leadY=0;camera.lastTime=0;
   if(world)world.style.transform='';
 }
 
@@ -54,48 +49,49 @@ function updateCamera(mode,snap){
   if(!p||!w)return;
   const vw=Math.max(1,window.innerWidth||document.documentElement.clientWidth||390);
   const vh=Math.max(1,window.innerHeight||document.documentElement.clientHeight||844);
-  const portrait=vh>vw;
-  const scale=Math.max(.01,Number(mode.scale)||1);
-  const anchorX=vw*.5;
-  const anchorY=portrait?vh*.54:vh*.50;
+  const scale=vh/VISIBLE_H;
+  const viewW=vw/scale,viewH=VISIBLE_H;
+  const now=performance.now();
+  const dt=camera.lastTime?Math.min(.08,Math.max(.001,(now-camera.lastTime)/1000)):1/60;
+  camera.lastTime=now;
 
   if(!camera.ready){
-    camera.x=p.x;camera.y=p.y;
-    camera.prevX=p.x;camera.prevY=p.y;
-    camera.ready=true;
+    camera.x=p.x;camera.y=p.y;camera.prevX=p.x;camera.prevY=p.y;camera.ready=true;
   }
 
   const dx=p.x-camera.prevX,dy=p.y-camera.prevY;
   camera.prevX=p.x;camera.prevY=p.y;
   const mag=Math.hypot(dx,dy);
   let wantLeadX=0,wantLeadY=0;
-  if(mag>.035){
-    const lead=portrait?38:32;
-    wantLeadX=dx/mag*lead;
-    wantLeadY=dy/mag*lead;
-  }
-  camera.leadX+=(wantLeadX-camera.leadX)*.12;
-  camera.leadY+=(wantLeadY-camera.leadY)*.12;
-  if(mag<.018){camera.leadX*=.92;camera.leadY*=.92}
+  if(mag>.02){wantLeadX=dx/mag*viewW*LOOK_AHEAD;wantLeadY=dy/mag*viewH*LOOK_AHEAD}
+  const leadAlpha=1-Math.exp(-dt/.10);
+  camera.leadX+=(wantLeadX-camera.leadX)*leadAlpha;
+  camera.leadY+=(wantLeadY-camera.leadY)*leadAlpha;
 
-  const targetX=p.x+camera.leadX;
-  const targetY=p.y+camera.leadY;
-  camera.x+=(targetX-camera.x)*.20;
-  camera.y+=(targetY-camera.y)*.20;
+  const focusX=p.x+camera.leadX,focusY=p.y+camera.leadY;
+  const deadX=viewW*DEAD_X,deadY=viewH*DEAD_Y;
+  let targetX=camera.x,targetY=camera.y;
+  if(focusX<camera.x-deadX)targetX=focusX+deadX;
+  else if(focusX>camera.x+deadX)targetX=focusX-deadX;
+  if(focusY<camera.y-deadY)targetY=focusY+deadY;
+  else if(focusY>camera.y+deadY)targetY=focusY-deadY;
 
-  const minX=anchorX/scale;
-  const maxX=W-(vw-anchorX)/scale;
-  const minY=anchorY/scale;
-  const maxY=H-(vh-anchorY)/scale;
-  camera.x=minX<=maxX?clamp(camera.x,minX,maxX):W/2;
-  camera.y=minY<=maxY?clamp(camera.y,minY,maxY):H/2;
+  const halfW=viewW/2,halfH=viewH/2;
+  targetX=clamp(targetX,halfW,W-halfW);
+  targetY=clamp(targetY,halfH,H-halfH);
+  const alpha=1-Math.exp(-dt/SMOOTHING);
+  camera.x+=(targetX-camera.x)*alpha;
+  camera.y+=(targetY-camera.y)*alpha;
+  camera.x=clamp(camera.x,halfW,W-halfW);
+  camera.y=clamp(camera.y,halfH,H-halfH);
 
-  const left=anchorX-camera.x*scale;
-  const top=anchorY-camera.y*scale;
+  const left=vw*.5-camera.x*scale;
+  const top=vh*.5-camera.y*scale;
   w.style.setProperty('transform',`matrix(${scale},0,0,${scale},${left},${top})`,'important');
 
   mode.camX=camera.x;mode.camY=camera.y;mode.left=left;mode.top=top;
-  badge(`BUILD ${VERSION} · CAM ${scale.toFixed(2)}× · WORLD ${W}×${H}`);
+  mode.scale=scale;mode.viewW=viewW;mode.viewH=viewH;
+  badge(`BUILD ${VERSION} · CAM ${scale.toFixed(2)}× · 960H · WORLD ${W}×${H}`);
 }
 
 function frame(){
