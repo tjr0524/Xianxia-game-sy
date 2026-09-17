@@ -163,10 +163,21 @@ function schedule(){
     markDialog();
   });
 }
-function observe(){
-  const observer=new MutationObserver(schedule);
-  const targets=[$('#game'),$('#ov'),$('#area'),$('.tabs'),$('.controls')].filter(Boolean);
-  for(const target of targets)observer.observe(target,{attributes:true,attributeFilter:['class'],childList:true,subtree:true,characterData:true});
+let lastFrameArea=null,lastFramePhase=null;
+function visualFrame(shot){
+  const area=shot?.M?.area||'qingyun',phase=shot?.phase||'home';
+  if(area===lastFrameArea&&phase===lastFramePhase)return;
+  lastFrameArea=area;lastFramePhase=phase;
+  schedule();
+}
+function bindEvents(){
+  document.addEventListener('xianxia:progression-rendered',schedule);
+  document.addEventListener('xianxia:panel-open',schedule,true);
+  document.addEventListener('click',event=>{
+    if(event.target?.closest?.('.tab-btn,#start,#ret,.detail-action'))schedule();
+  },true);
+  const hub=window.__xianxiaFrameHub;
+  if(hub?.subscribe)hub.subscribe('visual-state',visualFrame,70);
 }
 function boot(){
   promoteTheme();
@@ -178,18 +189,11 @@ function boot(){
   decorateTabs();
   syncState();
   markDialog();
-  observe();
+  bindEvents();
   window.addEventListener('resize',schedule,{passive:true});
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
 else boot();
 
-if(!document.querySelector('script[data-v1132-extras]')){
-  const extra=document.createElement('script');
-  extra.src='progression_extras_v11_32.js?v=11.32';
-  extra.dataset.v1132Extras='1';
-  extra.async=false;
-  document.head.appendChild(extra);
-}
 })();
