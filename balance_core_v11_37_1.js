@@ -140,13 +140,13 @@ try{
   try{(0,eval)(load('update_guard.js')+'\n//# sourceURL=update_guard.runtime.js')}catch(updateError){console.warn('[update] guard load failed',updateError)}
   try{(0,eval)(load('tree_camera_gesture_v11_44.js',TREE_CAMERA_VERSION)+'\n//# sourceURL=tree_camera_gesture_v11_45.runtime.js')}catch(cameraError){console.warn('[tree-camera] load failed',cameraError)}
   try{(0,eval)(load('tree_touch_fix_v11_37_4.js')+'\n//# sourceURL=tree_touch_fix_v11_46.runtime.js')}catch(touchError){console.warn('[touch-fix] load failed',touchError)}
-  const src=load(BASE);
-  (0,eval)(src+'\n//# sourceURL=balance_core_v11_37_2.entry.runtime.js');
+  const src=load(BASE).replaceAll('11.37.2',PATCH_VERSION);
+  (0,eval)(src+'\n//# sourceURL=balance_core_v11_50.entry.runtime.js');
   installSnapshotGovernor();
   try{(0,eval)(load('ios_stability_v11_48.js')+'\n//# sourceURL=ios_stability_v11_50.runtime.js')}catch(stabilityError){console.warn('[ios-stability] load failed',stabilityError)}
   setTimeout(()=>restorePersistedBasic(),0);
   const e=document.querySelector('#buildVersion');if(e)e.textContent=`BUILD ${PATCH_VERSION}`;
-  window.__xianxiaEncounterHotfix={version:PATCH_VERSION,compatEntrypoint:'11.37.1',basicSaveFix:true,treeTouchFix:true,treeCameraFix:true,cooldownHudFix:true,uiHygiene:true,devMenuSwordTrigger:true,inlineBuildBadge:true,herbSpatialFix:true,mobileHeaderFix:true,loaderRollback:true,iosStability:true,cacheStable:true,gatherIdleFix:true,areaAssetPrune:true,snapshotGovernor:true};
+  window.__xianxiaEncounterHotfix={version:PATCH_VERSION,compatEntrypoint:'11.37.1',basicSaveFix:true,treeTouchFix:true,treeCameraFix:true,cooldownHudFix:true,uiHygiene:true,devMenuSwordTrigger:true,inlineBuildBadge:true,herbSpatialFix:true,mobileHeaderFix:true,loaderRollback:true,iosStability:true,cacheStable:true,gatherIdleFix:true,areaAssetPrune:true,snapshotGovernor:true,nestedCacheBust:true};
 }catch(error){
   console.error(error);
   const e=document.querySelector('#buildVersion');if(e)e.textContent=`BUILD ${PATCH_VERSION}`;
