@@ -1,4 +1,4 @@
-const SW_BUILD='11.46.0';
+const SW_BUILD='11.47.0';
 
 self.addEventListener('install',event=>{
   event.waitUntil(self.skipWaiting());
@@ -31,6 +31,8 @@ self.addEventListener('fetch',event=>{
     req.destination==='script' ||
     req.destination==='style' ||
     req.destination==='worker' ||
+    url.pathname.endsWith('.js') ||
+    url.pathname.endsWith('.css') ||
     url.pathname.endsWith('/version.json') ||
     url.pathname.endsWith('/index.html');
 
