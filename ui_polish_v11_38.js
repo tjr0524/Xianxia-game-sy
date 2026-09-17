@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.38.0';
+const VERSION='11.39.0';
 if(window.__xianxiaUiPolishVersion===VERSION)return;
 window.__xianxiaUiPolishVersion=VERSION;
 window.__XIANXIA_BUILD__=VERSION;
@@ -29,6 +29,13 @@ let pickerObserver=null;
 let spellRenderQueued=false;
 let mapDecorating=false;
 let pickerDecorating=false;
+
+function promoteStylesheet(){
+  const link=$('#v1138-ui-polish');
+  if(!link)return;
+  link.href=`ui_polish_v11_38.css?v=${VERSION}`;
+  document.head.appendChild(link);
+}
 
 function snapshot(){return D.snapshot()}
 function spells(){
@@ -219,6 +226,74 @@ function decorateMap(){
   mapDecorating=false;
 }
 
+function moveRecordsToExpedition(){
+  const records=$('#bestStone')?.closest('.section');
+  const dialog=$('#ov .dialog');
+  const start=$('#start');
+  if(!records||!dialog||!start)return;
+  records.classList.add('expedition-records38');
+  if(!records.querySelector('.expedition-record-head38')){
+    const head=document.createElement('div');
+    head.className='expedition-record-head38';
+    head.innerHTML='<b>원정 기록</b><span>선택한 비경의 최고 기록</span>';
+    records.prepend(head);
+  }
+  if(records.parentElement!==dialog)start.insertAdjacentElement('afterend',records);
+}
+
+function installDetailPopover(viewSelector,detailSelector,nodeSelector){
+  const view=$(viewSelector),detail=$(detailSelector);
+  if(!view||!detail||detail.dataset.v38Popover)return;
+  detail.dataset.v38Popover='1';
+  detail.classList.add('v17float','detail-popover38');
+  detail.classList.remove('open');
+  view.appendChild(detail);
+
+  const close=()=>detail.classList.remove('open');
+  const addClose=()=>{
+    let button=detail.querySelector('.detail-close38');
+    if(button)return button;
+    button=document.createElement('button');
+    button.type='button';
+    button.className='detail-close38';
+    button.setAttribute('aria-label','상세정보 닫기');
+    button.textContent='×';
+    button.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();close()});
+    detail.appendChild(button);
+    return button;
+  };
+  const place=node=>{
+    const vr=view.getBoundingClientRect(),nr=node.getBoundingClientRect();
+    const width=Math.min(252,Math.max(190,vr.width-18));
+    detail.style.width=`${width}px`;
+    detail.classList.add('open');
+    const height=Math.min(detail.scrollHeight,210);
+    let left=nr.left-vr.left+nr.width/2-width/2;
+    left=Math.max(8,Math.min(vr.width-width-8,left));
+    let top=nr.bottom-vr.top+8;
+    if(top+height>vr.height-8)top=nr.top-vr.top-height-8;
+    top=Math.max(8,Math.min(vr.height-height-8,top));
+    detail.style.left=`${left}px`;
+    detail.style.top=`${top}px`;
+  };
+  view.addEventListener('click',event=>{
+    const node=event.target.closest(nodeSelector);
+    if(node){
+      requestAnimationFrame(()=>{addClose();place(node)});
+      return;
+    }
+    if(!event.target.closest(detailSelector)&&!event.target.closest('.camera'))close();
+  },true);
+  for(const type of ['pointerdown','pointermove','pointerup','click']){
+    detail.addEventListener(type,event=>event.stopPropagation());
+  }
+}
+
+function polishPanelCopy(){
+  const mapHint=$('[data-panel="tree"] .section-head .small');
+  if(mapHint)mapHint.textContent='도장=계통 · 숫자=개척 단계';
+}
+
 function observe(){
   const skillRoot=$('#skillTree');
   if(skillRoot){spellObserver=new MutationObserver(scheduleSpellbook);spellObserver.observe(skillRoot,{childList:true})}
@@ -232,8 +307,13 @@ function observe(){
   $('.tab-btn[data-tab="tree"]')?.addEventListener('click',()=>requestAnimationFrame(decorateMap));
 }
 function boot(){
+  promoteStylesheet();
   const badge=$('#buildVersion');
   if(badge)badge.textContent=`BUILD ${VERSION}`;
+  moveRecordsToExpedition();
+  installDetailPopover('#ascViewport','#ascDetail','.asc-node');
+  installDetailPopover('#mapViewport','#mapDetail','.map-node');
+  polishPanelCopy();
   renderSpellbook();
   decoratePicker();
   decorateMap();
