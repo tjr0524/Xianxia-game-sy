@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const PATCH_VERSION='11.49.0';
+const PATCH_VERSION='11.50.0';
 const FEEDBACK_VERSION='11.40.0';
 const RESULT_VERSION='11.41.0';
 const MAP_DETAIL_VERSION='11.42.0';
@@ -9,11 +9,13 @@ const TREE_CAMERA_VERSION='11.45.0';
 const HYGIENE_VERSION='11.47.1';
 const BASE='balance_core_v11_37.js';
 const SAVE_KEY='xianxia_proto_v11';
+const IOS_WEBKIT=/iP(?:hone|ad|od)/.test(navigator.userAgent)&&/WebKit/i.test(navigator.userAgent);
 window.__XIANXIA_BUILD__=PATCH_VERSION;
 
 function load(path,version=PATCH_VERSION){
   const x=new XMLHttpRequest();
   x.open('GET',`${path}?v=${encodeURIComponent(version)}`,false);
+  x.setRequestHeader('Cache-Control','no-cache');
   x.send(null);
   if(!((x.status>=200&&x.status<300)||x.status===0))throw new Error(`${path} load failed: ${x.status}`);
   return x.responseText;
@@ -24,6 +26,38 @@ try{
   const raw=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');
   if(raw?.skills?.basic&&typeof raw.skills.basic==='object')persistedBasic={...raw.skills.basic};
 }catch(error){console.warn('[save-fix] basic snapshot failed',error)}
+
+function installSnapshotGovernor(){
+  if(!IOS_WEBKIT)return;
+  const D=window.__xianxiaDebug;
+  if(!D?.snapshot||D.__snapshotGovernor)return;
+  const rawSnapshot=D.snapshot.bind(D);
+  let cached=null;
+  let cachedAt=-Infinity;
+  let calls=0,clones=0;
+  const invalidate=()=>{cached=null;cachedAt=-Infinity};
+  D.snapshot=()=>{
+    calls++;
+    const now=performance.now();
+    // Rendering/HUD code only needs display-rate state. The simulation does not use
+    // debug snapshots, so reusing one clone prevents 3-5 RAF consumers from each
+    // JSON-cloning the entire world every frame.
+    const running=cached?.phase==='run'||document.body?.classList.contains('v1133-run');
+    const ttl=running?48:450;
+    if(cached&&now-cachedAt<ttl)return cached;
+    cached=rawSnapshot();
+    cachedAt=now;
+    clones++;
+    return cached;
+  };
+  for(const key of ['replaceState','selectArea','selectPlan']){
+    if(typeof D[key]!=='function')continue;
+    const raw=D[key].bind(D);
+    D[key]=(...args)=>{invalidate();const out=raw(...args);invalidate();return out};
+  }
+  D.__snapshotGovernor={version:PATCH_VERSION,enabled:true,invalidate,get calls(){return calls},get clones(){return clones}};
+  console.info('[ios-stability] snapshot governor enabled',PATCH_VERSION);
+}
 
 function restorePersistedBasic(attempt=0){
   if(!persistedBasic)return;
@@ -111,10 +145,11 @@ try{
   try{(0,eval)(load('tree_touch_fix_v11_37_4.js')+'\n//# sourceURL=tree_touch_fix_v11_46.runtime.js')}catch(touchError){console.warn('[touch-fix] load failed',touchError)}
   const src=load(BASE);
   (0,eval)(src+'\n//# sourceURL=balance_core_v11_37_2.entry.runtime.js');
-  try{(0,eval)(load('ios_stability_v11_48.js')+'\n//# sourceURL=ios_stability_v11_49.runtime.js')}catch(stabilityError){console.warn('[ios-stability] load failed',stabilityError)}
+  installSnapshotGovernor();
+  try{(0,eval)(load('ios_stability_v11_48.js')+'\n//# sourceURL=ios_stability_v11_50.runtime.js')}catch(stabilityError){console.warn('[ios-stability] load failed',stabilityError)}
   setTimeout(()=>restorePersistedBasic(),0);
   const e=document.querySelector('#buildVersion');if(e)e.textContent=`BUILD ${PATCH_VERSION}`;
-  window.__xianxiaEncounterHotfix={version:PATCH_VERSION,compatEntrypoint:'11.37.1',basicSaveFix:true,treeTouchFix:true,treeCameraFix:true,cooldownHudFix:true,uiHygiene:true,devMenuSwordTrigger:true,inlineBuildBadge:true,herbSpatialFix:true,mobileHeaderFix:true,loaderRollback:true,iosStability:true,cacheStable:true,gatherIdleFix:true,areaAssetPrune:true};
+  window.__xianxiaEncounterHotfix={version:PATCH_VERSION,compatEntrypoint:'11.37.1',basicSaveFix:true,treeTouchFix:true,treeCameraFix:true,cooldownHudFix:true,uiHygiene:true,devMenuSwordTrigger:true,inlineBuildBadge:true,herbSpatialFix:true,mobileHeaderFix:true,loaderRollback:true,iosStability:true,cacheStable:true,gatherIdleFix:true,areaAssetPrune:true,snapshotGovernor:true};
 }catch(error){
   console.error(error);
   const e=document.querySelector('#buildVersion');if(e)e.textContent=`BUILD ${PATCH_VERSION}`;
