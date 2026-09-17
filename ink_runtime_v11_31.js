@@ -9,8 +9,8 @@ const files={
  blackwind_guard:'source/blackwind_horned_yak.png',blackwind_chaser:'source/blackwind_ink_panther.png',
  blood_guard:'source/blood_armored_bear.png',blood_chaser:'source/blood_ember_fox.png',
  thunder_guard:'source/thunder_stone_rhino.png',thunder_chaser:'source/thunder_lightning_leopard.png',
- bg_qingyun:'runtime/backgrounds/qingyun.png',bg_blackwind:'runtime/backgrounds/blackwind.png',
- bg_blood:'runtime/backgrounds/blood.png',bg_thunder:'runtime/backgrounds/thunder.png'
+ bg_qingyun:'../ink_v2/runtime/backgrounds/qingyun.webp',bg_blackwind:'../ink_v2/runtime/backgrounds/blackwind.webp',
+ bg_blood:'../ink_v2/runtime/backgrounds/blood.webp',bg_thunder:'../ink_v2/runtime/backgrounds/thunder.webp'
 };
 const S={version:'11.31.1',ready:false,error:null,images:{},layer:null,ctx:null};
 window.__xianxiaInkRuntime=S;
