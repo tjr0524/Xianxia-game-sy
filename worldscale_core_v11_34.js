@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.47.0';
+const VERSION='11.50.0';
 const W=1800,H=2400,EXIT_X=900,EXIT_Y=1200;
 const PLAYER_VISUAL_H=100;
 const badge=text=>{const e=document.querySelector('#buildVersion');if(e)e.textContent=text};
@@ -106,13 +106,18 @@ const EXIT={x:${EXIT_X},y:${EXIT_Y},r:27};`,'world constants');
   let ink=load('ink_runtime_v11_31.js');
   ink=once(ink,
 `const W=700,H=460,EXIT={x:350,y:438},BASE='assets/ink_v1/';`,
-`const W=${W},H=${H},EXIT={x:${EXIT_X},y:${EXIT_Y}},BASE='assets/ink_v1/';`,'ink world constants');
+`const W=${W},H=${H},EXIT={x:${EXIT_X},y:${EXIT_Y}},BASE='assets/ink_v1/';
+const IOS_WEBKIT=/iP(?:hone|ad|od)/.test(navigator.userAgent)&&/WebKit/i.test(navigator.userAgent);
+let v50DrawAt=0;`,'ink world constants');
   ink=once(ink,
 `function drawBackground(area){const c=S.ctx,img=S.images['bg_'+area]||S.images.bg_qingyun;c.globalAlpha=1;c.drawImage(img,0,0,W,H);const wash=c.createLinearGradient(0,0,0,H);wash.addColorStop(0,'rgba(247,243,229,.08)');wash.addColorStop(1,'rgba(20,31,28,.10)');c.fillStyle=wash;c.fillRect(0,0,W,H)}`,
 `function drawBackground(area){const c=S.ctx,img=S.images['bg_'+area]||S.images.bg_qingyun;c.globalAlpha=1;c.drawImage(img,0,0,W,H);const wash=c.createLinearGradient(0,0,0,H);wash.addColorStop(0,'rgba(247,243,229,.04)');wash.addColorStop(1,'rgba(20,31,28,.06)');c.fillStyle=wash;c.fillRect(0,0,W,H)}`,'full-world background');
   ink=once(ink,
 `anchored('player',row,cols,idx,p.x,ground,53,pFacing<0);`,
 `anchored('player',row,cols,idx,p.x,ground,${PLAYER_VISUAL_H},pFacing<0);`,'player visual height');
+  ink=once(ink,
+`function draw(ms){requestAnimationFrame(draw);if(!S.ready)return;let s;try{s=window.__xianxiaDebug?.snapshot?.()}catch{}if(!s)return;`,
+`function draw(ms){requestAnimationFrame(draw);if(!S.ready)return;if(IOS_WEBKIT){if(!document.body.classList.contains('v1133-run'))return;if(ms-v50DrawAt<40)return;v50DrawAt=ms}let s;try{s=window.__xianxiaDebug?.snapshot?.()}catch{}if(!s)return;`,'iOS ink draw throttle');
   (0,eval)(`${ink}\n//# sourceURL=ink_runtime_v11_31.worldscale.js`);
 
   window.__xianxiaWorldScale={
