@@ -1,4 +1,5 @@
 {
   "channel": "test",
-  "source_sha": "002550ceae2f60e94b039fcc4335fecf729671d8"
+  "source_sha": "609723b0f42c9969d412658fac56198bd397f273",
+  "build": "11.46.0"
 }

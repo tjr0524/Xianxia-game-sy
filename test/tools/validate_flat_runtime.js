@@ -4,6 +4,9 @@ const path=require('path');
 const root=process.argv[2]||'.';
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const index=read('index.html');
+const kernel=read('runtime_kernel_v11_45.js');
+if(!index.includes('BUILD 11.46.0'))throw new Error('test build label is not 11.46.0');
+if(!kernel.includes("const BUILD='11.46.0'"))throw new Error('canonical test build is not 11.46.0');
 const flat=[
   'game_runtime_v11_45.js',
   'ink_runtime_world_v11_45.js',
