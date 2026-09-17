@@ -3,7 +3,6 @@
 const VERSION='11.39.0';
 if(window.__xianxiaUiPolishVersion===VERSION)return;
 window.__xianxiaUiPolishVersion=VERSION;
-window.__XIANXIA_BUILD__=VERSION;
 
 const D=window.__xianxiaDebug;
 const P=window.__xianxiaProgression;
@@ -308,8 +307,6 @@ function observe(){
 }
 function boot(){
   promoteStylesheet();
-  const badge=$('#buildVersion');
-  if(badge)badge.textContent=`BUILD ${VERSION}`;
   moveRecordsToExpedition();
   installDetailPopover('#ascViewport','#ascDetail','.asc-node');
   installDetailPopover('#mapViewport','#mapDetail','.map-node');
