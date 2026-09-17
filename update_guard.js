@@ -32,7 +32,7 @@ function loadIosStability(){
   if(document.querySelector('script[data-ios-stability-48]'))return;
   const s=document.createElement('script');
   s.dataset.iosStability48='1';
-  s.src='ios_stability_v11_48.js?v=11.48.0';
+  s.src='ios_stability_v11_48.js?v=11.48.1';
   s.async=true;
   s.onerror=()=>console.warn('[ios-stability] bootstrap failed');
   document.head.appendChild(s);
