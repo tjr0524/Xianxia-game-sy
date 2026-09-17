@@ -66,15 +66,14 @@ function cleanUi(){
   const result=['무사 귀환','육신 중상','비경 붕괴'].includes(title);
   const start=$('#start');
   if(start){
-    const wanted=result?'같은 비경에 다시 진입':'비경 진입';
+    const wanted='입장';
     if(start.textContent!==wanted)start.textContent=wanted;
   }
-  const settings=$('#v17settings');
-  if(settings&&settings.textContent!=='비경 변경')settings.textContent='비경 변경';
+  $('#v17settings')?.remove();
   const sheet=$('#v17back .v17sheet');
   if(sheet){
     const h=sheet.querySelector('h4');
-    if(h&&h.textContent!=='비경 변경')h.textContent='비경 변경';
+    if(h&&h.textContent!=='비경 선택')h.textContent='비경 선택';
     const done=sheet.querySelector('.v17done');
     if(done&&done.textContent!=='닫기')done.textContent='닫기';
   }

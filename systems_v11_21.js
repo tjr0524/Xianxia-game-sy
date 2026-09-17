@@ -96,7 +96,7 @@ function activateJournal(){
   document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
   tab.classList.add('active');
   panel.classList.add('active');
-  $('.controls')?.classList.add('open');
+  D.setMenuOpen?.(true);
 }
 function journalIsActive(){return !!$('.v19-ach-tab.active')||!!$('#v19JournalPanel.active')}
 function preserveJournalTab(){

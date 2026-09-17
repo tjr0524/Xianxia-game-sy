@@ -832,10 +832,7 @@ function begin(){
   }
   setupVein();
   UI.ov.classList.add('hide');
-  if(window.matchMedia?.('(max-width:920px)').matches){
-    mobileMenuOpen=false;
-    UI.controls.classList.remove('open');
-  }
+  if(window.matchMedia?.('(max-width:920px)').matches)setMenuOpen(false);
   UI.ret.disabled=false;
   UI.notice.textContent=`${planCopy(plan)[0]} 시작. 배치를 읽고 목표와 귀환 동선을 함께 잡으세요.`;
   syncHud();
@@ -1595,6 +1592,14 @@ function activateTab(name,persist=true,toggleMenu=false){
   if(persist){M.settings.tab=valid;save()}
 }
 
+function setMenuOpen(open){
+  const compact=!!window.matchMedia?.('(max-width:920px)').matches;
+  mobileMenuOpen=compact?!!open:true;
+  UI.controls.classList.toggle('open',compact?mobileMenuOpen:true);
+  document.querySelectorAll('.tab-btn').forEach(button=>button.setAttribute?.('aria-expanded',String(button.classList.contains('active')&&(!compact||mobileMenuOpen))));
+  UI.controls.dispatchEvent(new CustomEvent('xianxia:panel-open',{detail:{open:compact?mobileMenuOpen:true}}));
+}
+
 UI.atk.onclick=()=>buyTrain('atk');
 UI.mov.onclick=()=>buyTrain('mov');
 UI.sen.onclick=()=>buyTrain('sen');
@@ -1756,7 +1761,8 @@ window.__xianxiaDebug={
   begin,
   tick:seconds=>update(seconds),
   finish,
-  objectiveData
+  objectiveData,
+  setMenuOpen
 };
 
 function loadNormalized(value){

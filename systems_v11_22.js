@@ -27,7 +27,7 @@ function css(){
 }
 
 function syncAria(open){document.querySelectorAll('.tab-btn').forEach(b=>b.setAttribute('aria-expanded',String(open&&b.classList.contains('active'))));}
-function setOpen(open){if(!compact())return;desiredOpen=!!open;controls.classList.toggle('open',desiredOpen);syncAria(desiredOpen);}
+function setOpen(open){if(!compact())return;desiredOpen=!!open;if(typeof D.setMenuOpen==='function')D.setMenuOpen(desiredOpen);else{controls.classList.toggle('open',desiredOpen);syncAria(desiredOpen)}}
 function closePanel(){setOpen(false)}
 
 function installHandle(){
@@ -42,7 +42,7 @@ function installHandle(){
 }
 function bindTabs(){if(tabs.dataset.v22tabs)return;tabs.dataset.v22tabs='1';tabs.addEventListener('click',e=>{const b=e.target.closest('.tab-btn');if(!b||!compact())return;const wasOpen=controls.classList.contains('open');const wasActive=b.classList.contains('active');requestAnimationFrame(()=>setOpen(wasOpen&&wasActive?false:true));},true);}
 function bindOutsideClose(){if(!game||game.dataset.v22close)return;game.dataset.v22close='1';game.addEventListener('pointerdown',()=>{if(compact()&&controls.classList.contains('open'))closePanel();},{capture:true,passive:true});}
-function bindLifecycle(){window.addEventListener('resize',()=>{if(!compact())return;if(D.snapshot().phase==='run')desiredOpen=false;requestAnimationFrame(()=>setOpen(desiredOpen));});$('#start')?.addEventListener('click',()=>{desiredOpen=false},{capture:true});}
+function bindLifecycle(){controls.addEventListener('xianxia:panel-open',e=>{desiredOpen=!!e.detail?.open});window.addEventListener('resize',()=>{if(!compact())return;if(D.snapshot().phase==='run')desiredOpen=false;requestAnimationFrame(()=>setOpen(desiredOpen));});$('#start')?.addEventListener('click',()=>{desiredOpen=false},{capture:true});}
 function boot(){css();installHandle();bindTabs();bindOutsideClose();bindLifecycle();if(compact())desiredOpen=controls.classList.contains('open');}
 boot();
 
