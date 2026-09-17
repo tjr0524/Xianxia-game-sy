@@ -26,3 +26,18 @@ jobs:
           node --check balance_progression_extras_v11_36.js
       - name: Validate patch anchors and transformed encounter build
         run: node tools/validate_balance_patch.js
+      - name: Syntax check runtime hardening
+        run: |
+          node --check runtime_kernel_v11_45.js
+          node --check update_guard.js
+          node --check balance_core_v11_37_1.js
+          node --check ui_hygiene_v11_45.js
+          node --check ui_feedback_v11_40.js
+          node --check result_flow_v11_41.js
+          node --check map_detail_v11_42.js
+          node --check combat_cooldown_hud_v11_43.js
+          node --check ui_polish_v11_38.js
+          node --check worldscale_exploration_v11_34.js
+          node --check exploration_world_v11_33_4.js
+      - name: Validate runtime ownership and reload safety
+        run: node tools/validate_runtime_safety.js
