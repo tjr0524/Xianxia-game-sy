@@ -1,11 +1,12 @@
 (()=>{
 'use strict';
-const PATCH_VERSION='11.44.0';
+const PATCH_VERSION='11.45.0';
 const FEEDBACK_VERSION='11.40.0';
 const RESULT_VERSION='11.41.0';
 const MAP_DETAIL_VERSION='11.42.0';
-const COOLDOWN_VERSION='11.43.0';
-const TREE_CAMERA_VERSION='11.44.0';
+const COOLDOWN_VERSION='11.45.0';
+const TREE_CAMERA_VERSION='11.45.0';
+const HYGIENE_VERSION='11.45.0';
 const BASE='balance_core_v11_37.js';
 const SAVE_KEY='xianxia_proto_v11';
 window.__XIANXIA_BUILD__=PATCH_VERSION;
@@ -62,13 +63,27 @@ function restorePersistedBasic(attempt=0){
   }
 }
 
+function loadUiHygiene(){
+  if(document.querySelector('script[data-v1145-hygiene]'))return;
+  const script=document.createElement('script');
+  script.dataset.v1145Hygiene='1';
+  script.src=`ui_hygiene_v11_45.js?v=${encodeURIComponent(HYGIENE_VERSION)}&ts=${Date.now()}`;
+  script.async=false;
+  script.onerror=()=>console.warn('[ui-11.45] hygiene patch load failed');
+  document.body.appendChild(script);
+}
+
 function loadCooldownHud(){
-  if(document.querySelector('script[data-v1143-cooldown]'))return;
+  if(document.querySelector('script[data-v1143-cooldown]')){
+    loadUiHygiene();
+    return;
+  }
   const script=document.createElement('script');
   script.dataset.v1143Cooldown='1';
   script.src=`combat_cooldown_hud_v11_43.js?v=${encodeURIComponent(COOLDOWN_VERSION)}&ts=${Date.now()}`;
   script.async=false;
-  script.onerror=()=>console.warn('[ui-11.43] cooldown HUD load failed');
+  script.onload=loadUiHygiene;
+  script.onerror=()=>{console.warn('[ui-11.45] cooldown HUD load failed');loadUiHygiene()};
   document.body.appendChild(script);
 }
 
@@ -116,15 +131,15 @@ function loadFeedbackPatch(){
 
 try{
   try{(0,eval)(load('update_guard.js')+'\n//# sourceURL=update_guard.runtime.js')}catch(updateError){console.warn('[update] guard load failed',updateError)}
-  // Must load before the legacy touch shim and before progression creates its camera
+  // Load before the legacy touch shim and before progression creates its camera
   // listeners, so one pointer-state machine owns drag/pinch on the training/map views.
-  try{(0,eval)(load('tree_camera_gesture_v11_44.js',TREE_CAMERA_VERSION)+'\n//# sourceURL=tree_camera_gesture_v11_44.runtime.js')}catch(cameraError){console.warn('[tree-camera] load failed',cameraError)}
+  try{(0,eval)(load('tree_camera_gesture_v11_44.js',TREE_CAMERA_VERSION)+'\n//# sourceURL=tree_camera_gesture_v11_45.runtime.js')}catch(cameraError){console.warn('[tree-camera] load failed',cameraError)}
   try{(0,eval)(load('tree_touch_fix_v11_37_4.js')+'\n//# sourceURL=tree_touch_fix_v11_37_4.runtime.js')}catch(touchError){console.warn('[touch-fix] load failed',touchError)}
   const src=load(BASE);
   (0,eval)(src+'\n//# sourceURL=balance_core_v11_37_4.runtime.js');
   setTimeout(()=>restorePersistedBasic(),0);
   const e=document.querySelector('#buildVersion');if(e)e.textContent=`BUILD ${PATCH_VERSION}`;
-  window.__xianxiaEncounterHotfix={version:PATCH_VERSION,compatEntrypoint:'11.37.1',basicSaveFix:true,treeTouchFix:true,treeCameraFix:true};
+  window.__xianxiaEncounterHotfix={version:PATCH_VERSION,compatEntrypoint:'11.37.1',basicSaveFix:true,treeTouchFix:true,treeCameraFix:true,cooldownHudFix:true,uiHygiene:true};
 }catch(error){
   console.error(error);
   const e=document.querySelector('#buildVersion');if(e)e.textContent=`BUILD ${PATCH_VERSION}`;
