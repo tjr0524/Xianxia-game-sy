@@ -35,8 +35,7 @@ function css(){
 .dialog.v17expedition #expeditionAreaPicker{margin:3px 0 5px!important}
 .dialog.v17expedition #start{margin-top:4px!important}
 .v17plans,.v17areas + .v17label{display:none!important}
-.v17quick .v17chip:nth-child(2){display:none!important}
-.v17quick .v17chip:first-child{flex:1 1 100%!important}
+.v17quick .v17chip{display:block!important}
 `;
   document.head.appendChild(s);
 }

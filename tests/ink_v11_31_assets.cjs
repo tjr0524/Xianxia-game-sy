@@ -44,6 +44,8 @@ const systems22=fs.readFileSync(path.join(root,'systems_v11_22.js'),'utf8');
 assert.match(game,/function setMenuOpen/);
 assert.match(systems22,/xianxia:panel-open/);
 assert.match(ui,/setupAreaTitlePicker/);
+assert.match(ui,/function renderResultAreas/);
+assert.match(ui,/D\.selectArea\(a\.id\);syncDialog\(\)/);
 assert.match(ui,/start\.textContent='입장'/);
 assert.doesNotMatch(ui,/같은 설정으로 다시 진입/);
 assert.match(progression,/M\.stone>=sword\.unlock\.s&&herbHave\(M,sword\.grade\)>=sword\.unlock\.h/);
