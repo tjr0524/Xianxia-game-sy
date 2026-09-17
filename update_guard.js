@@ -29,10 +29,10 @@ async function retireLegacyUpdater(){
 
 function loadIosStability(){
   if(!IOS_WEBKIT||window.__xianxiaIosStability)return;
-  if(document.querySelector('script[data-ios-stability-48]'))return;
+  if(document.querySelector('script[data-ios-stability-49]'))return;
   const s=document.createElement('script');
-  s.dataset.iosStability48='1';
-  s.src='ios_stability_v11_48.js?v=11.48.1';
+  s.dataset.iosStability49='1';
+  s.src='ios_stability_v11_48.js?v=11.49.0';
   s.async=true;
   s.onerror=()=>console.warn('[ios-stability] bootstrap failed');
   document.head.appendChild(s);
