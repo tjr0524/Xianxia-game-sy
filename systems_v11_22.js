@@ -26,8 +26,7 @@ function css(){
   body.v22-panel-mode .arena-card{display:none!important}
   .controls{position:static!important;left:auto!important;right:auto!important;bottom:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;margin:0 0 4px!important;border-radius:10px 3px 10px 3px!important;box-shadow:none!important}
   body.v22-expedition-mode .controls{height:0!important;margin:0!important;border:0!important;background:transparent!important;overflow:visible!important}
-  .controls .tabs{position:fixed!important;z-index:80!important;left:6px!important;right:6px!important;bottom:calc(env(safe-area-inset-bottom) + 6px)!important;top:auto!important;display:grid!important;grid-template-columns:repeat(5,1fr)!important;gap:3px!important;min-height:58px!important;padding:5px!important;border:1px solid #77877f55!important;border-radius:13px 5px 13px 5px!important;box-shadow:0 10px 30px #27393238!important}
-  .controls.open .tabs{padding-top:5px!important}
+  .tabs.v22-mobile-nav{position:fixed!important;z-index:80!important;left:6px!important;right:6px!important;bottom:calc(env(safe-area-inset-bottom) + 6px)!important;top:auto!important;display:grid!important;grid-template-columns:repeat(5,1fr)!important;gap:3px!important;min-height:58px!important;padding:5px!important;border:1px solid #77877f55!important;border-radius:13px 5px 13px 5px!important;background:rgba(239,241,233,.97)!important;box-shadow:0 10px 30px #27393238!important;overflow:visible!important}
   .controls .panel{display:none!important;max-height:none!important;overflow:visible!important;padding:7px!important}
   body.v22-panel-mode .controls .panel.active{display:block!important}
   body.v22-expedition-mode .controls .panel,body.v22-expedition-mode .controls details{display:none!important}
@@ -51,6 +50,16 @@ function expeditionButton(){
   const tree=$('.tab-btn[data-tab="tree"]');
   tabs.insertBefore(b,tree||null);
   return b;
+}
+
+function placeMobileNav(){
+  if(compact()){
+    tabs.classList.add('v22-mobile-nav');
+    if(tabs.parentElement!==document.body)document.body.appendChild(tabs);
+  }else{
+    tabs.classList.remove('v22-mobile-nav');
+    if(tabs.parentElement!==controls)controls.insertBefore(tabs,controls.firstChild);
+  }
 }
 
 function showExpedition(){
@@ -82,8 +91,8 @@ function installHandle(){
 }
 function bindTabs(){if(tabs.dataset.v22tabs)return;tabs.dataset.v22tabs='1';tabs.addEventListener('pointerup',e=>{if(Date.now()<ignoreTabsUntil){e.preventDefault();e.stopImmediatePropagation()}},true);tabs.addEventListener('click',e=>{const b=e.target.closest('.tab-btn');if(!b||!compact())return;if(Date.now()<ignoreTabsUntil){e.preventDefault();e.stopImmediatePropagation();return}if(b.dataset.tab==='expedition'){e.preventDefault();e.stopImmediatePropagation();showExpedition();return}requestAnimationFrame(()=>showPanel(b));},true);}
 function bindOutsideClose(){}
-function bindLifecycle(){controls.addEventListener('xianxia:panel-open',e=>{if(e.detail?.open&&compact()){const active=$('.tab-btn.active');if(active?.dataset.tab!=='expedition')requestAnimationFrame(()=>showPanel(active))}});window.addEventListener('resize',()=>{if(!compact()){document.body.classList.remove('v22-panel-mode','v22-expedition-mode');return}requestAnimationFrame(()=>document.body.classList.contains('v22-panel-mode')?showPanel($('.tab-btn.active')):showExpedition())});$('#start')?.addEventListener('pointerup',()=>{ignoreTabsUntil=Date.now()+450},{capture:true});$('#start')?.addEventListener('click',()=>{ignoreTabsUntil=Date.now()+450;showExpedition()},{capture:true});}
-function boot(){css();expeditionButton();installHandle();bindTabs();bindOutsideClose();bindLifecycle();if(compact())showExpedition();}
+function bindLifecycle(){controls.addEventListener('xianxia:panel-open',e=>{if(e.detail?.open&&compact()){const active=$('.tab-btn.active');if(active?.dataset.tab!=='expedition')requestAnimationFrame(()=>showPanel(active))}});window.addEventListener('resize',()=>{placeMobileNav();if(!compact()){document.body.classList.remove('v22-panel-mode','v22-expedition-mode');return}requestAnimationFrame(()=>document.body.classList.contains('v22-panel-mode')?showPanel($('.tab-btn.active')):showExpedition())});$('#start')?.addEventListener('pointerup',()=>{ignoreTabsUntil=Date.now()+450},{capture:true});$('#start')?.addEventListener('click',()=>{ignoreTabsUntil=Date.now()+450;showExpedition()},{capture:true});}
+function boot(){css();expeditionButton();installHandle();placeMobileNav();bindTabs();bindOutsideClose();bindLifecycle();if(compact())showExpedition();}
 boot();
 
 // v11.30: load verified brush-sprite runtime after the core UI scripts.

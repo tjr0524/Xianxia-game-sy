@@ -45,6 +45,7 @@ assert.match(game,/function setMenuOpen/);
 assert.match(systems22,/xianxia:panel-open/);
 assert.match(systems22,/v22-expedition-mode/);
 assert.match(systems22,/grid-template-columns:repeat\(5,1fr\)/);
+assert.match(systems22,/document\.body\.appendChild\(tabs\)/);
 assert.match(systems22,/ignoreTabsUntil=Date\.now\(\)\+450/);
 assert.match(game,/enemy:2\.05,reward:4/);
 assert.match(game,/enemy:3\.9,reward:10/);
