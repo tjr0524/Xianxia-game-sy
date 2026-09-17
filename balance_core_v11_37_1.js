@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const PATCH_VERSION='11.50.2';
+const PATCH_VERSION='11.50.3';
 const BASE='balance_core_v11_37.js';
 const SAVE_KEY='xianxia_proto_v11';
 
@@ -142,7 +142,7 @@ try{
   try{(0,eval)(load('tree_camera_gesture_v11_44.js')+'\n//# sourceURL=tree_camera_gesture.runtime.js')}catch(cameraError){console.warn('[tree-camera] load failed',cameraError)}
   try{(0,eval)(load('tree_touch_fix_v11_37_4.js')+'\n//# sourceURL=tree_touch_fix.runtime.js')}catch(touchError){console.warn('[touch-fix] load failed',touchError)}
   const src=load(BASE).replaceAll('11.37.2',PATCH_VERSION);
-  (0,eval)(src+'\n//# sourceURL=balance_core_v11_50_2.entry.runtime.js');
+  (0,eval)(src+'\n//# sourceURL=balance_core_v11_50_3.entry.runtime.js');
   setTimeout(()=>restorePersistedBasic(),0);
   installCanonicalHeader();
   window.__xianxiaEncounterHotfix={
@@ -153,7 +153,8 @@ try{
     iosEmergencyMonkeypatchRemoved:true,
     legacyWorldLoopDisabled:true,
     devMenuSwordTrigger:true,
-    inlineBuildBadge:true
+    inlineBuildBadge:true,
+    fullRateExplorationCamera:true
   };
 }catch(error){
   console.error(error);
