@@ -19,9 +19,10 @@ jobs:
       - name: Syntax check balance loaders
         run: |
           node --check balance_core_v11_36.js
+          node --check balance_core_v11_37.js
           node --check balance_progression_v11_36.js
           node --check balance_ui_v11_36.js
           node --check balance_systems21_v11_36.js
           node --check balance_progression_extras_v11_36.js
-      - name: Validate patch anchors
+      - name: Validate patch anchors and transformed encounter build
         run: node tools/validate_balance_patch.js
