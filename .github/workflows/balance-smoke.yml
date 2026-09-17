@@ -1,0 +1,27 @@
+name: Balance Smoke Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-balance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax check balance loaders
+        run: |
+          node --check balance_core_v11_36.js
+          node --check balance_progression_v11_36.js
+          node --check balance_ui_v11_36.js
+          node --check balance_systems21_v11_36.js
+          node --check balance_progression_extras_v11_36.js
+      - name: Validate patch anchors
+        run: node tools/validate_balance_patch.js
