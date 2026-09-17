@@ -95,30 +95,46 @@ function closeDeveloperMenu(){
   modal.classList.remove('open');
 }
 
-function brandClick(event){
-  const brand=closest(event.target,'.brand-mark');
-  if(!brand)return;
+function developerTriggerFor(target){
+  const testBadge=document.querySelector('#testChannelBadge');
+  if(testBadge)return closest(target,'#testChannelBadge');
+  return closest(target,'.brand-mark');
+}
+
+function developerTriggerClick(event){
+  const trigger=developerTriggerFor(event.target);
+  if(!trigger)return;
   event.preventDefault();
   event.stopImmediatePropagation();
   openDeveloperMenu();
 }
 
-document.addEventListener('click',brandClick,true);
+document.addEventListener('click',developerTriggerClick,true);
 document.addEventListener('keydown',event=>{
-  const brand=closest(event.target,'.brand-mark');
-  if(!brand||!(event.key==='Enter'||event.key===' '))return;
+  const trigger=developerTriggerFor(event.target);
+  if(!trigger||!(event.key==='Enter'||event.key===' '))return;
   event.preventDefault();
   event.stopImmediatePropagation();
   openDeveloperMenu();
 },true);
 
-function setupBrandTrigger(){
+function setupDeveloperTrigger(){
+  const testBadge=document.querySelector('#testChannelBadge');
   const brand=document.querySelector('.brand-mark');
-  if(brand){
-    brand.setAttribute('role','button');
-    brand.setAttribute('aria-label','개발자 메뉴 열기');
-    brand.tabIndex=0;
+  const trigger=testBadge||brand;
+
+  if(trigger){
+    trigger.setAttribute('role','button');
+    trigger.setAttribute('aria-label','개발자 메뉴 열기');
+    trigger.tabIndex=0;
   }
+
+  if(testBadge&&brand){
+    brand.removeAttribute('role');
+    brand.removeAttribute('aria-label');
+    brand.removeAttribute('tabindex');
+  }
+
   const badge=document.querySelector('#buildVersion');
   if(badge){
     badge.removeAttribute('role');
@@ -127,14 +143,14 @@ function setupBrandTrigger(){
     badge.setAttribute('aria-hidden','true');
   }
 }
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setupBrandTrigger,{once:true});
-else setupBrandTrigger();
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setupDeveloperTrigger,{once:true});
+else setupDeveloperTrigger();
 
 const style=document.createElement('style');
 style.id='tree-touch-fix-v11-37-4';
 style.textContent=`
 ${NODE_SELECTOR}{touch-action:manipulation!important;-webkit-user-select:none!important;user-select:none!important}
-.brand-mark{cursor:pointer!important;touch-action:manipulation!important}
+.brand-mark,#testChannelBadge{cursor:pointer!important;touch-action:manipulation!important}
 #buildDevModal{position:fixed;inset:0;z-index:2147483640;display:none;pointer-events:none}
 #buildDevModal.open{display:block;pointer-events:auto}
 .build-dev-backdrop{position:absolute;inset:0;background:#020607b8;backdrop-filter:blur(3px)}
