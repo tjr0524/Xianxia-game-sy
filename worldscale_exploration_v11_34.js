@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.50.3',W=1800,H=2400,EXIT_X=900,EXIT_Y=1200,EXIT_APPROACH_Y=1177;
+const VERSION='11.50.4',W=1800,H=2400,EXIT_X=900,EXIT_Y=1200,EXIT_APPROACH_Y=1177;
 const VISIBLE_H=960,SMOOTHING=.14,DEAD_X=.08,DEAD_Y=.06,LOOK_AHEAD=.08;
 const badge=()=>{};
 function load(path){const x=new XMLHttpRequest();x.open('GET',`${path}?v=${encodeURIComponent(VERSION)}`,false);x.send(null);if(!((x.status>=200&&x.status<300)||x.status===0))throw new Error(`${path} load failed: ${x.status}`);return x.responseText}
@@ -47,7 +47,7 @@ const EXIT_APPROACH={x:${EXIT_X},y:${EXIT_APPROACH_Y}};`,'world constants');
 }`,
 `function updateLead(p,m){
   if(state.prevPX==null){state.prevPX=p.x;state.prevPY=p.y;return}
-  const dx=p.x-state.prevPX,dy=p.y-state.prevPY;state.prevPX=p.x;state.prevPY=p.y;
+  const dx=p.x-state.prevPX,dy=p.y-state.prevPY;state.prevX=p.x;state.prevPY=p.y;
   const mag=Math.hypot(dx,dy);let tx=0,ty=0;
   if(mag>.02){tx=dx/mag*m.viewW*${LOOK_AHEAD};ty=dy/mag*m.viewH*${LOOK_AHEAD}}
   state.leadX+=(tx-state.leadX)*.16;state.leadY+=(ty-state.leadY)*.16;
@@ -110,16 +110,16 @@ const EXIT_APPROACH={x:${EXIT_X},y:${EXIT_APPROACH_Y}};`,'world constants');
 `let v50IdleProbe=0;
 function frame(now=performance.now()){
   const active=document.body.classList.contains('v1133-run');
-  // Safari crash was caused by the recursive DOM observer, not the camera RAF.
-  // Keep the expensive idle probe slow, but run the active camera at display refresh rate.
   if(!active&&now-v50IdleProbe<250){requestAnimationFrame(frame);return}
   if(!active)v50IdleProbe=now;
   const D=window.__xianxiaDebug;let s=null;try{s=D?.snapshot?.()}catch{}
   if(s?.phase==='run'){
-    activate(s);patchInkRuntime();syncBackdrop(s);updateCamera(s);updateHud(s);
+    activate(s);patchInkRuntime();syncBackdrop(s);
+    if(!window.__xianxiaWorldCameraOwner?.active)updateCamera(s);
+    updateHud(s);
   }else deactivate();
   requestAnimationFrame(frame);
-}`,'full-rate active camera');
+}`,'single compositor camera handoff');
   (0,eval)(`${src}\n//# sourceURL=exploration_mode_v11_33.worldscale.js`);
   badge();
 }catch(error){console.error(error);badge()}
