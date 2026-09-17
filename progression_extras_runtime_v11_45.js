@@ -4,7 +4,6 @@
 if(window.__xianxiaProgressionExtras?.version==='11.32.2')return;
 const D=window.__xianxiaDebug;if(!D)return;
 const SAVE_KEY='xianxia_proto_v11';
-const OLD_KEYS=['xianxia_proto_v10','xianxia_proto_v9','xianxia_proto_v8','xianxia_proto_v7','xianxia_proto_v6','xianxia_proto_v5','xianxia_proto_v4'];
 const $=s=>document.querySelector(s);
 const EXTRA=[];
 const POS={extra_speed:{x:965,y:1340,fromY:1415},extra_range:{x:235,y:1070,fromY:1145},extra_multi:{x:985,y:800,fromY:875},extra_cycle:{x:205,y:530,fromY:605}};
@@ -21,11 +20,6 @@ details.dev{display:none!important}
 .asc-node.v32-extra.ready{outline:2px solid rgba(168,135,69,.55);outline-offset:2px}
 .asc-node.v32-extra.done{background:#cfe0d3!important;border-color:#527a6d!important}
 .asc-node.v32-extra .glyph{font-size:21px!important}
-#v1132Dev{position:fixed;z-index:9999;inset:0;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(24,31,28,.34);backdrop-filter:blur(4px)}
-#v1132Dev.open{display:flex}
-#v1132Dev .box{width:min(360px,94vw);padding:15px;border:1px solid #52645b80;border-radius:14px;background:#eee7d7 url("assets/paper_fiber.svg");box-shadow:0 18px 60px #1f241f55;color:#22322d}
-#v1132Dev h3{margin:0 0 4px;font-size:16px}#v1132Dev p{margin:0 0 10px;font-size:10px;color:#64716c}
-#v1132Dev .grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}#v1132Dev button{min-height:40px;border:1px solid #65766d77;border-radius:9px;background:#e2dac7;color:#23332e;font-weight:700}#v1132Dev .danger{color:#8e3e37;border-color:#8e3e3766}#v1132Dev .close{grid-column:1/-1;margin-top:4px}
 `;document.head.appendChild(s)}
 function iconFor(id){if(/_(atk|edge)/.test(id))return'⚔';if(/_(hp|guard)/.test(id))return'♥';if(/_(mov|shadow)/.test(id))return'➤';if(/_(sen|spirit)/.test(id))return'◉';if(/harmony/.test(id))return'✦';if(/core/.test(id))return'◆';return'•'}
 function replaceGlyphs(){document.querySelectorAll('#ascWorld .asc-leaf:not(.v32-extra)').forEach(n=>{const g=n.querySelector('.glyph');if(g)g.textContent=iconFor(n.dataset.nodeId||'')})}
