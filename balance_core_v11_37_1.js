@@ -1,9 +1,10 @@
 (()=>{
 'use strict';
-const PATCH_VERSION='11.39.0';
+const PATCH_VERSION='11.43.0';
 const FEEDBACK_VERSION='11.40.0';
 const RESULT_VERSION='11.41.0';
 const MAP_DETAIL_VERSION='11.42.0';
+const COOLDOWN_VERSION='11.43.0';
 const BASE='balance_core_v11_37.js';
 const SAVE_KEY='xianxia_proto_v11';
 window.__XIANXIA_BUILD__=PATCH_VERSION;
@@ -60,13 +61,27 @@ function restorePersistedBasic(attempt=0){
   }
 }
 
+function loadCooldownHud(){
+  if(document.querySelector('script[data-v1143-cooldown]'))return;
+  const script=document.createElement('script');
+  script.dataset.v1143Cooldown='1';
+  script.src=`combat_cooldown_hud_v11_43.js?v=${encodeURIComponent(COOLDOWN_VERSION)}&ts=${Date.now()}`;
+  script.async=false;
+  script.onerror=()=>console.warn('[ui-11.43] cooldown HUD load failed');
+  document.body.appendChild(script);
+}
+
 function loadMapDetailPatch(){
-  if(document.querySelector('script[data-v1142-map-detail]'))return;
+  if(document.querySelector('script[data-v1142-map-detail]')){
+    loadCooldownHud();
+    return;
+  }
   const script=document.createElement('script');
   script.dataset.v1142MapDetail='1';
   script.src=`map_detail_v11_42.js?v=${encodeURIComponent(MAP_DETAIL_VERSION)}&ts=${Date.now()}`;
   script.async=false;
-  script.onerror=()=>console.warn('[ui-11.42] map detail patch load failed');
+  script.onload=loadCooldownHud;
+  script.onerror=()=>{console.warn('[ui-11.42] map detail patch load failed');loadCooldownHud()};
   document.body.appendChild(script);
 }
 
