@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.45.0';
+const VERSION='11.50.0';
 if(window.__xianxiaCooldownHud?.version===VERSION)return;
 window.__xianxiaCooldownHud={version:VERSION};
 window.__XIANXIA_BUILD__=VERSION;
@@ -11,6 +11,7 @@ const GLYPH={basic:'劍',sword:'御',wave:'風',chain:'連',thunder:'雷',array:
 let signature='';
 let observedMax={};
 let previous={};
+let lastUpdateAt=0;
 
 function installStyle(){
   if($('#v1145CooldownStyle'))return;
@@ -128,16 +129,22 @@ function rebuild(hud,skills){
   }
 }
 
-function update(){
+function update(now=performance.now()){
+  const hud=ensureHud();
+  if(!hud){setTimeout(()=>requestAnimationFrame(update),250);return}
+  if(!document.body.classList.contains('v1133-run')){
+    hud.style.display='none';
+    signature='';observedMax={};previous={};
+    setTimeout(()=>requestAnimationFrame(update),200);return;
+  }
+  if(now-lastUpdateAt<33){requestAnimationFrame(update);return}
+  lastUpdateAt=now;
+
   const D=window.__xianxiaDebug;
   let snap=null;
   try{snap=D?.snapshot?.()}catch{}
-  const hud=ensureHud();
-  if(!hud){requestAnimationFrame(update);return}
-
   if(snap?.phase!=='run'||!snap.run){
     hud.style.display='none';
-    signature='';observedMax={};previous={};
     requestAnimationFrame(update);return;
   }
   hud.style.display='';
