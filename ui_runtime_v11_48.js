@@ -195,6 +195,7 @@ document.addEventListener('click',event=>{
 },true);
 
 document.addEventListener('xianxia:panel-open',schedule,true);
+document.addEventListener('xianxia:progression-rendered',schedule,true);
 
 function boot(){
   installStyle();
