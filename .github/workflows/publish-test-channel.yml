@@ -30,6 +30,20 @@ jobs:
           path: testsrc
           fetch-depth: 1
 
+      - name: Validate flattened test runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check testsrc/game_runtime_v11_45.js
+          node --check testsrc/ink_runtime_world_v11_45.js
+          node --check testsrc/progression_runtime_v11_45.js
+          node --check testsrc/systems21_runtime_v11_45.js
+          node --check testsrc/progression_extras_runtime_v11_45.js
+          node --check testsrc/exploration_runtime_v11_45.js
+          node --check testsrc/runtime_preflight_v11_45_flat.js
+          node --check testsrc/runtime_postflight_v11_45_flat.js
+          node testsrc/tools/validate_flat_runtime.js testsrc
+
       - name: Build /test channel
         shell: bash
         run: |
