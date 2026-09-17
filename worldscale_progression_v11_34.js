@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.34.0',W=1120,H=1200;
+const VERSION='11.35.0',W=1800,H=2400;
 function load(path){const x=new XMLHttpRequest();x.open('GET',`${path}?v=${encodeURIComponent(VERSION)}`,false);x.send(null);if(!((x.status>=200&&x.status<300)||x.status===0))throw new Error(`${path} load failed: ${x.status}`);return x.responseText}
 function once(src,from,to,label){const i=src.indexOf(from);if(i<0)throw new Error(`progression patch missing: ${label}`);return src.slice(0,i)+to+src.slice(i+from.length)}
 try{
