@@ -10,10 +10,10 @@ const polish=read('ui_polish_v11_38.js');
 const feedback=read('ui_feedback_v11_40.js');
 const resultFlow=read('result_flow_v11_41.js');
 
-if(!post.includes("loadScript('ui_runtime_v11_48.js','11.48.0'"))throw new Error('consolidated UI runtime is not loaded');
+if(!post.includes("loadScript('ui_runtime_v11_48.js','11.48.1'"))throw new Error('consolidated UI runtime is not loaded');
 if(post.includes('ui_hygiene_v11_45.js'))throw new Error('legacy UI hygiene is still active');
 if(post.includes('map_detail_v11_42.js'))throw new Error('legacy map detail patch is still active');
-if(!post.includes("uiOwner:'ui-runtime-11.48'"))throw new Error('UI owner marker missing');
+if(!post.includes("uiOwner:'ui-runtime-11.48.1'"))throw new Error('UI owner marker missing');
 
 if(/new\s+MutationObserver/.test(ui))throw new Error('UI runtime must stay event-driven');
 if(!ui.includes("setupPopover('training'"))throw new Error('training popover is not UI-runtime owned');
