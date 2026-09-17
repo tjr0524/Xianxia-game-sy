@@ -1,0 +1,419 @@
+:root{
+  --v38-violet:#66577f;
+  --v38-violet-deep:#493b61;
+  --v38-violet-soft:#eee8f2;
+  --v38-paper:#fffdf7;
+  --v38-ink:#263733;
+  --v38-muted:#73807c;
+  --v38-line:#c4ccc6;
+}
+
+/* 법술첩: 작은 트리 대신 모바일에서 바로 읽고 강화하는 세로 카드 */
+.v25-theme .spellbook38{
+  display:grid;
+  gap:9px;
+  color:var(--v38-ink);
+}
+.v25-theme .spellbook38-intro{
+  position:relative;
+  overflow:hidden;
+  display:grid;
+  grid-template-columns:48px minmax(0,1fr);
+  align-items:center;
+  gap:10px;
+  min-height:76px;
+  padding:11px 12px;
+  border:1px solid rgba(102,87,127,.34);
+  border-radius:9px 3px 9px 3px;
+  background:linear-gradient(135deg,#fbf8ef,#eee9f2);
+  box-shadow:inset 0 1px rgba(255,255,255,.85),0 5px 14px rgba(55,52,67,.06);
+}
+.v25-theme .spellbook38-intro::after{
+  content:"法";
+  position:absolute;
+  right:8px;
+  bottom:-17px;
+  color:rgba(88,72,111,.055);
+  font:800 72px/1 var(--v25-serif);
+}
+.v25-theme .spellbook38-core{
+  width:46px;
+  height:46px;
+  display:grid;
+  place-items:center;
+  border:1px solid #77698e;
+  border-radius:50%;
+  color:#fffdf7;
+  background:radial-gradient(circle at 35% 28%,#83729b,#514267 70%);
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.16),0 4px 10px rgba(64,50,82,.16);
+  font:800 21px/1 var(--v25-serif);
+}
+.v25-theme .spellbook38-intro b{
+  display:block;
+  margin-bottom:3px;
+  color:#40364f;
+  font:800 14px/1.25 var(--v25-serif);
+}
+.v25-theme .spellbook38-intro p{
+  margin:0;
+  color:#697570;
+  font-size:10px;
+  line-height:1.48;
+}
+.v25-theme .spellbook38-note{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:7px 9px;
+  border-left:3px solid #9c7d37;
+  color:#675b3f;
+  background:#fff8e7;
+  font-size:9px;
+  line-height:1.35;
+}
+.v25-theme .spellbook38-note strong{
+  flex:0 0 auto;
+  color:#826521;
+  font:700 10px/1 var(--v25-serif);
+}
+.v25-theme .spell-card38{
+  position:relative;
+  overflow:hidden;
+  display:grid;
+  grid-template-columns:50px minmax(0,1fr);
+  gap:9px;
+  padding:10px;
+  border:1px solid var(--v38-line);
+  border-radius:9px 3px 9px 3px;
+  background:linear-gradient(145deg,#fffdf7,#f5f2e8);
+  box-shadow:0 5px 14px rgba(43,57,54,.055),inset 0 1px #fff;
+}
+.v25-theme .spell-card38::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  bottom:0;
+  width:3px;
+  background:#a9b1ac;
+}
+.v25-theme .spell-card38.ready::before{background:#a68235}
+.v25-theme .spell-card38.known::before{background:var(--v38-violet)}
+.v25-theme .spell-card38.mastered::before{background:#427967}
+.v25-theme .spell-card38.locked{background:linear-gradient(145deg,#faf8f1,#f0eee6)}
+.v25-theme .spell-seal38{
+  position:relative;
+  width:48px;
+  height:48px;
+  display:grid;
+  place-items:center;
+  align-self:start;
+  border:1px solid #aeb6b1;
+  border-radius:50%;
+  color:#7b8580;
+  background:#f1eee5;
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.62);
+  font:800 22px/1 var(--v25-serif);
+}
+.v25-theme .spell-card38.ready .spell-seal38{
+  border-color:#b58d3d;
+  color:#84641f;
+  background:#fff2c9;
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.55),0 0 14px rgba(181,141,61,.16);
+}
+.v25-theme .spell-card38.known .spell-seal38{
+  border-color:#76658d;
+  color:#fff;
+  background:radial-gradient(circle at 35% 28%,#89779f,#57476e 72%);
+}
+.v25-theme .spell-card38.mastered .spell-seal38{
+  border-color:#4d806f;
+  background:radial-gradient(circle at 35% 28%,#669b88,#376556 72%);
+}
+.v25-theme .spell-main38{min-width:0}
+.v25-theme .spell-head38{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:7px;
+}
+.v25-theme .spell-title38{min-width:0}
+.v25-theme .spell-title38 b{
+  display:block;
+  overflow:hidden;
+  color:#2b3634;
+  font:800 14px/1.25 var(--v25-serif);
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.v25-theme .spell-title38 small{
+  display:block;
+  margin-top:2px;
+  color:var(--v38-muted);
+  font-size:8px;
+  line-height:1.25;
+}
+.v25-theme .spell-state38{
+  flex:0 0 auto;
+  padding:3px 6px;
+  border:1px solid #c4cbc6;
+  border-radius:99px;
+  color:#7b8580;
+  background:#f7f5ed;
+  font:700 8px/1 var(--v25-serif);
+  white-space:nowrap;
+}
+.v25-theme .spell-card38.ready .spell-state38{border-color:#c9a85e;color:#795b1e;background:#fff6d9}
+.v25-theme .spell-card38.known .spell-state38{border-color:#9c8cab;color:#5a4c70;background:#f0eaf4}
+.v25-theme .spell-card38.mastered .spell-state38{border-color:#83a497;color:#376756;background:#e8f1ec}
+.v25-theme .spell-desc38{
+  margin:7px 0 8px;
+  color:#465653;
+  font-size:10px;
+  font-weight:600;
+  line-height:1.48;
+}
+.v25-theme .spell-rank38{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:7px;
+  margin-bottom:8px;
+}
+.v25-theme .spell-rank38>span{
+  color:#777f7c;
+  font:700 8px/1 var(--v25-serif);
+  white-space:nowrap;
+}
+.v25-theme .spell-pips38{display:grid;grid-template-columns:repeat(5,1fr);gap:3px}
+.v25-theme .spell-pips38 i{
+  height:5px;
+  border-radius:99px;
+  background:#d7d9d4;
+}
+.v25-theme .spell-pips38 i.on{background:linear-gradient(90deg,#817097,#5e4f74)}
+.v25-theme .spell-pips38 i.cap{background:#e5dfd1}
+.v25-theme .spell-actions38{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:7px;
+}
+.v25-theme .spell-cost38{display:flex;align-items:center;gap:4px;flex-wrap:wrap;min-height:24px}
+.v25-theme .spell-cost38 span{
+  display:inline-flex;
+  align-items:center;
+  min-height:22px;
+  padding:3px 6px;
+  border:1px solid #c9c7bb;
+  border-radius:99px;
+  color:#6c6c62;
+  background:#faf7ed;
+  font-size:8px;
+  font-weight:750;
+  white-space:nowrap;
+}
+.v25-theme .spell-cost38 .stone{border-color:#c8aa66;color:#82631d;background:#fff7dc}
+.v25-theme .spell-cost38 .herb0{border-color:#87ad93;color:#41745b;background:#edf5ee}
+.v25-theme .spell-cost38 .herb1{border-color:#80a7ba;color:#456f83;background:#edf4f7}
+.v25-theme .spell-cost38 .herb2{border-color:#a28ab3;color:#74578a;background:#f2ecf5}
+.v25-theme .spell-action38{
+  min-width:92px;
+  min-height:34px;
+  margin:0;
+  padding:6px 9px;
+  border:1px solid #9da9a3;
+  border-radius:7px 2px 7px 2px;
+  color:#40524d;
+  background:linear-gradient(180deg,#f7f6ef,#e7e8df);
+  font:700 9px/1.15 var(--v25-serif)!important;
+}
+.v25-theme .spell-action38:not(:disabled){
+  border-color:#574768;
+  color:#fffdf7;
+  background:linear-gradient(180deg,#78678d,#554568);
+  box-shadow:0 5px 12px rgba(67,53,83,.15);
+}
+.v25-theme .spell-action38:disabled{opacity:.58!important}
+
+/* 비경 선택: 한 글자씩 꺾이는 문제 제거, 후산은 좁은 버튼에서 생략 */
+.v25-theme .expedition-area-grid{
+  grid-template-columns:repeat(auto-fit,minmax(86px,1fr))!important;
+  gap:5px!important;
+}
+.v25-theme .expedition-area-btn{
+  width:100%!important;
+  min-width:0!important;
+  min-height:40px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:6px!important;
+  padding:5px 8px!important;
+  overflow:hidden!important;
+  font:700 10px/1.15 var(--v25-serif)!important;
+  white-space:nowrap!important;
+  word-break:keep-all!important;
+}
+.v25-theme .expedition-area-btn i{
+  flex:0 0 auto;
+  display:grid!important;
+  place-items:center;
+  width:23px;
+  height:23px;
+  margin:0!important;
+  border:1px solid currentColor;
+  border-radius:50%;
+  font:700 12px/1 var(--v25-serif)!important;
+  opacity:.82;
+}
+.v25-theme .expedition-area-btn .area-label38{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  word-break:keep-all;
+}
+
+/* 비경 지도: 계통별 도장과 단계 링으로 정리 */
+.v25-theme .map-viewport{
+  background:linear-gradient(rgba(249,246,236,.72),rgba(238,232,217,.72)),url("assets/ink_v1/runtime/ui/world_map.png") center/cover no-repeat!important;
+}
+.v25-theme .map-world{background:none!important}
+.v25-theme .map-zone{
+  border:1px solid rgba(83,105,97,.22)!important;
+  border-radius:26px 8px 26px 8px!important;
+  background:rgba(255,253,247,.22)!important;
+}
+.v25-theme .map-zone span{
+  padding:4px 8px;
+  border-left:4px solid rgba(66,104,91,.5);
+  color:rgba(40,61,56,.7)!important;
+  font:800 19px/1.2 var(--v25-serif)!important;
+  letter-spacing:.04em;
+  white-space:nowrap;
+  word-break:keep-all;
+}
+.v25-theme .map-node{
+  display:grid!important;
+  place-items:center!important;
+  border:0!important;
+  color:#334741!important;
+  background-image:none!important;
+  filter:none!important;
+  font-family:var(--v25-serif)!important;
+}
+.v25-theme .map-root{
+  width:118px!important;
+  height:58px!important;
+  grid-template-columns:36px minmax(0,1fr)!important;
+  gap:6px!important;
+  padding:7px 9px!important;
+  border:1px solid #819a90!important;
+  border-radius:10px 3px 10px 3px!important;
+  background:linear-gradient(145deg,#faf8ef,#e7ece5)!important;
+  box-shadow:0 8px 18px rgba(40,58,53,.14),inset 0 1px #fff!important;
+}
+.v25-theme .map-root.on{border-color:#568675!important;background:linear-gradient(145deg,#f1f7f2,#dceae2)!important}
+.v25-theme .map-root.current{outline:3px solid rgba(155,65,55,.74)!important;outline-offset:4px!important}
+.v25-theme .map-root-seal38{
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border:1px solid #577f71;
+  border-radius:50%;
+  color:#fff;
+  background:#517d6e;
+  font:800 17px/1 var(--v25-serif);
+}
+.v25-theme .map-root-name38{
+  overflow:hidden;
+  color:#29443b;
+  font:800 14px/1.2 var(--v25-serif);
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  word-break:keep-all;
+}
+.v25-theme .map-point{
+  width:60px!important;
+  height:60px!important;
+  padding:0!important;
+  border:1px solid #a5afa9!important;
+  border-radius:50%!important;
+  background:radial-gradient(circle at 34% 29%,#fffdf8,#e8e7de 74%)!important;
+  box-shadow:0 6px 14px rgba(48,61,57,.12),inset 0 0 0 4px rgba(255,255,255,.55)!important;
+}
+.v25-theme .map-point.on{
+  border-color:#5e907f!important;
+  color:#245345!important;
+  background:radial-gradient(circle at 34% 29%,#f7fcf8,#d8e9df 74%)!important;
+}
+.v25-theme .map-point.available{
+  border-color:#b38c3e!important;
+  color:#77591e!important;
+  background:radial-gradient(circle at 34% 29%,#fffaf0,#f5e5b3 74%)!important;
+  box-shadow:0 0 0 4px rgba(183,145,64,.1),0 6px 15px rgba(82,66,32,.12)!important;
+}
+.v25-theme .map-point.locked{opacity:.55!important;filter:grayscale(.72)!important}
+.v25-theme .map-point-glyph38{font:800 23px/1 var(--v25-serif)}
+.v25-theme .map-point .rank{
+  right:-5px!important;
+  bottom:-4px!important;
+  min-width:29px!important;
+  height:20px!important;
+  padding:0 5px!important;
+  border:2px solid #f6f2e7!important;
+  border-radius:99px!important;
+  color:#fff!important;
+  background:#56645f!important;
+  font:700 9px/16px var(--v25-serif)!important;
+}
+.v25-theme .map-point.on .rank{background:#477766!important}
+.v25-theme .map-point.available .rank{background:#9d792f!important}
+.v25-theme .map-gate{
+  width:92px!important;
+  height:50px!important;
+  grid-template-columns:28px minmax(0,1fr)!important;
+  gap:5px!important;
+  padding:6px 8px!important;
+  border:1px solid #a08246!important;
+  border-radius:8px 8px 14px 14px!important;
+  color:#684f20!important;
+  background:linear-gradient(#fff6d9,#e8d49f)!important;
+  box-shadow:0 7px 16px rgba(69,54,24,.14),inset 0 0 0 2px rgba(255,255,255,.52)!important;
+}
+.v25-theme .map-gate::before{display:none!important}
+.v25-theme .map-gate-mark38{font:800 22px/1 var(--v25-serif)}
+.v25-theme .map-gate-name38{font:800 12px/1.15 var(--v25-serif);white-space:nowrap;word-break:keep-all}
+.v25-theme #mapDetail.v17float .node-kicker{font-family:var(--v25-serif)!important}
+
+@media(max-width:560px){
+  body.v22-panel-mode .controls .panel.active[data-panel="skills"]{
+    display:block!important;
+    overflow-y:auto!important;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+  body.v22-panel-mode [data-panel="skills"]>.section{
+    display:block!important;
+    height:auto!important;
+    min-height:min-content!important;
+    flex:none!important;
+  }
+  .v25-theme [data-panel="skills"]{padding:6px!important}
+  .v25-theme [data-panel="skills"]>.section{margin:0!important;padding:7px!important}
+  .v25-theme .spellbook38{gap:7px}
+  .v25-theme .spellbook38-intro{grid-template-columns:43px minmax(0,1fr);min-height:66px;padding:9px}
+  .v25-theme .spellbook38-core{width:41px;height:41px;font-size:19px}
+  .v25-theme .spell-card38{grid-template-columns:44px minmax(0,1fr);gap:8px;padding:9px 8px}
+  .v25-theme .spell-seal38{width:42px;height:42px;font-size:20px}
+  .v25-theme .spell-title38 b{font-size:13px}
+  .v25-theme .spell-desc38{margin:6px 0 7px;font-size:9.5px}
+  .v25-theme .spell-action38{min-width:84px;min-height:32px;padding:5px 7px;font-size:8.5px!important}
+  .v25-theme .spell-cost38 span{padding:3px 5px;font-size:7.5px}
+  .v25-theme .expedition-area-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .v25-theme .expedition-area-grid>.expedition-area-btn:only-child{grid-column:1/-1}
+  .v25-theme .dialog.v17expedition .expedition-area-btn{min-height:38px!important;padding:5px 7px!important;font-size:9.5px!important}
+}

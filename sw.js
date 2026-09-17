@@ -1,4 +1,4 @@
-const SW_BUILD='11.37.2';
+const SW_BUILD='11.38.0';
 
 self.addEventListener('install',event=>{
   event.waitUntil(self.skipWaiting());
