@@ -1,7 +1,8 @@
 (()=>{
 'use strict';
-const VERSION='11.34.0';
-const W=1120,H=1200,EXIT_X=560,EXIT_Y=600;
+const VERSION='11.35.0';
+const W=1800,H=2400,EXIT_X=900,EXIT_Y=1200;
+const TILE_W=700,TILE_H=460,PLAYER_VISUAL_H=100;
 const badge=text=>{const e=document.querySelector('#buildVersion');if(e)e.textContent=text};
 function load(path){
   const x=new XMLHttpRequest();
@@ -40,7 +41,7 @@ const EXIT={x:${EXIT_X},y:${EXIT_Y},r:27};`,'world constants');
 }`,
 `function edgePoint(){
   const edge=Math.floor(Math.random()*4);
-  const margin=48;
+  const margin=64;
   if(edge===0)return {x:margin,y:margin+Math.random()*(H-margin*2)};
   if(edge===1)return {x:W-margin,y:margin+Math.random()*(H-margin*2)};
   if(edge===2)return {x:margin+Math.random()*(W-margin*2),y:margin};
@@ -48,10 +49,10 @@ const EXIT={x:${EXIT_X},y:${EXIT_Y},r:27};`,'world constants');
 }`,'edge spawn');
   game=once(game,
 `point={x:clamp(anchor.x+Math.cos(angle)*radius,48,652),y:clamp(anchor.y+Math.sin(angle)*radius,40,408)};`,
-`point={x:clamp(anchor.x+Math.cos(angle)*radius,48,W-48),y:clamp(anchor.y+Math.sin(angle)*radius,48,H-48)};`,'cluster bounds');
+`point={x:clamp(anchor.x+Math.cos(angle)*radius,64,W-64),y:clamp(anchor.y+Math.sin(angle)*radius,64,H-64)};`,'cluster bounds');
   game=once(game,
 `const point={x:150+Math.random()*400,y:105+Math.random()*210};`,
-`const point={x:W*.18+Math.random()*W*.64,y:H*.18+Math.random()*H*.64};`,'vein spawn');
+`const point={x:W*.15+Math.random()*W*.70,y:H*.15+Math.random()*H*.70};`,'vein spawn');
   game=once(game,
 `    x:clamp(P.x+(Math.random()-.5)*70,45,655),
     y:clamp(P.y+(Math.random()-.5)*70,45,405),`,
@@ -66,7 +67,7 @@ const EXIT={x:${EXIT_X},y:${EXIT_Y},r:27};`,'world constants');
 `      enemy.x=clamp(enemy.x+enemy.vx*dt,18,682);
       enemy.y=clamp(enemy.y+enemy.vy*dt,18,420);`,
 `      enemy.x=clamp(enemy.x+enemy.vx*dt,18,W-18);
-      enemy.y=clamp(enemy.y+enemy.vy*dt,18,H-40);`,'spirit bounds');
+      enemy.y=clamp(enemy.y+enemy.vy*dt,18,H-18);`,'spirit bounds');
   game=once(game,
 `      if(enemy.escape)moveToward(enemy,enemy.x<350?-30:730,enemy.y,enemy.speed*1.2,dt);`,
 `      if(enemy.escape)moveToward(enemy,enemy.x<W/2?-30:W+30,enemy.y,enemy.speed*1.2,dt);`,'rogue escape');
@@ -85,8 +86,20 @@ const EXIT={x:${EXIT_X},y:${EXIT_Y},r:27};`,'world constants');
   ink=once(ink,
 `const W=700,H=460,EXIT={x:350,y:438},BASE='assets/ink_v1/';`,
 `const W=${W},H=${H},EXIT={x:${EXIT_X},y:${EXIT_Y}},BASE='assets/ink_v1/';`,'ink world constants');
+  ink=once(ink,
+`function drawBackground(area){const c=S.ctx,img=S.images['bg_'+area]||S.images.bg_qingyun;c.globalAlpha=1;c.drawImage(img,0,0,W,H);const wash=c.createLinearGradient(0,0,0,H);wash.addColorStop(0,'rgba(247,243,229,.08)');wash.addColorStop(1,'rgba(20,31,28,.10)');c.fillStyle=wash;c.fillRect(0,0,W,H)}`,
+`function drawBackground(area){const c=S.ctx,img=S.images['bg_'+area]||S.images.bg_qingyun;c.globalAlpha=1;const tw=${TILE_W},th=${TILE_H};for(let y=0,row=0;y<H;y+=th,row++){for(let x=0,col=0;x<W;x+=tw,col++){const fx=col%2?-1:1,fy=row%2?-1:1;c.save();c.translate(x+(fx<0?tw:0),y+(fy<0?th:0));c.scale(fx,fy);c.drawImage(img,0,0,tw,th);c.restore()}}const wash=c.createLinearGradient(0,0,0,H);wash.addColorStop(0,'rgba(247,243,229,.06)');wash.addColorStop(1,'rgba(20,31,28,.08)');c.fillStyle=wash;c.fillRect(0,0,W,H)}`,'tiled background');
+  ink=once(ink,
+`anchored('player',row,cols,idx,p.x,ground,53,pFacing<0);`,
+`anchored('player',row,cols,idx,p.x,ground,${PLAYER_VISUAL_H},pFacing<0);`,'player visual height');
   (0,eval)(`${ink}\n//# sourceURL=ink_runtime_v11_31.worldscale.js`);
-  window.__xianxiaWorldScale={version:VERSION,W,H,exit:{x:EXIT_X,y:EXIT_Y},scaleX:W/700,scaleY:H/460};
+
+  window.__xianxiaWorldScale={
+    version:VERSION,W,H,ratio:'3:4',exit:{x:EXIT_X,y:EXIT_Y},
+    camera:{referenceCss:{w:390,h:844},visibleHeight:960,visibleWidthAtReference:390/(844/960),smoothingSeconds:.14,deadZone:{x:.08,y:.06},lookAhead:.08},
+    player:{visualHeight:PLAYER_VISUAL_H},
+    background:{mode:'tile-current',tileWorld:{w:TILE_W,h:TILE_H},futureGameAsset:{width:2304,height:3072,format:'webp',quality:85,pathTemplate:'assets/ink_v2/runtime/backgrounds/{area}.webp'},master:{width:3072,height:4096}}
+  };
   badge(`BUILD ${VERSION} · WORLD ${W}×${H}`);
 }catch(error){
   console.error(error);
