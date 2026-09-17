@@ -303,11 +303,7 @@ function subscribeFrame(){
 
 function boot(){
   installStyles();
-  moveRecordsToAreaTab();
-  ensureCompactPopover('#ascViewport','#ascDetail','.asc-node');
-  ensureCompactPopover('#mapViewport','#mapDetail','.map-node');
-  annotateMap();observeMap();badge();
-  setTimeout(()=>{moveRecordsToAreaTab();annotateMap();badge()},250);
+  badge();
   subscribeFrame();
 }
 

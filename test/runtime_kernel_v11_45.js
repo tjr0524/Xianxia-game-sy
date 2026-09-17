@@ -1,8 +1,8 @@
 (()=>{
 'use strict';
 
-const BUILD='11.47.1';
-const SESSION_KEY='xianxia_runtime_safety_11_47_test';
+const BUILD='11.48.0';
+const SESSION_KEY='xianxia_runtime_safety_11_48_test';
 
 function setCanonicalBuild(){
   try{

@@ -9,6 +9,7 @@ const explore=read('exploration_runtime_v11_45.js');
 const world=read('exploration_world_v11_33_4.js');
 const feedback=read('ui_feedback_v11_40.js');
 const cooldown=read('combat_cooldown_hud_v11_43.js');
+const resultFlow=read('result_flow_v11_41.js');
 
 if(!index.includes('runtime_frame_hub_v11_47.js'))throw new Error('shared frame hub is not loaded');
 const gamePos=index.indexOf('game_runtime_v11_45.js');
@@ -30,8 +31,8 @@ for(const [name,src,loop,legacy] of checks){
   if(src.includes(legacy))throw new Error(name+' still exposes its old frame/snapshot entrypoint');
 }
 
-const joined=explore+world+feedback+cooldown;
-for(const name of ['exploration-lifecycle','world-camera','exploration-hud','player-feedback','combat-cooldowns']){
+const joined=explore+world+feedback+cooldown+resultFlow;
+for(const name of ['exploration-lifecycle','world-camera','exploration-hud','player-feedback','combat-cooldowns','result-flow']){
   if(!joined.includes("'"+name+"'"))throw new Error('missing frame subscriber '+name);
 }
 if(!explore.includes("cameraOwner='world-wrapper'"))throw new Error('world wrapper is not declared as camera owner');
@@ -40,5 +41,7 @@ if(!world.includes("hub.subscribe('world-camera',cameraFrame,20)"))throw new Err
 if(!explore.includes("hub.subscribe('exploration-hud',hudFrame,30)"))throw new Error('HUD must run after world camera');
 if(!feedback.includes("hub.subscribe('player-feedback',frame,40)"))throw new Error('player feedback must run after camera/HUD');
 if(!cooldown.includes("hub.subscribe('combat-cooldowns',update,50)"))throw new Error('cooldown HUD priority changed');
+if(resultFlow.includes('requestAnimationFrame(frame)'))throw new Error('result flow still owns a continuous RAF');
+if(!resultFlow.includes("hub.subscribe('result-flow',frame,60)"))throw new Error('result flow priority changed');
 
 console.log('frame ownership validation: OK');
