@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const PATCH_VERSION='11.50.3';
+const PATCH_VERSION='11.50.4';
 const BASE='balance_core_v11_37.js';
 const SAVE_KEY='xianxia_proto_v11';
 
@@ -92,6 +92,22 @@ function restorePersistedBasic(attempt=0){
   }catch(error){console.warn('[save-fix] basic restore failed',error)}
 }
 
+function installFrameSnapshotBroker(){
+  const D=window.__xianxiaDebug;
+  if(!D?.snapshot||D.__v11504SnapshotBroker)return;
+  const raw=D.snapshot.bind(D);
+  let current=null,stopped=false;
+  try{current=raw()}catch{}
+  const capture=()=>{
+    if(stopped)return;
+    try{current=raw()}catch{}
+    requestAnimationFrame(capture);
+  };
+  D.snapshot=()=>current||raw();
+  D.__v11504SnapshotBroker={version:PATCH_VERSION,raw,stop(){stopped=true}};
+  requestAnimationFrame(capture);
+}
+
 function cleanupDetailClose(detail){
   if(!detail)return;
   const closers=[...detail.querySelectorAll('button')].filter(button=>{
@@ -142,7 +158,8 @@ try{
   try{(0,eval)(load('tree_camera_gesture_v11_44.js')+'\n//# sourceURL=tree_camera_gesture.runtime.js')}catch(cameraError){console.warn('[tree-camera] load failed',cameraError)}
   try{(0,eval)(load('tree_touch_fix_v11_37_4.js')+'\n//# sourceURL=tree_touch_fix.runtime.js')}catch(touchError){console.warn('[touch-fix] load failed',touchError)}
   const src=load(BASE).replaceAll('11.37.2',PATCH_VERSION);
-  (0,eval)(src+'\n//# sourceURL=balance_core_v11_50_3.entry.runtime.js');
+  (0,eval)(src+'\n//# sourceURL=balance_core_v11_50_4.entry.runtime.js');
+  installFrameSnapshotBroker();
   setTimeout(()=>restorePersistedBasic(),0);
   installCanonicalHeader();
   window.__xianxiaEncounterHotfix={
@@ -151,7 +168,8 @@ try{
     canonicalBuildOwner:true,
     globalMutationObserverRemoved:true,
     iosEmergencyMonkeypatchRemoved:true,
-    legacyWorldLoopDisabled:true,
+    singleWorldCompositor:true,
+    frameSnapshotBroker:true,
     devMenuSwordTrigger:true,
     inlineBuildBadge:true,
     fullRateExplorationCamera:true
