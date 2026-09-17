@@ -242,15 +242,33 @@ function interceptPointer(){
   game.addEventListener('pointerup',end,{capture:true,passive:false});game.addEventListener('pointercancel',end,{capture:true,passive:false});
 }
 
-function frame(){
-  const D=window.__xianxiaDebug;let s=null;try{s=D?.snapshot?.()}catch{}
+function lifecycleFrame(s){
   if(s?.phase==='run'){
-    activate(s);patchInkRuntime();syncBackdrop(s);updateCamera(s);updateHud(s);
+    activate(s);patchInkRuntime();syncBackdrop(s);
   }else deactivate();
-  requestAnimationFrame(frame);
+}
+function hudFrame(s){
+  if(s?.phase==='run'&&state.active)updateHud(s);
+}
+function subscribeFrames(){
+  const hub=window.__xianxiaFrameHub;
+  if(hub?.subscribe){
+    hub.subscribe('exploration-lifecycle',lifecycleFrame,10);
+    hub.subscribe('exploration-hud',hudFrame,30);
+    state.frameOwner='shared-hub';
+    state.cameraOwner='world-wrapper';
+    return;
+  }
+  function fallback(){
+    const D=window.__xianxiaDebug;let s=null;try{s=D?.snapshot?.()}catch{}
+    lifecycleFrame(s);hudFrame(s);
+    requestAnimationFrame(fallback);
+  }
+  state.frameOwner='fallback';
+  requestAnimationFrame(fallback);
 }
 
-installCss();ensureBackdrop();makeHud();interceptPointer();buildBadge(`BUILD ${VERSION} · CAM ✓`);requestAnimationFrame(frame);
+installCss();ensureBackdrop();makeHud();interceptPointer();buildBadge(`BUILD ${VERSION} · CAM ✓`);subscribeFrames();
 })();
 
 //# sourceURL=exploration_runtime_v11_45.js

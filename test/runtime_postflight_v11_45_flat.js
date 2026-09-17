@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
-const VERSION='11.46.0';
-const FLAT_VERSION='11.46.0-test1';
+const VERSION='11.47.0';
+const FLAT_VERSION='11.47.0-test2';
 
 window.__xianxiaFlatPreflight?.restoreBasic?.();
 if(window.__xianxiaProgression)window.__xianxiaProgression.balanceVersion='core-v0.1';
@@ -15,7 +15,7 @@ window.__xianxiaWorldScale={
 window.__xianxiaBalance={version:'11.37.2',core:'Core Balance v0.2',spatial:'Spatial v0.1',encounter:'Encounter Density v0.3',incoming:'Multi-target v0.1'};
 window.__xianxiaEncounterPatch={version:'11.37.2',flattened:true};
 window.__xianxiaEncounterHotfix={version:VERSION,compatEntrypoint:'11.37.1',basicSaveFix:true,treeTouchFix:true,treeCameraFix:true,cooldownHudFix:true,uiHygiene:true,runtimeSafety:true,flattened:true};
-window.__xianxiaFlatRuntime={version:FLAT_VERSION,loaderPatches:false,syncXHR:false,eval:false};
+window.__xianxiaFlatRuntime={version:FLAT_VERSION,loaderPatches:false,syncXHR:false,eval:false,frameOwner:'shared-hub'};
 window.__xianxiaRuntime?.pinBuildBadge?.();
 
 function loadScript(path,version,next,label){

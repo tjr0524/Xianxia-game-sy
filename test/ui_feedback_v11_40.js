@@ -278,11 +278,7 @@ function showDeath(){
   setTimeout(()=>{layer.remove();deathActive=false},1320);
 }
 
-function snapshot(){
-  try{return window.__xianxiaDebug?.snapshot?.()||null}catch{return null}
-}
-function frame(){
-  const s=snapshot();
+function frame(s){
   const phase=s?.phase||null;
   if(phase==='run'){
     followPlayerHp(s);
@@ -291,7 +287,18 @@ function frame(){
     if(dead)showDeath();
   }
   priorPhase=phase;
-  requestAnimationFrame(frame);
+}
+function subscribeFrame(){
+  const hub=window.__xianxiaFrameHub;
+  if(hub?.subscribe){
+    hub.subscribe('player-feedback',frame,40);
+    return;
+  }
+  function fallback(){
+    let s=null;try{s=window.__xianxiaDebug?.snapshot?.()||null}catch{}
+    frame(s);requestAnimationFrame(fallback);
+  }
+  requestAnimationFrame(fallback);
 }
 
 function boot(){
@@ -301,7 +308,7 @@ function boot(){
   ensureCompactPopover('#mapViewport','#mapDetail','.map-node');
   annotateMap();observeMap();badge();
   setTimeout(()=>{moveRecordsToAreaTab();annotateMap();badge()},250);
-  requestAnimationFrame(frame);
+  subscribeFrame();
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
