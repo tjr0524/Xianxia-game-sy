@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.35.0',W=1800,H=2400,EXIT_X=900,EXIT_Y=1200,EXIT_APPROACH_Y=1177;
+const VERSION='11.50.0',W=1800,H=2400,EXIT_X=900,EXIT_Y=1200,EXIT_APPROACH_Y=1177;
 const VISIBLE_H=960,SMOOTHING=.14,DEAD_X=.08,DEAD_Y=.06,LOOK_AHEAD=.08;
 const displayBuild=()=>window.__XIANXIA_BUILD__||VERSION;
 const badge=text=>{const e=document.querySelector('#buildVersion');if(e)e.textContent=text};
@@ -110,6 +110,26 @@ const EXIT_APPROACH={x:${EXIT_X},y:${EXIT_APPROACH_Y}};`,'world constants');
 }`,'camera behavior');
   src=once(src,`  const target=worldToScreen(EXIT_APPROACH.x,EXIT_APPROACH.y),p=s.P||{x:350,y:230},player=worldToScreen(p.x,p.y);`,`  const target=worldToScreen(EXIT_APPROACH.x,EXIT_APPROACH.y),p=s.P||{x:W/2,y:H/2},player=worldToScreen(p.x,p.y);`,'guide fallback');
   src=once(src,`function screenToWorld(e){return{x:clamp((e.clientX-state.left)/state.scale,11,689),y:clamp((e.clientY-state.top)/state.scale,11,449)}}`,`function screenToWorld(e){return{x:clamp((e.clientX-state.left)/state.scale,11,W-11),y:clamp((e.clientY-state.top)/state.scale,11,H-11)}}`,'pointer world bounds');
+  src=once(src,
+`function frame(){
+  const D=window.__xianxiaDebug;let s=null;try{s=D?.snapshot?.()}catch{}
+  if(s?.phase==='run'){
+    activate(s);patchInkRuntime();syncBackdrop(s);updateCamera(s);updateHud(s);
+  }else deactivate();
+  requestAnimationFrame(frame);
+}`,
+`let v50FrameAt=0,v50IdleProbe=0;
+function frame(now=performance.now()){
+  const active=document.body.classList.contains('v1133-run');
+  if(active&&now-v50FrameAt<34){requestAnimationFrame(frame);return}
+  if(!active&&now-v50IdleProbe<250){requestAnimationFrame(frame);return}
+  if(active)v50FrameAt=now;else v50IdleProbe=now;
+  const D=window.__xianxiaDebug;let s=null;try{s=D?.snapshot?.()}catch{}
+  if(s?.phase==='run'){
+    activate(s);patchInkRuntime();syncBackdrop(s);updateCamera(s);updateHud(s);
+  }else deactivate();
+  requestAnimationFrame(frame);
+}`,'iOS-friendly frame throttle');
   (0,eval)(`${src}\n//# sourceURL=exploration_mode_v11_33.worldscale.js`);
   badge(`BUILD ${displayBuild()} · CAM ✓ · WORLD ${W}×${H}`);
 }catch(error){console.error(error);badge(`BUILD ${displayBuild()} · CAM LOAD ERR`)}
