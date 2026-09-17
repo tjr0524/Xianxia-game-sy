@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.47.0';
+const VERSION='11.47.1';
 if(window.__xianxiaUiHygiene?.version===VERSION)return;
 window.__xianxiaUiHygiene={version:VERSION};
 window.__XIANXIA_BUILD__=VERSION;
@@ -75,6 +75,37 @@ style.textContent=`
 .brand-title-row{display:flex!important;align-items:baseline!important;gap:7px!important;min-width:0!important}
 #buildVersion.build-version{position:static!important;z-index:auto!important;transform:none!important;display:inline!important;min-width:0!important;min-height:0!important;width:auto!important;height:auto!important;margin:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;backdrop-filter:none!important;color:#8b918e!important;font-size:8px!important;font-weight:600!important;line-height:1.2!important;letter-spacing:.04em!important;white-space:nowrap!important;pointer-events:none!important;opacity:.82!important}
 body.v22-combat-mode #buildVersion{display:none!important}
+@media(max-width:560px){
+  body.v25-theme .topbar{
+    display:flex!important;
+    flex-wrap:wrap!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    gap:8px!important;
+  }
+  body.v25-theme .brand{
+    flex:1 1 100%!important;
+    width:100%!important;
+    min-width:0!important;
+  }
+  body.v25-theme .brand>div:last-child{min-width:0!important;flex:1 1 auto!important}
+  body.v25-theme .brand-title-row{display:flex!important;align-items:baseline!important;gap:6px!important;min-width:0!important}
+  body.v25-theme .brand-title-row h1{
+    flex:0 0 auto!important;
+    white-space:nowrap!important;
+    word-break:keep-all!important;
+  }
+  body.v25-theme .resources{
+    flex:1 1 100%!important;
+    width:100%!important;
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:6px!important;
+  }
+  body.v25-theme .resource{min-width:0!important;width:auto!important}
+  body.v25-theme .resource>span,
+  body.v25-theme .resource>b{white-space:nowrap!important;word-break:keep-all!important}
+}
 `;
 (document.head||document.documentElement).appendChild(style);
 
