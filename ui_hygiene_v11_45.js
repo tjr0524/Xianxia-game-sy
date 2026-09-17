@@ -3,7 +3,6 @@
 const VERSION='11.45.0';
 if(window.__xianxiaUiHygiene?.version===VERSION)return;
 window.__xianxiaUiHygiene={version:VERSION};
-window.__XIANXIA_BUILD__=VERSION;
 
 const $=s=>document.querySelector(s);
 let queued=false;
@@ -30,8 +29,6 @@ function clean(){
   queued=false;
   normalizeDetail($('#ascDetail'));
   normalizeDetail($('#mapDetail'));
-  const badge=$('#buildVersion');
-  if(badge)badge.textContent=`BUILD ${VERSION}`;
 }
 function schedule(){
   if(queued)return;
@@ -68,8 +65,14 @@ style.textContent=`
 `;
 (document.head||document.documentElement).appendChild(style);
 
-const observer=new MutationObserver(schedule);
-observer.observe(document.documentElement,{childList:true,subtree:true});
+function scheduleAfterUiAction(){
+  schedule();
+  setTimeout(schedule,40);
+}
+document.addEventListener('click',event=>{
+  if(event.target?.closest?.('.asc-node,.map-node,.detail-action,.tab-btn[data-tab="tree"]'))scheduleAfterUiAction();
+},true);
+document.addEventListener('xianxia:panel-open',scheduleAfterUiAction,true);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule,{once:true});
 else schedule();
 })();
