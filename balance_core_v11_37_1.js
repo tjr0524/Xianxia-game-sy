@@ -9,7 +9,6 @@ const TREE_CAMERA_VERSION='11.45.0';
 const HYGIENE_VERSION='11.45.0';
 const BASE='balance_core_v11_37.js';
 const SAVE_KEY='xianxia_proto_v11';
-window.__XIANXIA_BUILD__=PATCH_VERSION;
 
 function load(path,version=PATCH_VERSION){
   const x=new XMLHttpRequest();
@@ -138,11 +137,11 @@ try{
   const src=load(BASE);
   (0,eval)(src+'\n//# sourceURL=balance_core_v11_37_4.runtime.js');
   setTimeout(()=>restorePersistedBasic(),0);
-  const e=document.querySelector('#buildVersion');if(e)e.textContent=`BUILD ${PATCH_VERSION}`;
-  window.__xianxiaEncounterHotfix={version:PATCH_VERSION,compatEntrypoint:'11.37.1',basicSaveFix:true,treeTouchFix:true,treeCameraFix:true,cooldownHudFix:true,uiHygiene:true};
+  window.__xianxiaRuntime?.pinBuildBadge?.();
+  window.__xianxiaEncounterHotfix={version:PATCH_VERSION,compatEntrypoint:'11.37.1',basicSaveFix:true,treeTouchFix:true,treeCameraFix:true,cooldownHudFix:true,uiHygiene:true,runtimeSafety:true};
 }catch(error){
   console.error(error);
-  const e=document.querySelector('#buildVersion');if(e)e.textContent=`BUILD ${PATCH_VERSION}`;
+  window.__xianxiaRuntime?.pinBuildBadge?.();
 }
 
 if(document.readyState==='complete')setTimeout(loadFeedbackPatch,0);
