@@ -3,7 +3,6 @@
 const VERSION='11.45.0';
 if(window.__xianxiaCooldownHud?.version===VERSION)return;
 window.__xianxiaCooldownHud={version:VERSION};
-window.__XIANXIA_BUILD__=VERSION;
 
 const $=s=>document.querySelector(s);
 const SHORT={basic:'검격',sword:'어검',wave:'검풍',chain:'연환',thunder:'낙뢰',array:'만검'};
@@ -177,6 +176,5 @@ function update(){
 
 installStyle();
 ensureHud();
-const badge=$('#buildVersion');if(badge)badge.textContent=`BUILD ${VERSION}`;
 requestAnimationFrame(update);
 })();
