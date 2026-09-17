@@ -22,9 +22,6 @@ const SKILL_COST={
   array:[null,{s:1200,h:12,hg:2}]
 };
 
-let spellObserver=null;
-let mapObserver=null;
-let pickerObserver=null;
 let spellRenderQueued=false;
 let mapDecorating=false;
 let pickerDecorating=false;
@@ -126,7 +123,6 @@ function makeSpellCard(M,phase,skill){
 function renderSpellbook(){
   const root=$('#skillTree');
   if(!root)return;
-  spellObserver?.disconnect();
   const shot=snapshot(),M=shot.M;
   const book=document.createElement('div');
   book.className='spellbook38';
@@ -135,7 +131,6 @@ function renderSpellbook(){
     <div class="spellbook38-note"><strong>기본 검격 · 상시</strong><span>별도 해금 없이 사용 · 수련 도맥에서 강화</span></div>`;
   for(const skill of spells())book.appendChild(makeSpellCard(M,shot.phase,skill));
   root.replaceChildren(book);
-  spellObserver?.observe(root,{childList:true});
 }
 function scheduleSpellbook(){
   if(spellRenderQueued)return;
@@ -177,7 +172,6 @@ function decoratePicker(){
   const grid=$('#expeditionAreaPicker .expedition-area-grid');
   if(!grid||pickerDecorating)return;
   pickerDecorating=true;
-  pickerObserver?.disconnect();
   for(const button of grid.querySelectorAll('.expedition-area-btn')){
     const raw=button.textContent.trim();
     const glyph=button.querySelector('i')?.textContent.trim()||raw.slice(0,1);
@@ -185,7 +179,6 @@ function decoratePicker(){
     button.innerHTML=`<i aria-hidden="true">${glyph}</i><span class="area-label38">${name}</span>`;
     button.setAttribute('aria-label',name);
   }
-  pickerObserver?.observe(grid,{childList:true,subtree:true});
   pickerDecorating=false;
 }
 
@@ -200,7 +193,6 @@ function decorateMap(){
   const world=$('#mapWorld');
   if(!world||mapDecorating)return;
   mapDecorating=true;
-  mapObserver?.disconnect();
   for(const zone of world.querySelectorAll('.map-zone span'))zone.textContent=compactAreaName(zone.textContent);
   for(const node of world.querySelectorAll('.map-node')){
     if(node.classList.contains('map-root')){
@@ -223,71 +215,7 @@ function decorateMap(){
       node.setAttribute('aria-label',`${name} 관문`);
     }
   }
-  mapObserver?.observe(world,{childList:true,subtree:true});
   mapDecorating=false;
-}
-
-function moveRecordsToExpedition(){
-  const records=$('#bestStone')?.closest('.section');
-  const dialog=$('#ov .dialog');
-  const start=$('#start');
-  if(!records||!dialog||!start)return;
-  records.classList.add('expedition-records38');
-  if(!records.querySelector('.expedition-record-head38')){
-    const head=document.createElement('div');
-    head.className='expedition-record-head38';
-    head.innerHTML='<b>원정 기록</b><span>선택한 비경의 최고 기록</span>';
-    records.prepend(head);
-  }
-  if(records.parentElement!==dialog)start.insertAdjacentElement('afterend',records);
-}
-
-function installDetailPopover(viewSelector,detailSelector,nodeSelector){
-  const view=$(viewSelector),detail=$(detailSelector);
-  if(!view||!detail||detail.dataset.v38Popover)return;
-  detail.dataset.v38Popover='1';
-  detail.classList.add('v17float','detail-popover38');
-  detail.classList.remove('open');
-  view.appendChild(detail);
-
-  const close=()=>detail.classList.remove('open');
-  const addClose=()=>{
-    let button=detail.querySelector('.detail-close38');
-    if(button)return button;
-    button=document.createElement('button');
-    button.type='button';
-    button.className='detail-close38';
-    button.setAttribute('aria-label','상세정보 닫기');
-    button.textContent='×';
-    button.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();close()});
-    detail.appendChild(button);
-    return button;
-  };
-  const place=node=>{
-    const vr=view.getBoundingClientRect(),nr=node.getBoundingClientRect();
-    const width=Math.min(252,Math.max(190,vr.width-18));
-    detail.style.width=`${width}px`;
-    detail.classList.add('open');
-    const height=Math.min(detail.scrollHeight,210);
-    let left=nr.left-vr.left+nr.width/2-width/2;
-    left=Math.max(8,Math.min(vr.width-width-8,left));
-    let top=nr.bottom-vr.top+8;
-    if(top+height>vr.height-8)top=nr.top-vr.top-height-8;
-    top=Math.max(8,Math.min(vr.height-height-8,top));
-    detail.style.left=`${left}px`;
-    detail.style.top=`${top}px`;
-  };
-  view.addEventListener('click',event=>{
-    const node=event.target.closest(nodeSelector);
-    if(node){
-      requestAnimationFrame(()=>{addClose();place(node)});
-      return;
-    }
-    if(!event.target.closest(detailSelector)&&!event.target.closest('.camera'))close();
-  },true);
-  for(const type of ['pointerdown','pointermove','pointerup','click']){
-    detail.addEventListener(type,event=>event.stopPropagation());
-  }
 }
 
 function polishPanelCopy(){
@@ -295,17 +223,16 @@ function polishPanelCopy(){
   if(mapHint)mapHint.textContent='도장=계통 · 숫자=개척 단계';
 }
 
-function observe(){
-  const skillRoot=$('#skillTree');
-  if(skillRoot){spellObserver=new MutationObserver(scheduleSpellbook);spellObserver.observe(skillRoot,{childList:true})}
-  const world=$('#mapWorld');
-  if(world){mapObserver=new MutationObserver(()=>requestAnimationFrame(decorateMap));mapObserver.observe(world,{childList:true,subtree:true})}
-  const picker=$('#expeditionAreaPicker .expedition-area-grid');
-  if(picker){pickerObserver=new MutationObserver(()=>requestAnimationFrame(decoratePicker));pickerObserver.observe(picker,{childList:true,subtree:true})}
+function bindEvents(){
   const areaPanel=$('[data-panel="skills"]');
   areaPanel?.addEventListener('xianxia:panel-open',scheduleSpellbook);
   $('.tab-btn[data-tab="skills"]')?.addEventListener('click',scheduleSpellbook);
   $('.tab-btn[data-tab="tree"]')?.addEventListener('click',()=>requestAnimationFrame(decorateMap));
+  document.addEventListener('xianxia:progression-rendered',()=>{
+    decoratePicker();
+    decorateMap();
+    scheduleSpellbook();
+  });
 }
 function boot(){
   promoteStylesheet();
@@ -313,7 +240,7 @@ function boot(){
   renderSpellbook();
   decoratePicker();
   decorateMap();
-  observe();
+  bindEvents();
   setTimeout(()=>{decoratePicker();decorateMap();scheduleSpellbook()},250);
 }
 
