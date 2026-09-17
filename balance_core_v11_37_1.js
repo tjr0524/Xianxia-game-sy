@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const PATCH_VERSION='11.47.1';
+const PATCH_VERSION='11.48.0';
 const FEEDBACK_VERSION='11.40.0';
 const RESULT_VERSION='11.41.0';
 const MAP_DETAIL_VERSION='11.42.0';
@@ -13,8 +13,7 @@ window.__XIANXIA_BUILD__=PATCH_VERSION;
 
 function load(path,version=PATCH_VERSION){
   const x=new XMLHttpRequest();
-  x.open('GET',`${path}?v=${encodeURIComponent(version)}&ts=${Date.now()}`,false);
-  x.setRequestHeader('Cache-Control','no-cache');
+  x.open('GET',`${path}?v=${encodeURIComponent(version)}`,false);
   x.send(null);
   if(!((x.status>=200&&x.status<300)||x.status===0))throw new Error(`${path} load failed: ${x.status}`);
   return x.responseText;
@@ -56,7 +55,7 @@ function loadUiHygiene(){
   if(document.querySelector('script[data-v1145-hygiene]'))return;
   const script=document.createElement('script');
   script.dataset.v1145Hygiene='1';
-  script.src=`ui_hygiene_v11_45.js?v=${encodeURIComponent(HYGIENE_VERSION)}&ts=${Date.now()}`;
+  script.src=`ui_hygiene_v11_45.js?v=${encodeURIComponent(HYGIENE_VERSION)}`;
   script.async=false;
   script.onerror=()=>console.warn('[ui-11.47.1] hygiene patch load failed');
   document.body.appendChild(script);
@@ -66,7 +65,7 @@ function loadCooldownHud(){
   if(document.querySelector('script[data-v1143-cooldown]')){loadUiHygiene();return}
   const script=document.createElement('script');
   script.dataset.v1143Cooldown='1';
-  script.src=`combat_cooldown_hud_v11_43.js?v=${encodeURIComponent(COOLDOWN_VERSION)}&ts=${Date.now()}`;
+  script.src=`combat_cooldown_hud_v11_43.js?v=${encodeURIComponent(COOLDOWN_VERSION)}`;
   script.async=false;
   script.onload=loadUiHygiene;
   script.onerror=()=>{console.warn('[ui-11.45] cooldown HUD load failed');loadUiHygiene()};
@@ -77,7 +76,7 @@ function loadMapDetailPatch(){
   if(document.querySelector('script[data-v1142-map-detail]')){loadCooldownHud();return}
   const script=document.createElement('script');
   script.dataset.v1142MapDetail='1';
-  script.src=`map_detail_v11_42.js?v=${encodeURIComponent(MAP_DETAIL_VERSION)}&ts=${Date.now()}`;
+  script.src=`map_detail_v11_42.js?v=${encodeURIComponent(MAP_DETAIL_VERSION)}`;
   script.async=false;
   script.onload=loadCooldownHud;
   script.onerror=()=>{console.warn('[ui-11.42] map detail patch load failed');loadCooldownHud()};
@@ -88,7 +87,7 @@ function loadResultFlow(){
   if(document.querySelector('script[data-v1141-result]')){loadMapDetailPatch();return}
   const result=document.createElement('script');
   result.dataset.v1141Result='1';
-  result.src=`result_flow_v11_41.js?v=${encodeURIComponent(RESULT_VERSION)}&ts=${Date.now()}`;
+  result.src=`result_flow_v11_41.js?v=${encodeURIComponent(RESULT_VERSION)}`;
   result.async=false;
   result.onload=loadMapDetailPatch;
   result.onerror=()=>{console.warn('[ui-11.41] result flow load failed');loadMapDetailPatch()};
@@ -99,7 +98,7 @@ function loadFeedbackPatch(){
   if(document.querySelector('script[data-v1140-feedback]')){loadResultFlow();return}
   const script=document.createElement('script');
   script.dataset.v1140Feedback='1';
-  script.src=`ui_feedback_v11_40.js?v=${encodeURIComponent(FEEDBACK_VERSION)}&ts=${Date.now()}`;
+  script.src=`ui_feedback_v11_40.js?v=${encodeURIComponent(FEEDBACK_VERSION)}`;
   script.async=false;
   script.onload=loadResultFlow;
   script.onerror=()=>{console.warn('[ui-11.40] feedback patch load failed');loadResultFlow()};
@@ -112,9 +111,10 @@ try{
   try{(0,eval)(load('tree_touch_fix_v11_37_4.js')+'\n//# sourceURL=tree_touch_fix_v11_46.runtime.js')}catch(touchError){console.warn('[touch-fix] load failed',touchError)}
   const src=load(BASE);
   (0,eval)(src+'\n//# sourceURL=balance_core_v11_37_2.entry.runtime.js');
+  try{(0,eval)(load('ios_stability_v11_48.js')+'\n//# sourceURL=ios_stability_v11_48.runtime.js')}catch(stabilityError){console.warn('[ios-stability] load failed',stabilityError)}
   setTimeout(()=>restorePersistedBasic(),0);
   const e=document.querySelector('#buildVersion');if(e)e.textContent=`BUILD ${PATCH_VERSION}`;
-  window.__xianxiaEncounterHotfix={version:PATCH_VERSION,compatEntrypoint:'11.37.1',basicSaveFix:true,treeTouchFix:true,treeCameraFix:true,cooldownHudFix:true,uiHygiene:true,devMenuSwordTrigger:true,inlineBuildBadge:true,herbSpatialFix:true,mobileHeaderFix:true,loaderRollback:true};
+  window.__xianxiaEncounterHotfix={version:PATCH_VERSION,compatEntrypoint:'11.37.1',basicSaveFix:true,treeTouchFix:true,treeCameraFix:true,cooldownHudFix:true,uiHygiene:true,devMenuSwordTrigger:true,inlineBuildBadge:true,herbSpatialFix:true,mobileHeaderFix:true,loaderRollback:true,iosStability:true,cacheStable:true};
 }catch(error){
   console.error(error);
   const e=document.querySelector('#buildVersion');if(e)e.textContent=`BUILD ${PATCH_VERSION}`;
