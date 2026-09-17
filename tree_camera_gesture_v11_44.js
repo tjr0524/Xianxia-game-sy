@@ -230,10 +230,13 @@ style.id='tree-camera-gesture-v11-45';
 style.textContent=`#ascViewport,#mapViewport{touch-action:none!important;overscroll-behavior:contain!important}#ascViewport .asc-node,#mapViewport .map-node{touch-action:none!important}`;
 (document.head||document.documentElement).appendChild(style);
 
-const observer=new MutationObserver(()=>{
-  if($('#ascViewport')||$('#mapViewport'))requestAnimationFrame(()=>requestAnimationFrame(initialFocus));
-});
-observer.observe(document.documentElement,{childList:true,subtree:true});
-if(document.readyState!=='loading')requestAnimationFrame(()=>requestAnimationFrame(initialFocus));
-else document.addEventListener('DOMContentLoaded',()=>requestAnimationFrame(()=>requestAnimationFrame(initialFocus)),{once:true});
+function scheduleInitialFocus(){
+  requestAnimationFrame(()=>requestAnimationFrame(initialFocus));
+}
+if(document.readyState!=='loading')scheduleInitialFocus();
+else document.addEventListener('DOMContentLoaded',scheduleInitialFocus,{once:true});
+window.addEventListener('load',scheduleInitialFocus,{once:true});
+document.addEventListener('xianxia:panel-open',scheduleInitialFocus,true);
+setTimeout(scheduleInitialFocus,250);
+setTimeout(scheduleInitialFocus,800);
 })();

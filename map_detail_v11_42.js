@@ -3,7 +3,6 @@
 const VERSION='11.42.0';
 if(window.__xianxiaMapDetailPatch?.version===VERSION)return;
 window.__xianxiaMapDetailPatch={version:VERSION};
-window.__XIANXIA_BUILD__=VERSION;
 
 const $=s=>document.querySelector(s);
 let observer=null;
@@ -56,8 +55,6 @@ function cleanDetail(){
     const header=$('[data-panel="tree"] .section-head .small');
     if(header&&header.textContent!=='노드를 눌러 개척 정보 확인')header.textContent='노드를 눌러 개척 정보 확인';
 
-    const badge=$('#buildVersion');
-    if(badge)badge.textContent=`BUILD ${VERSION}`;
   }finally{
     sanitizing=false;
   }
@@ -72,7 +69,6 @@ function boot(){
   observer.observe(detail,{childList:true,subtree:true,characterData:true});
   const header=$('[data-panel="tree"] .section-head .small');
   if(header)header.textContent='노드를 눌러 개척 정보 확인';
-  const badge=$('#buildVersion');if(badge)badge.textContent=`BUILD ${VERSION}`;
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});

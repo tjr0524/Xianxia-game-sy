@@ -3,7 +3,6 @@
 const VERSION='11.40.0';
 if(window.__xianxiaFeedbackPatch?.version===VERSION)return;
 window.__xianxiaFeedbackPatch={version:VERSION};
-window.__XIANXIA_BUILD__=VERSION;
 
 const $=s=>document.querySelector(s);
 let mapObserver=null;
@@ -11,10 +10,7 @@ let priorPhase=null;
 let lastRunFrame=null;
 let deathActive=false;
 
-function badge(){
-  const el=$('#buildVersion');
-  if(el)el.textContent=`BUILD ${VERSION}`;
-}
+function badge(){}
 
 function installStyles(){
   if($('#v1140FeedbackStyle'))return;
