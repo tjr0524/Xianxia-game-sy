@@ -1,11 +1,11 @@
 (()=>{
 'use strict';
-const VERSION='11.48.0';
+const VERSION='11.48.1';
 const IOS_WEBKIT=/iP(?:hone|ad|od)/.test(navigator.userAgent)&&/WebKit/i.test(navigator.userAgent);
 if(!IOS_WEBKIT||window.__xianxiaIosStability?.version===VERSION)return;
 
 const ACTIVE_SCALE=.5;
-const TARGET_FRAME_MS=40; // 25 fps visual layer; game simulation keeps its normal RAF.
+const TARGET_FRAME_MS=40; // 25 fps visual layer; simulation keeps normal RAF timing.
 let installed=false;
 let lastPhase='';
 let lastDrawAt=0;
@@ -50,11 +50,18 @@ function resizeInkForPhase(runtime,p){
 }
 function freeBaseCanvas(){
   const cv=document.querySelector('#cv');
-  if(!cv||cv.dataset.iosStable48)return;
+  if(!cv)return;
   cv.dataset.iosStable48='1';
-  // The ink layer owns gameplay visuals on iOS. Keep the legacy canvas as a tiny
-  // event surface so its 1800x2400 backing store and 60-fps painter cannot exhaust Safari.
-  cv.width=1;cv.height=1;
+  if(cv.width!==1||cv.height!==1){
+    // On iOS the ink layer owns gameplay visuals. The legacy 1800x2400 canvas is
+    // otherwise repainted at RAF speed even while menus are open.
+    cv.width=1;cv.height=1;
+  }
+}
+function preReadyGuard(){
+  freeBaseCanvas();
+  const runtime=window.__xianxiaInkRuntime;
+  if(runtime?.layer&&runtime?.ctx&&!runtime.ready)resizeInkForPhase(runtime,'home');
 }
 function install(){
   if(installed)return true;
@@ -70,9 +77,11 @@ function install(){
   return true;
 }
 function tick(){
+  preReadyGuard();
   if(!installed){install();requestAnimationFrame(tick);return}
   const runtime=window.__xianxiaInkRuntime;
   const p=phase();
+  freeBaseCanvas();
   if(p!==lastPhase){
     lastPhase=p;
     lastDrawAt=0;
