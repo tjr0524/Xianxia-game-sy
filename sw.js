@@ -1,4 +1,4 @@
-const SW_BUILD='11.45.0';
+const SW_BUILD='retired-11.45';
 
 self.addEventListener('install',event=>{
   event.waitUntil(self.skipWaiting());
@@ -6,41 +6,13 @@ self.addEventListener('install',event=>{
 
 self.addEventListener('activate',event=>{
   event.waitUntil((async()=>{
-    const keys=await caches.keys();
-    await Promise.all(keys.map(key=>caches.delete(key)));
-    await self.clients.claim();
-  })());
-});
-
-self.addEventListener('message',event=>{
-  if(event.data?.type==='CLEAR_CACHES'){
-    event.waitUntil((async()=>{
+    try{
       const keys=await caches.keys();
       await Promise.all(keys.map(key=>caches.delete(key)));
-    })());
-  }
-});
-
-self.addEventListener('fetch',event=>{
-  const req=event.request;
-  if(req.method!=='GET')return;
-  const url=new URL(req.url);
-  if(url.origin!==self.location.origin)return;
-
-  const bypass=req.mode==='navigate' ||
-    req.destination==='script' ||
-    req.destination==='style' ||
-    req.destination==='worker' ||
-    url.pathname.endsWith('/version.json') ||
-    url.pathname.endsWith('/index.html');
-
-  if(!bypass)return;
-
-  event.respondWith((async()=>{
-    try{
-      return await fetch(new Request(req,{cache:'no-store'}));
-    }catch(error){
-      return fetch(req);
-    }
+    }catch(_){}
+    try{await self.registration.unregister()}catch(_){}
   })());
 });
+
+// Intentionally no fetch handler.
+// The game no longer uses a service worker for versioning or runtime updates.
