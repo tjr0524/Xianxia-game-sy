@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.35.0';
+const VERSION='11.47.0';
 const W=1800,H=2400,EXIT_X=900,EXIT_Y=1200;
 const PLAYER_VISUAL_H=100;
 const badge=text=>{const e=document.querySelector('#buildVersion');if(e)e.textContent=text};
@@ -31,6 +31,27 @@ const H=${H};
 cv.width=W;cv.height=H;
 const g=cv.getContext('2d');
 const EXIT={x:${EXIT_X},y:${EXIT_Y},r:27};`,'world constants');
+
+  // World size grew ~13.4x in area, but herb counts intentionally stayed on the
+  // economy curve. Keep herbs in a traversable search radius instead of spreading
+  // ten items uniformly over the entire 1800x2400 world.
+  game=once(game,
+`function randomPoint(margin=34){
+  return {x:margin+Math.random()*(W-margin*2),y:margin+Math.random()*(H-margin*2-18)};
+}`,
+`function randomPoint(margin=34){
+  const ring={qingyun:[90,430],blackwind:[120,500],blood:[150,560],thunder:[180,620]}[M.area]||[120,500];
+  const angle=Math.random()*Math.PI*2,min=ring[0],max=ring[1];
+  const radius=Math.sqrt(min*min+Math.random()*(max*max-min*min));
+  return {x:clamp(P.x+Math.cos(angle)*radius,margin,W-margin),y:clamp(P.y+Math.sin(angle)*radius,margin,H-margin-18)};
+}`,'herb local spawn');
+
+  // Blackwind is the medium-herb biome. 85% keeps the normal 10-herb run centered
+  // around 8~9 medium herbs, matching the 7~10 target while retaining 1~3 low herbs.
+  game=once(game,
+`grade=index===0?0:index===1?(Math.random()<.78?1:0):(Math.random()<.72?2:1);`,
+`grade=index===0?0:index===1?(Math.random()<.85?1:0):(Math.random()<.72?2:1);`,'blackwind herb grade mix');
+
   game=once(game,
 `function edgePoint(){
   const edge=Math.floor(Math.random()*3);
