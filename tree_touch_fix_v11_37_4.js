@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 if(window.__xianxiaTreeTouchFix)return;
-window.__xianxiaTreeTouchFix={version:'11.37.4-devmodal'};
+window.__xianxiaTreeTouchFix={version:'11.46.0-devmodal'};
 
 const NODE_SELECTOR='.asc-node,.map-node,.s17node';
 const VIEW_SELECTOR='#ascViewport,#mapViewport,#skillTreeViewport';
@@ -95,34 +95,73 @@ function closeDeveloperMenu(){
   modal.classList.remove('open');
 }
 
-function badgePointerUp(event){
-  const badge=closest(event.target,'#buildVersion');
-  if(!badge)return;
+function mountBuildBadge(){
+  const badge=document.querySelector('#buildVersion');
+  const title=document.querySelector('.brand h1');
+  if(!badge||!title)return;
+  let row=title.parentElement?.querySelector(':scope > .brand-title-row');
+  if(!row){
+    row=document.createElement('div');
+    row.className='brand-title-row';
+    title.parentNode.insertBefore(row,title);
+    row.appendChild(title);
+  }
+  if(badge.parentElement!==row)row.appendChild(badge);
+  badge.removeAttribute('role');
+  badge.removeAttribute('aria-label');
+  badge.removeAttribute('tabindex');
+  badge.setAttribute('aria-hidden','true');
+}
+
+function brandPointerUp(event){
+  const brand=closest(event.target,'.brand-mark');
+  if(!brand)return;
   event.preventDefault();
   event.stopImmediatePropagation();
   openDeveloperMenu();
 }
 
-document.addEventListener('pointerup',badgePointerUp,true);
-// Safari fallback if a pointer event is not synthesized for the fixed badge.
+document.addEventListener('pointerup',brandPointerUp,true);
+// Safari fallback. Prevent the synthetic click as well so the old hidden multi-tap
+// developer hook cannot compete with the single explicit sword-icon action.
 document.addEventListener('touchend',event=>{
-  const badge=closest(event.target,'#buildVersion');
-  if(!badge)return;
+  const brand=closest(event.target,'.brand-mark');
+  if(!brand)return;
   event.preventDefault();
   event.stopImmediatePropagation();
   openDeveloperMenu();
 },{capture:true,passive:false});
+document.addEventListener('click',event=>{
+  const brand=closest(event.target,'.brand-mark');
+  if(!brand)return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+},true);
 
-document.addEventListener('DOMContentLoaded',()=>{
-  const badge=document.querySelector('#buildVersion');
-  if(badge){badge.setAttribute('role','button');badge.setAttribute('aria-label','개발자 메뉴 열기');badge.tabIndex=0}
-},{once:true});
+document.addEventListener('keydown',event=>{
+  const brand=closest(event.target,'.brand-mark');
+  if(!brand||!(event.key==='Enter'||event.key===' '))return;
+  event.preventDefault();
+  openDeveloperMenu();
+},true);
+
+function setupBrand(){
+  mountBuildBadge();
+  const brand=document.querySelector('.brand-mark');
+  if(brand){brand.setAttribute('role','button');brand.setAttribute('aria-label','개발자 메뉴 열기');brand.tabIndex=0}
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setupBrand,{once:true});
+else setupBrand();
 
 const style=document.createElement('style');
 style.id='tree-touch-fix-v11-37-4';
 style.textContent=`
 ${NODE_SELECTOR}{touch-action:manipulation!important;-webkit-user-select:none!important;user-select:none!important}
-.build-version{pointer-events:auto!important;cursor:pointer!important;touch-action:manipulation!important;min-width:96px!important;min-height:30px!important;padding:7px 12px!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:9px!important;z-index:2147483000!important}
+.brand-title-row{display:flex!important;align-items:baseline!important;gap:7px!important;min-width:0!important}
+.brand-title-row h1{flex:0 1 auto!important}
+.build-version{position:static!important;z-index:auto!important;top:auto!important;left:auto!important;right:auto!important;bottom:auto!important;transform:none!important;display:inline!important;min-width:0!important;min-height:0!important;width:auto!important;height:auto!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;backdrop-filter:none!important;color:#8b918e!important;font:600 8px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:.04em!important;white-space:nowrap!important;pointer-events:none!important;cursor:default!important;opacity:.82!important}
+.brand-mark{cursor:pointer!important;touch-action:manipulation!important}
+body.v22-combat-mode #buildVersion{display:none!important}
 #buildDevModal{position:fixed;inset:0;z-index:2147483640;display:none;pointer-events:none}
 #buildDevModal.open{display:block;pointer-events:auto}
 .build-dev-backdrop{position:absolute;inset:0;background:#020607b8;backdrop-filter:blur(3px)}
