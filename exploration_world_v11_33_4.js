@@ -94,15 +94,25 @@ function updateCamera(mode,snap){
   badge(`BUILD ${VERSION} · CAM ${scale.toFixed(2)}× · 960H · WORLD ${W}×${H}`);
 }
 
-function frame(){
-  const mode=window.__xianxiaExplorationMode,D=window.__xianxiaDebug;
-  let snap=null;
-  try{snap=D?.snapshot?.()}catch{}
+function cameraFrame(snap){
+  const mode=window.__xianxiaExplorationMode;
   ensureWorld();
   if(mode?.active&&snap?.phase==='run')updateCamera(mode,snap);
   else{resetCamera();badge(`BUILD ${VERSION} · CAM ✓ · WORLD ${W}×${H}`)}
-  requestAnimationFrame(frame);
+}
+function subscribeFrame(){
+  const hub=window.__xianxiaFrameHub;
+  if(hub?.subscribe){
+    hub.subscribe('world-camera',cameraFrame,20);
+    return;
+  }
+  function fallback(){
+    const D=window.__xianxiaDebug;let snap=null;try{snap=D?.snapshot?.()}catch{}
+    cameraFrame(snap);
+    requestAnimationFrame(fallback);
+  }
+  requestAnimationFrame(fallback);
 }
 
-installCss();ensureWorld();badge(`BUILD ${VERSION} · CAM ✓ · WORLD ${W}×${H}`);requestAnimationFrame(frame);
+installCss();ensureWorld();badge(`BUILD ${VERSION} · CAM ✓ · WORLD ${W}×${H}`);subscribeFrame();
 })();
