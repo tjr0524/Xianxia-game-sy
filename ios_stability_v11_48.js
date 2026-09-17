@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.48.1';
+const VERSION='11.48.2';
 const IOS_WEBKIT=/iP(?:hone|ad|od)/.test(navigator.userAgent)&&/WebKit/i.test(navigator.userAgent);
 if(!IOS_WEBKIT||window.__xianxiaIosStability?.version===VERSION)return;
 
@@ -52,10 +52,10 @@ function freeBaseCanvas(){
   const cv=document.querySelector('#cv');
   if(!cv)return;
   cv.dataset.iosStable48='1';
-  if(cv.width!==1||cv.height!==1){
-    // On iOS the ink layer owns gameplay visuals. The legacy 1800x2400 canvas is
-    // otherwise repainted at RAF speed even while menus are open.
-    cv.width=1;cv.height=1;
+  if(cv.width!==3||cv.height!==4){
+    // Keep the 3:4 world aspect while reducing the invisible legacy backing store
+    // from 1800x2400 to 3x4 pixels. Pointer math uses CSS bounds + world constants.
+    cv.width=3;cv.height=4;
   }
 }
 function preReadyGuard(){
