@@ -131,6 +131,7 @@ let objects=[];
 let vein=null;
 let run=null;
 let hazards=[];
+let nextEnemyId=1;
 let pointerDown=false;
 let keys=new Set();
 let mobileMenuOpen=false;
@@ -790,7 +791,7 @@ function actor(type,options={}){
   }
   const gm={normal:{hp:1,atk:1,speed:1,reward:1},enhanced:{hp:1.35,atk:1.15,speed:1.05,reward:1.5},rare:{hp:1.8,atk:1.25,speed:1.08,reward:2.5},elite:{hp:1,atk:1,speed:1,reward:6}}[grade]||{hp:1,atk:1,speed:1,reward:1};
   const hp=isBeast?cfg.hp*role.hp*gm.hp:(type==='spirit'?1:type==='rogue'?80:type==='rat'?35:60);
-  const enemy={type,x:point.x,y:point.y,r:type==='elite'?23:type==='spirit'?10:type==='rat'?9:12,hp,max:hp,cd:isBeast?Math.random()*cfg.period*.85:0,aggressive:0,homeX:options.homeX??point.x,homeY:options.homeY??point.y,vx:(Math.random()-.5)*45,vy:(Math.random()-.5)*45,escape:0,bond:0,rare:grade==='rare'?1:0,grade,treasure:0,carry:[],stealCd:0,attack:cfg.hit*role.atk*gm.atk,attackPeriod:cfg.period,speed:isBeast?baseSpeed*role.speed*gm.speed:(type==='spirit'?92:type==='rogue'?105:type==='rat'?125:90),rewardMult:gm.reward,rareTrait:null,windup:0,pendingStrike:0,packId:options.packId??null,slotAngle:Math.random()*Math.PI*2,packLeader:options.packLeader?1:0};
+  const enemy={id:nextEnemyId++,type,x:point.x,y:point.y,r:type==='elite'?23:type==='spirit'?10:type==='rat'?9:12,hp,max:hp,cd:isBeast?Math.random()*cfg.period*.85:0,aggressive:0,homeX:options.homeX??point.x,homeY:options.homeY??point.y,vx:(Math.random()-.5)*45,vy:(Math.random()-.5)*45,escape:0,bond:0,rare:grade==='rare'?1:0,grade,treasure:0,carry:[],stealCd:0,attack:cfg.hit*role.atk*gm.atk,attackPeriod:cfg.period,speed:isBeast?baseSpeed*role.speed*gm.speed:(type==='spirit'?92:type==='rogue'?105:type==='rat'?125:90),rewardMult:gm.reward,rareTrait:null,windup:0,pendingStrike:0,packId:options.packId??null,slotAngle:Math.random()*Math.PI*2,packLeader:options.packLeader?1:0};
   if(options.packLeader&&isBeast){enemy.hp*=1.15;enemy.max=enemy.hp;enemy.attack*=1.10;enemy.rewardMult*=1.15;enemy.r+=2}
   if(grade==='rare'){
     const er=rank('eco3');
@@ -1529,7 +1530,7 @@ window.__xianxiaDebug={
   constants:{W,H,EXIT,EXIT_APPROACH,RUN_TIME,AREAS,TREE,SKILLS,PLANS},
   snapshot:()=>JSON.parse(JSON.stringify({
     M,phase,elapsed,run,P,
-    enemies:enemies.map(enemy=>({type:enemy.type,x:enemy.x,y:enemy.y,hp:enemy.hp,rare:enemy.rare,treasure:enemy.treasure})),
+    enemies:enemies.map(enemy=>({id:enemy.id,type:enemy.type,x:enemy.x,y:enemy.y,hp:enemy.hp,max:enemy.max,rare:enemy.rare,treasure:enemy.treasure})),
     objects:objects.map(object=>({type:object.type,x:object.x,y:object.y,value:object.value,grade:object.grade})),
     vein,hazards
   })),
