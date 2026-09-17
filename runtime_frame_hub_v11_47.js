@@ -34,6 +34,7 @@ function captureSnapshot(){
     return null;
   }
 }
+function schedule(){rafId=requestAnimationFrame(frame)}
 function frame(now){
   frames++;
   if(dirty)rebuild();
@@ -43,7 +44,7 @@ function frame(now){
     try{sub.fn(lastSnapshot,meta)}
     catch(error){console.error(`[frame-hub] ${sub.name} failed`,error)}
   }
-  rafId=requestAnimationFrame(frame);
+  schedule();
 }
 function stats(){
   if(dirty)rebuild();
@@ -56,5 +57,5 @@ function stats(){
   };
 }
 window.__xianxiaFrameHub={version:VERSION,subscribe,stats,get snapshot(){return lastSnapshot}};
-rafId=requestAnimationFrame(frame);
+schedule();
 })();
