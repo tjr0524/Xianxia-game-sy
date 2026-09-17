@@ -1,12 +1,12 @@
 (()=>{
 'use strict';
-const PATCH_VERSION='11.50.0';
+const PATCH_VERSION='11.50.1';
 const FEEDBACK_VERSION='11.40.0';
 const RESULT_VERSION='11.41.0';
 const MAP_DETAIL_VERSION='11.42.0';
 const COOLDOWN_VERSION='11.50.0';
 const TREE_CAMERA_VERSION='11.45.0';
-const HYGIENE_VERSION='11.47.1';
+const HYGIENE_VERSION='11.50.1';
 const BASE='balance_core_v11_37.js';
 const SAVE_KEY='xianxia_proto_v11';
 const IOS_WEBKIT=/iP(?:hone|ad|od)/.test(navigator.userAgent)&&/WebKit/i.test(navigator.userAgent);
@@ -88,7 +88,7 @@ function loadUiHygiene(){
   script.dataset.v1145Hygiene='1';
   script.src=`ui_hygiene_v11_45.js?v=${encodeURIComponent(HYGIENE_VERSION)}`;
   script.async=false;
-  script.onerror=()=>console.warn('[ui-11.47.1] hygiene patch load failed');
+  script.onerror=()=>console.warn('[ui-11.50.1] hygiene patch load failed');
   document.body.appendChild(script);
 }
 
@@ -141,12 +141,12 @@ try{
   try{(0,eval)(load('tree_camera_gesture_v11_44.js',TREE_CAMERA_VERSION)+'\n//# sourceURL=tree_camera_gesture_v11_45.runtime.js')}catch(cameraError){console.warn('[tree-camera] load failed',cameraError)}
   try{(0,eval)(load('tree_touch_fix_v11_37_4.js')+'\n//# sourceURL=tree_touch_fix_v11_46.runtime.js')}catch(touchError){console.warn('[touch-fix] load failed',touchError)}
   const src=load(BASE).replaceAll('11.37.2',PATCH_VERSION);
-  (0,eval)(src+'\n//# sourceURL=balance_core_v11_50.entry.runtime.js');
+  (0,eval)(src+'\n//# sourceURL=balance_core_v11_50_1.entry.runtime.js');
   installSnapshotGovernor();
   try{(0,eval)(load('ios_stability_v11_48.js')+'\n//# sourceURL=ios_stability_v11_50.runtime.js')}catch(stabilityError){console.warn('[ios-stability] load failed',stabilityError)}
   setTimeout(()=>restorePersistedBasic(),0);
   const e=document.querySelector('#buildVersion');if(e)e.textContent=`BUILD ${PATCH_VERSION}`;
-  window.__xianxiaEncounterHotfix={version:PATCH_VERSION,compatEntrypoint:'11.37.1',basicSaveFix:true,treeTouchFix:true,treeCameraFix:true,cooldownHudFix:true,uiHygiene:true,devMenuSwordTrigger:true,inlineBuildBadge:true,herbSpatialFix:true,mobileHeaderFix:true,loaderRollback:true,iosStability:true,cacheStable:true,gatherIdleFix:true,areaAssetPrune:true,snapshotGovernor:true,nestedCacheBust:true};
+  window.__xianxiaEncounterHotfix={version:PATCH_VERSION,compatEntrypoint:'11.37.1',basicSaveFix:true,treeTouchFix:true,treeCameraFix:true,cooldownHudFix:true,uiHygiene:true,devMenuSwordTrigger:true,inlineBuildBadge:true,herbSpatialFix:true,mobileHeaderFix:true,loaderRollback:true,iosStability:true,cacheStable:true,gatherIdleFix:true,areaAssetPrune:true,snapshotGovernor:true,nestedCacheBust:true,legacyWorldLoopDisabled:true,buildUiDecoupled:true};
 }catch(error){
   console.error(error);
   const e=document.querySelector('#buildVersion');if(e)e.textContent=`BUILD ${PATCH_VERSION}`;
