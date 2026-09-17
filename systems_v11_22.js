@@ -34,6 +34,19 @@ function css(){
   .v22-expedition-tab::before{background-position:25% 0!important;filter:sepia(.25) saturate(.8)!important}
   .v22-expedition-tab.active{background:#e6d6ab!important;border-color:#9e8040!important;color:#243a33!important}
   .v22-close-handle{display:none!important}
+  body.v22-combat-mode{overflow:hidden!important;padding-bottom:0!important}
+  body.v22-combat-mode .topbar,body.v22-combat-mode .controls,body.v22-combat-mode .tabs.v22-mobile-nav,body.v22-combat-mode .footer{display:none!important}
+  body.v22-combat-mode .shell{width:100%!important;height:100dvh!important;margin:0!important;padding:0!important}
+  body.v22-combat-mode .layout{display:block!important;width:100%!important;height:100%!important}
+  body.v22-combat-mode .arena-card{position:fixed!important;z-index:100!important;display:flex!important;flex-direction:column!important;inset:0!important;width:100%!important;height:100dvh!important;margin:0!important;padding:max(8px,env(safe-area-inset-top)) 7px max(8px,env(safe-area-inset-bottom))!important;border:0!important;border-radius:0!important;overflow-y:auto!important;background:#e9e2d0 url("assets/paper_fiber.svg")!important;box-shadow:none!important}
+  body.v22-combat-mode .arena-head{flex:0 0 auto;margin:0 2px 6px!important}
+  body.v22-combat-mode .arena-head h2{font-size:15px!important}
+  body.v22-combat-mode .arena-head p{font-size:8px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:74vw}
+  body.v22-combat-mode .game{flex:0 0 auto;width:100%!important;margin:0!important}
+  body.v22-combat-mode .hud{flex:0 0 auto;margin-top:6px!important;gap:5px!important}
+  body.v22-combat-mode .hud-item{min-height:45px!important;padding:5px!important}
+  body.v22-combat-mode .run-row{position:sticky;z-index:12;bottom:0;flex:0 0 auto;margin-top:6px!important;padding-bottom:2px;background:linear-gradient(transparent,#e9e2d0 22%)}
+  body.v22-combat-mode .notice{flex:0 0 auto;margin:3px 2px 0!important;font-size:9px!important}
 }
 `;
   document.head.appendChild(s);
@@ -79,6 +92,19 @@ function showPanel(tab){
   settleClosed();syncAria();window.scrollTo?.({top:0,behavior:'smooth'});
 }
 
+function enterCombat(){
+  if(!compact())return;
+  document.body.classList.remove('v22-panel-mode');
+  document.body.classList.add('v22-expedition-mode','v22-combat-mode');
+  settleClosed();window.scrollTo?.(0,0);
+}
+
+function leaveCombat(){
+  if(!document.body.classList.contains('v22-combat-mode'))return;
+  document.body.classList.remove('v22-combat-mode');
+  showExpedition();
+}
+
 function installHandle(){
   let b=$('#v22PanelClose');if(b)return b;
   b=document.createElement('button');b.id='v22PanelClose';b.type='button';b.className='v22-close-handle';b.setAttribute('aria-label','성장 패널 닫기');b.innerHTML='<span>⌄ 닫기</span>';tabs.appendChild(b);
@@ -91,7 +117,7 @@ function installHandle(){
 }
 function bindTabs(){if(tabs.dataset.v22tabs)return;tabs.dataset.v22tabs='1';tabs.addEventListener('pointerup',e=>{if(Date.now()<ignoreTabsUntil){e.preventDefault();e.stopImmediatePropagation()}},true);tabs.addEventListener('click',e=>{const b=e.target.closest('.tab-btn');if(!b||!compact())return;if(Date.now()<ignoreTabsUntil){e.preventDefault();e.stopImmediatePropagation();return}if(b.dataset.tab==='expedition'){e.preventDefault();e.stopImmediatePropagation();showExpedition();return}requestAnimationFrame(()=>showPanel(b));},true);}
 function bindOutsideClose(){}
-function bindLifecycle(){controls.addEventListener('xianxia:panel-open',e=>{if(e.detail?.open&&compact()){const active=$('.tab-btn.active');if(active?.dataset.tab!=='expedition')requestAnimationFrame(()=>showPanel(active))}});window.addEventListener('resize',()=>{placeMobileNav();if(!compact()){document.body.classList.remove('v22-panel-mode','v22-expedition-mode');return}requestAnimationFrame(()=>document.body.classList.contains('v22-panel-mode')?showPanel($('.tab-btn.active')):showExpedition())});$('#start')?.addEventListener('pointerup',()=>{ignoreTabsUntil=Date.now()+450},{capture:true});$('#start')?.addEventListener('click',()=>{ignoreTabsUntil=Date.now()+450;showExpedition()},{capture:true});}
+function bindLifecycle(){controls.addEventListener('xianxia:panel-open',e=>{if(e.detail?.open&&compact()&&!document.body.classList.contains('v22-combat-mode')){const active=$('.tab-btn.active');if(active?.dataset.tab!=='expedition')requestAnimationFrame(()=>showPanel(active))}});window.addEventListener('resize',()=>{placeMobileNav();if(!compact()){document.body.classList.remove('v22-panel-mode','v22-expedition-mode','v22-combat-mode');return}if(D.snapshot().phase==='run'){enterCombat();return}requestAnimationFrame(()=>document.body.classList.contains('v22-panel-mode')?showPanel($('.tab-btn.active')):showExpedition())});$('#start')?.addEventListener('pointerup',()=>{ignoreTabsUntil=Date.now()+450},{capture:true});$('#start')?.addEventListener('click',()=>{ignoreTabsUntil=Date.now()+450;enterCombat()},{capture:true});const ov=$('#ov');if(ov)new MutationObserver(()=>{if(!ov.classList.contains('hide'))leaveCombat();else if(D.snapshot().phase==='run')enterCombat()}).observe(ov,{attributes:true,attributeFilter:['class']});}
 function boot(){css();expeditionButton();installHandle();placeMobileNav();bindTabs();bindOutsideClose();bindLifecycle();if(compact())showExpedition();}
 boot();
 
