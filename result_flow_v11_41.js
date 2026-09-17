@@ -3,7 +3,6 @@
 const VERSION='11.41.0';
 if(window.__xianxiaResultFlow?.version===VERSION)return;
 window.__xianxiaResultFlow={version:VERSION};
-window.__XIANXIA_BUILD__=VERSION;
 
 const $=s=>document.querySelector(s);
 let priorPhase=null;
@@ -14,10 +13,7 @@ let pendingTimer=0;
 function snap(){
   try{return window.__xianxiaDebug?.snapshot?.()||null}catch{return null}
 }
-function badge(){
-  const el=$('#buildVersion');
-  if(el)el.textContent=`BUILD ${VERSION}`;
-}
+function badge(){}
 function installStyles(){
   if($('#v1141ResultStyle'))return;
   const style=document.createElement('style');
