@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.49.0';
+const VERSION='11.50.0';
 const IOS_WEBKIT=/iP(?:hone|ad|od)/.test(navigator.userAgent)&&/WebKit/i.test(navigator.userAgent);
 if(!IOS_WEBKIT||window.__xianxiaIosStability?.version===VERSION)return;
 
@@ -24,15 +24,24 @@ let areaLoadPromise=null;
 let areaLoadFor='';
 let wrappedDebug=false;
 
+// IMPORTANT: these are called from RAF. Never call debug.snapshot() here: snapshot()
+// JSON-clones the whole game state and was producing continuous allocation/GC churn on iOS.
 function phase(){
-  try{return window.__xianxiaDebug?.snapshot?.()?.phase||'home'}catch{return'home'}
+  return document.body?.classList.contains('v1133-run')?'run':'home';
 }
 function area(){
-  try{return window.__xianxiaDebug?.snapshot?.()?.M?.area||'qingyun'}catch{return'qingyun'}
+  const data=document.body?.dataset?.v25Area||document.body?.dataset?.v23Area||'';
+  if(AREA_ASSETS[data])return data;
+  const title=document.querySelector('#area')?.textContent||'';
+  if(title.includes('흑풍'))return'blackwind';
+  if(title.includes('적혈'))return'blood';
+  if(title.includes('천뢰'))return'thunder';
+  if(title.includes('청운'))return'qingyun';
+  return AREA_ASSETS[activeArea]?activeArea:'qingyun';
 }
 function patchInkContext(ctx){
-  if(!ctx||ctx.__iosStable49)return;
-  try{Object.defineProperty(ctx,'__iosStable49',{value:true})}catch{return}
+  if(!ctx||ctx.__iosStable50)return;
+  try{Object.defineProperty(ctx,'__iosStable50',{value:true})}catch{return}
   const methods=['clearRect','drawImage','fillRect','strokeRect','beginPath','closePath','moveTo','lineTo','quadraticCurveTo','bezierCurveTo','arc','ellipse','fill','stroke','save','restore','translate','scale','rotate','fillText','strokeText','setLineDash'];
   for(const name of methods){
     if(typeof ctx[name]!=='function')continue;
@@ -75,7 +84,7 @@ function resizeGatherForPhase(p){
 function freeBaseCanvas(){
   const cv=document.querySelector('#cv');
   if(!cv)return;
-  cv.dataset.iosStable49='1';
+  cv.dataset.iosStable50='1';
   if(cv.width!==3||cv.height!==4){cv.width=3;cv.height=4}
 }
 function disableLegacyObjectLayer(){
@@ -83,15 +92,15 @@ function disableLegacyObjectLayer(){
   if(!c)return;
   if(c.width!==3||c.height!==4){c.width=3;c.height=4}
   const ctx=c.getContext('2d');
-  if(!ctx||ctx.__iosStable49Noop)return;
-  try{Object.defineProperty(ctx,'__iosStable49Noop',{value:true})}catch{return}
+  if(!ctx||ctx.__iosStable50Noop)return;
+  try{Object.defineProperty(ctx,'__iosStable50Noop',{value:true})}catch{return}
   const methods=['clearRect','drawImage','fillRect','strokeRect','beginPath','closePath','moveTo','lineTo','quadraticCurveTo','bezierCurveTo','arc','arcTo','ellipse','fill','stroke','save','restore','translate','scale','rotate','fillText','strokeText','setLineDash'];
   for(const name of methods)if(typeof ctx[name]==='function')ctx[name]=()=>{};
 }
 function preReadyGuard(){
   freeBaseCanvas();
   disableLegacyObjectLayer();
-  resizeGatherForPhase(phase());
+  resizeGatherForPhase('home');
   const runtime=window.__xianxiaInkRuntime;
   if(runtime?.layer&&runtime?.ctx&&!runtime.ready)resizeInkForPhase(runtime,'home');
 }
@@ -181,19 +190,16 @@ function install(){
   return true;
 }
 function tick(){
-  preReadyGuard();
-  if(!installed){install();requestAnimationFrame(tick);return}
+  if(!installed){preReadyGuard();install();requestAnimationFrame(tick);return}
   const runtime=window.__xianxiaInkRuntime;
   const p=phase();
-  freeBaseCanvas();
-  disableLegacyObjectLayer();
   if(p!==lastPhase){
     lastPhase=p;
     lastDrawAt=0;
     skipVisualFrame=false;
+    freeBaseCanvas();
+    disableLegacyObjectLayer();
     resizeInkForPhase(runtime,p);
-    resizeGatherForPhase(p);
-  }else{
     resizeGatherForPhase(p);
   }
   const nextArea=area();
