@@ -3,6 +3,7 @@
 const PATCH_VERSION='11.39.0';
 const FEEDBACK_VERSION='11.40.0';
 const RESULT_VERSION='11.41.0';
+const MAP_DETAIL_VERSION='11.42.0';
 const BASE='balance_core_v11_37.js';
 const SAVE_KEY='xianxia_proto_v11';
 window.__XIANXIA_BUILD__=PATCH_VERSION;
@@ -59,13 +60,27 @@ function restorePersistedBasic(attempt=0){
   }
 }
 
+function loadMapDetailPatch(){
+  if(document.querySelector('script[data-v1142-map-detail]'))return;
+  const script=document.createElement('script');
+  script.dataset.v1142MapDetail='1';
+  script.src=`map_detail_v11_42.js?v=${encodeURIComponent(MAP_DETAIL_VERSION)}&ts=${Date.now()}`;
+  script.async=false;
+  script.onerror=()=>console.warn('[ui-11.42] map detail patch load failed');
+  document.body.appendChild(script);
+}
+
 function loadResultFlow(){
-  if(document.querySelector('script[data-v1141-result]'))return;
+  if(document.querySelector('script[data-v1141-result]')){
+    loadMapDetailPatch();
+    return;
+  }
   const result=document.createElement('script');
   result.dataset.v1141Result='1';
   result.src=`result_flow_v11_41.js?v=${encodeURIComponent(RESULT_VERSION)}&ts=${Date.now()}`;
   result.async=false;
-  result.onerror=()=>console.warn('[ui-11.41] result flow load failed');
+  result.onload=loadMapDetailPatch;
+  result.onerror=()=>{console.warn('[ui-11.41] result flow load failed');loadMapDetailPatch()};
   document.body.appendChild(result);
 }
 
