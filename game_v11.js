@@ -36,17 +36,17 @@ const AREAS=[
   },
   {
     id:'blackwind',name:'흑풍곡',desc:'산수와 탐보서가 전리품을 노리는 거친 골짜기.',
-    enemy:2.05,reward:2.8,herbs:13,env:{move:.72,pick:.62},baseStage:3,rec:'연기 3~6층',
+    enemy:2.05,reward:4,herbs:13,env:{move:.72,pick:.62},baseStage:3,rec:'연기 3~6층',
     req:{major:0,stage:3,prev:'qingyun',nodes:2},palette:['#191f22','#34342a','#6d6042']
   },
   {
     id:'blood',name:'적혈비경',desc:'영맥과 정예 수호수가 버티는 고위 비경.',
-    enemy:3.9,reward:6.4,herbs:16,env:{move:.55,pick:.42},baseStage:6,rec:'연기 6~9층',
+    enemy:3.9,reward:10,herbs:16,env:{move:.55,pick:.42},baseStage:6,rec:'연기 6~9층',
     req:{major:0,stage:6,prev:'blackwind',nodes:3},palette:['#291719','#532127','#8c493b']
   },
   {
     id:'thunder',name:'천뢰봉',desc:'낙뢰를 피하며 뇌정을 회수하는 축기 비경.',
-    enemy:6.5,reward:12.5,herbs:18,env:{move:.48,pick:.38},baseStage:1,rec:'축기 1층 이상',
+    enemy:6.5,reward:24,herbs:18,env:{move:.48,pick:.38},baseStage:1,rec:'축기 1층 이상',
     req:{major:1,stage:1,prev:'blood',nodes:4},palette:['#11182b','#24284b','#555c91']
   }
 ];
