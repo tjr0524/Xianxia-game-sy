@@ -1,0 +1,31 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+
+const root=path.resolve(__dirname,'..');
+const read=name=>fs.readFileSync(path.join(root,name),'utf8');
+const html=read('index.html');
+const css=read('visual_v11_25.css');
+const js=read('visual_v11_25.js');
+
+assert.match(html,/<meta name="theme-color" content="#f3efe3">/);
+assert.match(html,/<body class="v25-theme">/);
+assert.match(html,/visual_v11_25\.css\?v=11\.25/);
+assert.match(html,/visual_v11_25\.js\?v=11\.25/);
+assert.doesNotMatch(html,/visual_v11_23\.js|visual_v11_24\.js/);
+assert.match(css,/Gowun\+Batang/);
+assert.match(css,/Hahmlet/);
+assert.match(css,/assets\/ink_mountains\.svg/);
+assert.match(css,/assets\/cloud_scroll\.svg/);
+assert.match(css,/assets\/paper_fiber\.svg/);
+assert.match(css,/\.v25-theme \.dialog button,[\s\S]*color:var\(--v25-ink\)!important/);
+assert.match(css,/\.v25-theme \.primary,[\s\S]*color:#fffdf3!important/);
+assert.match(css,/\.v25-theme \.v17settings[\s\S]*color:#245d51!important/);
+assert.match(css,/\.v25-theme #ascDetail\.v17float,[\s\S]*background:linear-gradient/);
+assert.match(css,/\.v25-theme \.v17float \.node-effect[\s\S]*font:800 14px/);
+assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+assert.match(js,/dataset\.visualVersion='11\.25'/);
+assert.doesNotMatch(js,/replaceState|localStorage|sessionStorage/);
+for(const asset of ['assets/ink_mountains.svg','assets/cloud_scroll.svg','assets/paper_fiber.svg'])assert.ok(fs.existsSync(path.join(root,asset)));
+let depth=0;for(const char of css){if(char==='{')depth++;if(char==='}')depth--;assert.ok(depth>=0)}assert.equal(depth,0);
+console.log('v11.25 eastern visual regression passed');
