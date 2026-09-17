@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const LOCAL_BUILD=window.__XIANXIA_BUILD__||'11.37.2';
+const LOCAL_BUILD=window.__XIANXIA_BUILD__||'11.37.3';
 let canonicalBuild=LOCAL_BUILD;
 let checking=false;
 let lastCheck=0;
