@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.50.1',W=1800,H=2400,EXIT_X=900,EXIT_Y=1200,EXIT_APPROACH_Y=1177;
+const VERSION='11.50.3',W=1800,H=2400,EXIT_X=900,EXIT_Y=1200,EXIT_APPROACH_Y=1177;
 const VISIBLE_H=960,SMOOTHING=.14,DEAD_X=.08,DEAD_Y=.06,LOOK_AHEAD=.08;
 const badge=()=>{};
 function load(path){const x=new XMLHttpRequest();x.open('GET',`${path}?v=${encodeURIComponent(VERSION)}`,false);x.send(null);if(!((x.status>=200&&x.status<300)||x.status===0))throw new Error(`${path} load failed: ${x.status}`);return x.responseText}
@@ -107,18 +107,19 @@ const EXIT_APPROACH={x:${EXIT_X},y:${EXIT_APPROACH_Y}};`,'world constants');
   }else deactivate();
   requestAnimationFrame(frame);
 }`,
-`let v50FrameAt=0,v50IdleProbe=0;
+`let v50IdleProbe=0;
 function frame(now=performance.now()){
   const active=document.body.classList.contains('v1133-run');
-  if(active&&now-v50FrameAt<34){requestAnimationFrame(frame);return}
+  // Safari crash was caused by the recursive DOM observer, not the camera RAF.
+  // Keep the expensive idle probe slow, but run the active camera at display refresh rate.
   if(!active&&now-v50IdleProbe<250){requestAnimationFrame(frame);return}
-  if(active)v50FrameAt=now;else v50IdleProbe=now;
+  if(!active)v50IdleProbe=now;
   const D=window.__xianxiaDebug;let s=null;try{s=D?.snapshot?.()}catch{}
   if(s?.phase==='run'){
     activate(s);patchInkRuntime();syncBackdrop(s);updateCamera(s);updateHud(s);
   }else deactivate();
   requestAnimationFrame(frame);
-}`,'iOS-friendly frame throttle');
+}`,'full-rate active camera');
   (0,eval)(`${src}\n//# sourceURL=exploration_mode_v11_33.worldscale.js`);
   badge();
 }catch(error){console.error(error);badge()}
