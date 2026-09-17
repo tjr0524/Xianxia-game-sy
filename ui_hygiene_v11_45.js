@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.46.0';
+const VERSION='11.47.0';
 if(window.__xianxiaUiHygiene?.version===VERSION)return;
 window.__xianxiaUiHygiene={version:VERSION};
 window.__XIANXIA_BUILD__=VERSION;
@@ -10,17 +10,29 @@ let queued=false;
 
 function normalizeDetail(detail){
   if(!detail)return;
-  const buttons=[...detail.querySelectorAll(':scope > button')].filter(button=>{
-    const text=(button.textContent||'').trim();
-    return button.classList.contains('detail-close38')||button.getAttribute('aria-label')==='상세정보 닫기'||text==='×';
-  });
-  if(!buttons.length)return;
-  const keep=buttons.find(button=>button.classList.contains('detail-close38'))||buttons[buttons.length-1];
+  // Legacy popover passes can recreate their own close buttons after every detail render.
+  // Own the close control here: preserve one hygiene button, remove every other
+  // non-action button, and only create a replacement when render() wiped ours.
+  const buttons=[...detail.querySelectorAll('button:not(.detail-action)')];
+  let keep=buttons.find(button=>button.classList.contains('hygiene-close47'))||null;
   for(const button of buttons)if(button!==keep)button.remove();
-  keep.classList.add('detail-close38');
-  keep.type='button';
-  keep.setAttribute('aria-label','상세정보 닫기');
-  keep.textContent='×';
+  if(!keep){
+    keep=document.createElement('button');
+    keep.type='button';
+    keep.className='detail-close38 hygiene-close47';
+    keep.setAttribute('aria-label','상세정보 닫기');
+    keep.textContent='×';
+    keep.addEventListener('click',event=>{
+      event.preventDefault();event.stopPropagation();
+      detail.classList.remove('open');
+    });
+    detail.appendChild(keep);
+  }else{
+    keep.classList.add('detail-close38');
+    keep.type='button';
+    keep.setAttribute('aria-label','상세정보 닫기');
+    if(keep.textContent!=='×')keep.textContent='×';
+  }
 }
 
 function mountBuildBadge(){
