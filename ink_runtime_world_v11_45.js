@@ -32,7 +32,44 @@ function centered(key,row,cols,index,x,y,targetHeight,flip=false,alpha=1,filter=
 function shadow(x,y,w,h,a=.16){const c=S.ctx;c.save();c.globalAlpha=a;c.fillStyle='#1b2924';c.beginPath();c.ellipse(x,y,w,h,0,0,Math.PI*2);c.fill();c.restore()}
 function drawPlayerSlash(x,groundY,p,flip){if(p<.16||p>.9)return;const q=Math.max(0,Math.min(1,(p-.16)/.74)),c=S.ctx;c.save();c.translate(x,groundY-29);if(flip)c.scale(-1,1);c.lineCap='round';c.globalAlpha=Math.sin(Math.PI*q)*.72;c.strokeStyle='rgba(41,65,71,.42)';c.lineWidth=8;c.beginPath();c.arc(-2,2,39,-2.42,-2.42+2.72*q);c.stroke();c.globalAlpha=Math.sin(Math.PI*q)*.92;c.strokeStyle='rgba(222,232,223,.9)';c.lineWidth=2.2;c.beginPath();c.arc(-2,2,40,-2.42,-2.42+2.72*q);c.stroke();c.restore()}
 function dist(a,b){return Math.hypot((a?.x||0)-(b?.x||0),(a?.y||0)-(b?.y||0))}
-function match(curr,now,area){const old=[...tracks.values()],used=new Set(),out=[];for(const e of curr){let best=null,bd=e.type==='rat'?45:80;for(const t of old){if(used.has(t.id)||t.type!==e.type)continue;const d=Math.hypot(e.x-t.x,e.y-t.y);if(d<bd){bd=d;best=t}}if(!best){best={id:nextId++,type:e.type,x:e.x,y:e.y,px:e.x,py:e.y,seen:now,facing:1,attackStart:-9,lastAttack:-9,area,maxHp:e.hp,lastHp:e.hp,hitUntil:0};tracks.set(best.id,best)}else used.add(best.id);best.px=best.x;best.py=best.y;best.x=e.x;best.y=e.y;best.e=e;best.seen=now;best.area=area;best.maxHp=Math.max(best.maxHp||e.hp,e.hp);if(e.hp<(best.lastHp??e.hp)-.05){const damage=(best.lastHp??e.hp)-e.hp;best.hitUntil=now+.12;impacts.push({x:e.x,y:e.y,damage,start:now,fromX:lastSnapshot?.P?.x??e.x,fromY:lastSnapshot?.P?.y??e.y});hitStopUntil=Math.max(hitStopUntil,now+.045)}best.lastHp=e.hp;const dx=best.x-best.px;if(Math.abs(dx)>.12)best.facing=dx<0?-1:1;out.push(best)}for(const t of [...tracks.values()]){if(out.includes(t))continue;if(now-t.seen<.22)deaths.push({...t,start:now});tracks.delete(t.id)}return out}
+function match(curr,now,area){
+  const old=[...tracks.values()],used=new Set(),out=[];
+  for(const e of curr){
+    let best=null;
+    if(e.id!=null){
+      best=old.find(t=>!used.has(t.id)&&t.entityId===e.id)||null;
+    }else{
+      let bd=e.type==='rat'?45:80;
+      for(const t of old){
+        if(used.has(t.id)||t.type!==e.type)continue;
+        const d=Math.hypot(e.x-t.x,e.y-t.y);
+        if(d<bd){bd=d;best=t}
+      }
+    }
+    if(!best){
+      best={id:nextId++,entityId:e.id??null,type:e.type,x:e.x,y:e.y,px:e.x,py:e.y,seen:now,facing:1,attackStart:-9,lastAttack:-9,area,maxHp:e.max??e.hp,lastHp:e.hp,hitUntil:0};
+      tracks.set(best.id,best);
+    }else used.add(best.id);
+    best.entityId=e.id??best.entityId;
+    best.px=best.x;best.py=best.y;best.x=e.x;best.y=e.y;best.e=e;best.seen=now;best.area=area;
+    best.maxHp=e.max??Math.max(best.maxHp||e.hp,e.hp);
+    if(e.hp<(best.lastHp??e.hp)-.05){
+      const damage=(best.lastHp??e.hp)-e.hp;
+      best.hitUntil=now+.12;
+      impacts.push({x:e.x,y:e.y,damage,start:now,fromX:lastSnapshot?.P?.x??e.x,fromY:lastSnapshot?.P?.y??e.y});
+      hitStopUntil=Math.max(hitStopUntil,now+.045);
+    }
+    best.lastHp=e.hp;
+    const dx=best.x-best.px;if(Math.abs(dx)>.12)best.facing=dx<0?-1:1;
+    out.push(best);
+  }
+  for(const t of [...tracks.values()]){
+    if(out.includes(t))continue;
+    if(now-t.seen<.22)deaths.push({...t,start:now});
+    tracks.delete(t.id);
+  }
+  return out;
+}
 function drawBackground(area){const c=S.ctx,img=S.images['bg_'+area]||S.images.bg_qingyun;c.globalAlpha=1;c.drawImage(img,0,0,W,H);const wash=c.createLinearGradient(0,0,0,H);wash.addColorStop(0,'rgba(247,243,229,.04)');wash.addColorStop(1,'rgba(20,31,28,.06)');c.fillStyle=wash;c.fillRect(0,0,W,H)}
 function drawPortal(t){shadow(EXIT.x,EXIT.y+2,32,6,.18);centered('objects',3,6,frame(t,7,6),EXIT.x,EXIT.y-12,74,false,.9)}
 function drawObjects(s,t){for(const o of s.objects||[]){if(o.type==='h'){const row=Math.max(0,Math.min(2,o.grade||0)),ground=o.y+16;shadow(o.x,ground,9,2.5,.13);anchored('objects',row,4,frame(t,1.55,4,(o.x+o.y)*.0015),o.x,ground,40,false,.96,String(row))}else{const ground=o.y+14;shadow(o.x,ground,9,3,.15);anchored('objects',4,4,0,o.x,ground,34,false,1,'4')}}if(s.vein){const ground=s.vein.y+22;shadow(s.vein.x,ground,18,5,.2);anchored('objects',4,4,3,s.vein.x,ground,58,false,1,'4')}}
