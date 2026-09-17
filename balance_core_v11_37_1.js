@@ -1,12 +1,12 @@
 (()=>{
 'use strict';
-const PATCH_VERSION='11.45.0';
+const PATCH_VERSION='11.46.0';
 const FEEDBACK_VERSION='11.40.0';
 const RESULT_VERSION='11.41.0';
 const MAP_DETAIL_VERSION='11.42.0';
 const COOLDOWN_VERSION='11.45.0';
 const TREE_CAMERA_VERSION='11.45.0';
-const HYGIENE_VERSION='11.45.0';
+const HYGIENE_VERSION='11.46.0';
 const BASE='balance_core_v11_37.js';
 const SAVE_KEY='xianxia_proto_v11';
 window.__XIANXIA_BUILD__=PATCH_VERSION;
@@ -20,26 +20,17 @@ function load(path,version=PATCH_VERSION){
   return x.responseText;
 }
 
-// Core loadState() builds its initial skill table before progression registers the
-// synthetic "basic" skill. Capture it before core boot can normalize/save it away.
 let persistedBasic=null;
 try{
   const raw=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');
-  if(raw?.skills?.basic&&typeof raw.skills.basic==='object'){
-    persistedBasic={...raw.skills.basic};
-  }
-}catch(error){
-  console.warn('[save-fix] basic snapshot failed',error);
-}
+  if(raw?.skills?.basic&&typeof raw.skills.basic==='object')persistedBasic={...raw.skills.basic};
+}catch(error){console.warn('[save-fix] basic snapshot failed',error)}
 
 function restorePersistedBasic(attempt=0){
   if(!persistedBasic)return;
   const D=window.__xianxiaDebug;
   const P=window.__xianxiaProgression;
-  if((!D||!P)&&attempt<30){
-    setTimeout(()=>restorePersistedBasic(attempt+1),0);
-    return;
-  }
+  if((!D||!P)&&attempt<30){setTimeout(()=>restorePersistedBasic(attempt+1),0);return}
   if(!D)return;
   try{
     const snap=D.snapshot();
@@ -58,9 +49,7 @@ function restorePersistedBasic(attempt=0){
     D.replaceState(M);
     console.info('[save-fix] restored basic attack progression',M.skills.basic);
     persistedBasic=null;
-  }catch(error){
-    console.warn('[save-fix] basic restore failed',error);
-  }
+  }catch(error){console.warn('[save-fix] basic restore failed',error)}
 }
 
 function loadUiHygiene(){
@@ -69,15 +58,12 @@ function loadUiHygiene(){
   script.dataset.v1145Hygiene='1';
   script.src=`ui_hygiene_v11_45.js?v=${encodeURIComponent(HYGIENE_VERSION)}&ts=${Date.now()}`;
   script.async=false;
-  script.onerror=()=>console.warn('[ui-11.45] hygiene patch load failed');
+  script.onerror=()=>console.warn('[ui-11.46] hygiene patch load failed');
   document.body.appendChild(script);
 }
 
 function loadCooldownHud(){
-  if(document.querySelector('script[data-v1143-cooldown]')){
-    loadUiHygiene();
-    return;
-  }
+  if(document.querySelector('script[data-v1143-cooldown]')){loadUiHygiene();return}
   const script=document.createElement('script');
   script.dataset.v1143Cooldown='1';
   script.src=`combat_cooldown_hud_v11_43.js?v=${encodeURIComponent(COOLDOWN_VERSION)}&ts=${Date.now()}`;
@@ -88,10 +74,7 @@ function loadCooldownHud(){
 }
 
 function loadMapDetailPatch(){
-  if(document.querySelector('script[data-v1142-map-detail]')){
-    loadCooldownHud();
-    return;
-  }
+  if(document.querySelector('script[data-v1142-map-detail]')){loadCooldownHud();return}
   const script=document.createElement('script');
   script.dataset.v1142MapDetail='1';
   script.src=`map_detail_v11_42.js?v=${encodeURIComponent(MAP_DETAIL_VERSION)}&ts=${Date.now()}`;
@@ -102,10 +85,7 @@ function loadMapDetailPatch(){
 }
 
 function loadResultFlow(){
-  if(document.querySelector('script[data-v1141-result]')){
-    loadMapDetailPatch();
-    return;
-  }
+  if(document.querySelector('script[data-v1141-result]')){loadMapDetailPatch();return}
   const result=document.createElement('script');
   result.dataset.v1141Result='1';
   result.src=`result_flow_v11_41.js?v=${encodeURIComponent(RESULT_VERSION)}&ts=${Date.now()}`;
@@ -116,10 +96,7 @@ function loadResultFlow(){
 }
 
 function loadFeedbackPatch(){
-  if(document.querySelector('script[data-v1140-feedback]')){
-    loadResultFlow();
-    return;
-  }
+  if(document.querySelector('script[data-v1140-feedback]')){loadResultFlow();return}
   const script=document.createElement('script');
   script.dataset.v1140Feedback='1';
   script.src=`ui_feedback_v11_40.js?v=${encodeURIComponent(FEEDBACK_VERSION)}&ts=${Date.now()}`;
@@ -131,15 +108,13 @@ function loadFeedbackPatch(){
 
 try{
   try{(0,eval)(load('update_guard.js')+'\n//# sourceURL=update_guard.runtime.js')}catch(updateError){console.warn('[update] guard load failed',updateError)}
-  // Load before the legacy touch shim and before progression creates its camera
-  // listeners, so one pointer-state machine owns drag/pinch on the training/map views.
   try{(0,eval)(load('tree_camera_gesture_v11_44.js',TREE_CAMERA_VERSION)+'\n//# sourceURL=tree_camera_gesture_v11_45.runtime.js')}catch(cameraError){console.warn('[tree-camera] load failed',cameraError)}
-  try{(0,eval)(load('tree_touch_fix_v11_37_4.js')+'\n//# sourceURL=tree_touch_fix_v11_37_4.runtime.js')}catch(touchError){console.warn('[touch-fix] load failed',touchError)}
+  try{(0,eval)(load('tree_touch_fix_v11_37_4.js')+'\n//# sourceURL=tree_touch_fix_v11_46.runtime.js')}catch(touchError){console.warn('[touch-fix] load failed',touchError)}
   const src=load(BASE);
   (0,eval)(src+'\n//# sourceURL=balance_core_v11_37_4.runtime.js');
   setTimeout(()=>restorePersistedBasic(),0);
   const e=document.querySelector('#buildVersion');if(e)e.textContent=`BUILD ${PATCH_VERSION}`;
-  window.__xianxiaEncounterHotfix={version:PATCH_VERSION,compatEntrypoint:'11.37.1',basicSaveFix:true,treeTouchFix:true,treeCameraFix:true,cooldownHudFix:true,uiHygiene:true};
+  window.__xianxiaEncounterHotfix={version:PATCH_VERSION,compatEntrypoint:'11.37.1',basicSaveFix:true,treeTouchFix:true,treeCameraFix:true,cooldownHudFix:true,uiHygiene:true,devMenuSwordTrigger:true,inlineBuildBadge:true};
 }catch(error){
   console.error(error);
   const e=document.querySelector('#buildVersion');if(e)e.textContent=`BUILD ${PATCH_VERSION}`;
