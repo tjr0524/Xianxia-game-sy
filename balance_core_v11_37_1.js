@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const PATCH_VERSION='11.48.0';
+const PATCH_VERSION='11.49.0';
 const FEEDBACK_VERSION='11.40.0';
 const RESULT_VERSION='11.41.0';
 const MAP_DETAIL_VERSION='11.42.0';
@@ -111,10 +111,10 @@ try{
   try{(0,eval)(load('tree_touch_fix_v11_37_4.js')+'\n//# sourceURL=tree_touch_fix_v11_46.runtime.js')}catch(touchError){console.warn('[touch-fix] load failed',touchError)}
   const src=load(BASE);
   (0,eval)(src+'\n//# sourceURL=balance_core_v11_37_2.entry.runtime.js');
-  try{(0,eval)(load('ios_stability_v11_48.js')+'\n//# sourceURL=ios_stability_v11_48.runtime.js')}catch(stabilityError){console.warn('[ios-stability] load failed',stabilityError)}
+  try{(0,eval)(load('ios_stability_v11_48.js')+'\n//# sourceURL=ios_stability_v11_49.runtime.js')}catch(stabilityError){console.warn('[ios-stability] load failed',stabilityError)}
   setTimeout(()=>restorePersistedBasic(),0);
   const e=document.querySelector('#buildVersion');if(e)e.textContent=`BUILD ${PATCH_VERSION}`;
-  window.__xianxiaEncounterHotfix={version:PATCH_VERSION,compatEntrypoint:'11.37.1',basicSaveFix:true,treeTouchFix:true,treeCameraFix:true,cooldownHudFix:true,uiHygiene:true,devMenuSwordTrigger:true,inlineBuildBadge:true,herbSpatialFix:true,mobileHeaderFix:true,loaderRollback:true,iosStability:true,cacheStable:true};
+  window.__xianxiaEncounterHotfix={version:PATCH_VERSION,compatEntrypoint:'11.37.1',basicSaveFix:true,treeTouchFix:true,treeCameraFix:true,cooldownHudFix:true,uiHygiene:true,devMenuSwordTrigger:true,inlineBuildBadge:true,herbSpatialFix:true,mobileHeaderFix:true,loaderRollback:true,iosStability:true,cacheStable:true,gatherIdleFix:true,areaAssetPrune:true};
 }catch(error){
   console.error(error);
   const e=document.querySelector('#buildVersion');if(e)e.textContent=`BUILD ${PATCH_VERSION}`;
