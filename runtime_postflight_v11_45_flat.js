@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
-const VERSION='11.48.0';
-const FLAT_VERSION='11.48.0-test3';
+const VERSION='11.48.1';
+const FLAT_VERSION='11.48.1-test4';
 
 window.__xianxiaFlatPreflight?.restoreBasic?.();
 if(window.__xianxiaProgression)window.__xianxiaProgression.balanceVersion='core-v0.1';
@@ -15,7 +15,7 @@ window.__xianxiaWorldScale={
 window.__xianxiaBalance={version:'11.37.2',core:'Core Balance v0.2',spatial:'Spatial v0.1',encounter:'Encounter Density v0.3',incoming:'Multi-target v0.1'};
 window.__xianxiaEncounterPatch={version:'11.37.2',flattened:true};
 window.__xianxiaEncounterHotfix={version:VERSION,compatEntrypoint:'11.37.1',basicSaveFix:true,treeTouchFix:true,treeCameraFix:true,cooldownHudFix:true,uiHygiene:true,runtimeSafety:true,flattened:true};
-window.__xianxiaFlatRuntime={version:FLAT_VERSION,loaderPatches:false,syncXHR:false,eval:false,frameOwner:'shared-hub',uiOwner:'ui-runtime-11.48'};
+window.__xianxiaFlatRuntime={version:FLAT_VERSION,loaderPatches:false,syncXHR:false,eval:false,frameOwner:'shared-hub',uiOwner:'ui-runtime-11.48.1'};
 window.__xianxiaRuntime?.pinBuildBadge?.();
 
 function loadScript(path,version,next,label){
@@ -27,9 +27,9 @@ function loadScript(path,version,next,label){
   document.body.appendChild(script);
 }
 function loadCooldown(){loadScript('combat_cooldown_hud_v11_43.js',VERSION,null,'cooldown HUD')}
-function loadResult(){loadScript('result_flow_v11_41.js','11.48.0',loadCooldown,'result flow')}
-function loadFeedback(){loadScript('ui_feedback_v11_40.js','11.48.0',loadResult,'feedback')}
-function loadUiRuntime(){loadScript('ui_runtime_v11_48.js','11.48.0',loadFeedback,'UI runtime')}
+function loadResult(){loadScript('result_flow_v11_41.js','11.48.1',loadCooldown,'result flow')}
+function loadFeedback(){loadScript('ui_feedback_v11_40.js','11.48.1',loadResult,'feedback')}
+function loadUiRuntime(){loadScript('ui_runtime_v11_48.js','11.48.1',loadFeedback,'UI runtime')}
 if(document.readyState==='complete')setTimeout(loadUiRuntime,0);
 else window.addEventListener('load',loadUiRuntime,{once:true});
 })();
