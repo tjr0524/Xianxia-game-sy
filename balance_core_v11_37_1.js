@@ -1,6 +1,7 @@
 (()=>{
 'use strict';
 const PATCH_VERSION='11.39.0';
+const FEEDBACK_VERSION='11.40.0';
 const BASE='balance_core_v11_37.js';
 const SAVE_KEY='xianxia_proto_v11';
 window.__XIANXIA_BUILD__=PATCH_VERSION;
@@ -57,6 +58,16 @@ function restorePersistedBasic(attempt=0){
   }
 }
 
+function loadFeedbackPatch(){
+  if(document.querySelector('script[data-v1140-feedback]'))return;
+  const script=document.createElement('script');
+  script.dataset.v1140Feedback='1';
+  script.src=`ui_feedback_v11_40.js?v=${encodeURIComponent(FEEDBACK_VERSION)}&ts=${Date.now()}`;
+  script.async=false;
+  script.onerror=()=>console.warn('[ui-11.40] feedback patch load failed');
+  document.body.appendChild(script);
+}
+
 try{
   try{(0,eval)(load('update_guard.js')+'\n//# sourceURL=update_guard.runtime.js')}catch(updateError){console.warn('[update] guard load failed',updateError)}
   try{(0,eval)(load('tree_touch_fix_v11_37_4.js')+'\n//# sourceURL=tree_touch_fix_v11_37_4.runtime.js')}catch(touchError){console.warn('[touch-fix] load failed',touchError)}
@@ -69,4 +80,7 @@ try{
   console.error(error);
   const e=document.querySelector('#buildVersion');if(e)e.textContent=`BUILD ${PATCH_VERSION}`;
 }
+
+if(document.readyState==='complete')setTimeout(loadFeedbackPatch,0);
+else window.addEventListener('load',loadFeedbackPatch,{once:true});
 })();
