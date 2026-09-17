@@ -18,12 +18,12 @@ function css(){
 .brand h1{white-space:nowrap}
 @media(max-width:920px){
   body:not(.v22-combat-mode){height:100dvh!important;overflow:hidden!important;padding-bottom:0!important}
-  body:not(.v22-combat-mode) .shell{display:grid!important;grid-template-rows:auto minmax(0,1fr)!important;width:100%!important;height:100dvh!important;padding:8px 8px calc(72px + env(safe-area-inset-bottom))!important;overflow:hidden!important}
-  .topbar{display:grid!important;grid-template-columns:1fr!important;gap:6px!important;align-items:start!important}
+  body:not(.v22-combat-mode) .shell{display:flex!important;flex-direction:column!important;width:100%!important;height:100dvh!important;padding:8px 8px calc(72px + env(safe-area-inset-bottom))!important;overflow:hidden!important}
+  .topbar{display:grid!important;flex:0 0 auto!important;grid-template-columns:1fr!important;gap:6px!important;align-items:start!important;margin-bottom:0!important;padding-bottom:6px!important}
   .brand{min-width:0}.brand h1{white-space:nowrap!important}
   .resources{display:grid!important;grid-template-columns:.85fr .8fr 1.35fr!important;width:100%;gap:5px!important}
   .resource{min-width:0!important}
-  .layout{display:block!important;min-height:0!important;height:100%!important;overflow:hidden!important}
+  .layout{display:block!important;flex:1 1 auto!important;min-height:0!important;height:auto!important;margin-top:0!important;padding-top:0!important;overflow:hidden!important}
   .footer{display:none!important}
   .arena-card{height:100%!important;margin-bottom:0!important;overflow-y:auto!important;overscroll-behavior:contain}
   body.v22-panel-mode .arena-card{display:none!important}
@@ -32,6 +32,9 @@ function css(){
   .tabs.v22-mobile-nav{position:fixed!important;z-index:80!important;left:6px!important;right:6px!important;bottom:calc(env(safe-area-inset-bottom) + 6px)!important;top:auto!important;display:grid!important;grid-template-columns:repeat(5,1fr)!important;gap:3px!important;min-height:58px!important;padding:5px!important;border:1px solid #77877f55!important;border-radius:13px 5px 13px 5px!important;background:rgba(239,241,233,.97)!important;box-shadow:0 10px 30px #27393238!important;overflow:visible!important}
   .controls .panel{display:none!important;height:100%!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:contain;padding:7px 7px 18px!important;scroll-padding-bottom:18px}
   body.v22-panel-mode .controls .panel.active{display:block!important}
+  body.v22-panel-mode .controls .panel.active[data-panel="train"],body.v22-panel-mode .controls .panel.active[data-panel="skills"],body.v22-panel-mode .controls .panel.active[data-panel="tree"]{display:flex!important;flex-direction:column!important;overflow:hidden!important}
+  body.v22-panel-mode [data-panel="train"] .asc-section,body.v22-panel-mode [data-panel="skills"] .skill17,body.v22-panel-mode [data-panel="tree"]>.section{display:flex!important;flex:1 1 auto!important;flex-direction:column!important;min-height:0!important;height:100%!important;margin:0!important}
+  body.v22-panel-mode #ascViewport,body.v22-panel-mode #mapViewport,body.v22-panel-mode #skillTreeViewport{flex:1 1 auto!important;min-height:0!important;height:auto!important}
   body.v22-expedition-mode .controls .panel,body.v22-expedition-mode .controls details{display:none!important}
   .v22-expedition-tab{display:flex!important;min-height:50px!important;margin-top:-8px!important;border-color:#8e763e!important;border-radius:13px 5px 13px 5px!important;background:#f7f0dc!important;color:#30453e!important;box-shadow:0 5px 14px #33463e30,inset 0 -3px #9b7f3f70!important;font-weight:800!important}
   .v22-expedition-tab::before{background-position:25% 0!important;filter:sepia(.25) saturate(.8)!important}
@@ -99,6 +102,7 @@ function showPanel(tab){
   document.body.classList.add('v22-panel-mode');
   $('.v22-expedition-tab')?.classList.remove('active');
   settleClosed();syncAria();window.scrollTo?.({top:0,behavior:'smooth'});
+  requestAnimationFrame(()=>requestAnimationFrame(()=>tab.dataset.tab==='train'?tab.closest('body')?.querySelector('[data-c="fit"]')?.click():tab.dataset.tab==='skills'?tab.closest('body')?.querySelector('[data-s="fit"]')?.click():tab.dataset.tab==='tree'?tab.closest('body')?.querySelector('[data-m="fit"]')?.click():null));
 }
 
 function enterCombat(){
