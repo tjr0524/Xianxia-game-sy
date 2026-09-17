@@ -44,10 +44,14 @@ jobs:
           node --check testsrc/runtime_postflight_v11_45_flat.js
           node --check testsrc/runtime_frame_hub_v11_47.js
           node --check testsrc/exploration_world_v11_33_4.js
+          node --check testsrc/ui_runtime_v11_48.js
+          node --check testsrc/ui_polish_v11_38.js
           node --check testsrc/ui_feedback_v11_40.js
+          node --check testsrc/result_flow_v11_41.js
           node --check testsrc/combat_cooldown_hud_v11_43.js
           node testsrc/tools/validate_flat_runtime.js testsrc
           node testsrc/tools/validate_frame_ownership.js testsrc
+          node testsrc/tools/validate_ui_ownership.js testsrc
 
       - name: Build /test channel
         shell: bash
@@ -88,21 +92,21 @@ jobs:
           if 'id="test-channel-style"' not in text:
               text = text.replace("</head>", marker + "\n</head>")
 
-          badge = '<div id="testChannelBadge">TEST 11.47.1</div>'
+          badge = '<div id="testChannelBadge">TEST 11.48.0</div>'
           if 'id="testChannelBadge"' not in text:
               text = text.replace("<body", "<body", 1)
               pos = text.find(">", text.find("<body"))
               text = text[:pos+1] + "\n" + badge + text[pos+1:]
 
-          if "<title>" in text and "[TEST 11.47.1]" not in text:
-              text = text.replace("<title>", "<title>[TEST 11.47.1] ", 1)
+          if "<title>" in text and "[TEST 11.48.0]" not in text:
+              text = text.replace("<title>", "<title>[TEST 11.48.0] ", 1)
 
           index.write_text(text, encoding="utf-8")
 
           (root / "test-channel.json").write_text(json.dumps({
               "channel": "test",
               "source_sha": os.environ.get("GITHUB_SHA", ""),
-              "build": "11.47.1",
+              "build": "11.48.0",
           }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
           PY
 
