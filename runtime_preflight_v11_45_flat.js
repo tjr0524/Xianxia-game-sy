@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.46.0-test1';
+const VERSION='11.47.0-test2';
 const SAVE_KEY='xianxia_proto_v11';
 let persistedBasic=null;
 try{
