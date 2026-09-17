@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.48.0';
+const VERSION='11.48.1';
 if(window.__xianxiaUiRuntime?.version===VERSION)return;
 
 const $=s=>document.querySelector(s);
