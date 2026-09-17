@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
-if(window.__xianxiaVisualVersion==='11.25.2')return;
-window.__xianxiaVisualVersion='11.25.2';
+if(window.__xianxiaVisualVersion==='11.25.4')return;
+window.__xianxiaVisualVersion='11.25.4';
 
 const $=s=>document.querySelector(s);
 const GLYPHS={qingyun:'青',blackwind:'風',blood:'血',thunder:'雷'};
@@ -111,10 +111,15 @@ function installArenaChrome(){
 
 function decorateTabs(){
   document.querySelectorAll('.tab-btn:not(.v1117-hide)').forEach(button=>{
+    const existing=button.querySelector(':scope > .v25-tab-label');
     const label=button.querySelector('.v23-tab-label,.v25-tab-label')?.textContent?.trim()||button.textContent.trim();
     if(!label)return;
-    button.setAttribute('aria-label',label);
-    button.innerHTML=`<span class="v25-tab-label">${label}</span>`;
+    if(button.getAttribute('aria-label')!==label)button.setAttribute('aria-label',label);
+    if(existing&&button.children.length===1&&existing.textContent.trim()===label)return;
+    const span=document.createElement('span');
+    span.className='v25-tab-label';
+    span.textContent=label;
+    button.replaceChildren(span);
   });
 }
 
@@ -141,14 +146,14 @@ function syncState(){
   body.dataset.v23Area=area;
   body.dataset.v23Phase=phase;
   const watermark=$('.v25-zone-watermark');
-  if(watermark)watermark.textContent=GLYPHS[area]||'境';
+  if(watermark&&watermark.textContent!==(GLYPHS[area]||'境'))watermark.textContent=GLYPHS[area]||'境';
 }
 
 function markDialog(){
   const dialog=$('#ov .dialog');
   if(!dialog)return;
-  dialog.dataset.v25Window='1';
-  dialog.querySelectorAll('button').forEach(button=>button.dataset.v25Button='1');
+  if(dialog.dataset.v25Window!=='1')dialog.dataset.v25Window='1';
+  dialog.querySelectorAll('button').forEach(button=>{if(button.dataset.v25Button!=='1')button.dataset.v25Button='1'});
 }
 
 let queued=false;
@@ -171,7 +176,7 @@ function observe(){
 function boot(){
   promoteTheme();
   installCorrections();
-  document.documentElement.dataset.visualVersion='11.25.2';
+  document.documentElement.dataset.visualVersion='11.25.4';
   document.body.classList.remove('v23-theme','v24-theme');
   document.body.classList.add('v25-theme');
   installArenaChrome();
@@ -185,11 +190,7 @@ function boot(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
 else boot();
 
-if(!document.querySelector('script[data-v1132-extras]')){
-  const extra=document.createElement('script');
-  extra.src='progression_extras_v11_32.js?v=11.32';
-  extra.dataset.v1132Extras='1';
-  extra.async=false;
-  document.head.appendChild(extra);
-}
+// progression_extras is loaded once by balance_progression_extras_v11_36.js.
+// The old dynamic injection here could start a second RAF/canvas path before the
+// balanced loader ran, so it is intentionally retired.
 })();
