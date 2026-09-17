@@ -1,9 +1,8 @@
 (()=>{
 'use strict';
-const VERSION='11.47.1';
+const VERSION='11.50.1';
 if(window.__xianxiaUiHygiene?.version===VERSION)return;
 window.__xianxiaUiHygiene={version:VERSION};
-window.__XIANXIA_BUILD__=VERSION;
 
 const $=s=>document.querySelector(s);
 let queued=false;
@@ -11,8 +10,7 @@ let queued=false;
 function normalizeDetail(detail){
   if(!detail)return;
   // Legacy popover passes can recreate their own close buttons after every detail render.
-  // Own the close control here: preserve one hygiene button, remove every other
-  // non-action button, and only create a replacement when render() wiped ours.
+  // Own the close control here, but do not touch unrelated action buttons.
   const buttons=[...detail.querySelectorAll('button:not(.detail-action)')];
   let keep=buttons.find(button=>button.classList.contains('hygiene-close47'))||null;
   for(const button of buttons)if(button!==keep)button.remove();
@@ -46,8 +44,10 @@ function mountBuildBadge(){
     row.appendChild(title);
   }
   if(badge.parentElement!==row)row.appendChild(badge);
-  badge.textContent=`BUILD ${VERSION}`;
   badge.setAttribute('aria-hidden','true');
+  // IMPORTANT: this UI helper must never write the build number or __XIANXIA_BUILD__.
+  // The canonical entrypoint owns the app build. Writing text here caused a
+  // MutationObserver -> textContent -> MutationObserver feedback loop on Safari.
 }
 
 function clean(){
@@ -109,7 +109,11 @@ body.v22-combat-mode #buildVersion{display:none!important}
 `;
 (document.head||document.documentElement).appendChild(style);
 
-const observer=new MutationObserver(schedule);
+const observer=new MutationObserver(mutations=>{
+  // Ignore pure text changes such as HUD/build labels. Only structural changes can
+  // require remounting the close button or inline build element.
+  if(mutations.some(m=>m.type==='childList'&&(m.addedNodes.length||m.removedNodes.length)))schedule();
+});
 observer.observe(document.documentElement,{childList:true,subtree:true});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule,{once:true});
 else schedule();
