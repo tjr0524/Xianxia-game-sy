@@ -11,8 +11,13 @@ function match(src,re){return re.test(src)}
 const index=read('index.html');
 const baseCore=read('balance_core_v11_36.js');
 const encounter=require(path.join(root,'balance_core_v11_37.js'));
+const hotfix=read('balance_core_v11_37_1.js');
 let core='';let transformed=false;
-try{core=encounter.transform(baseCore);new Function(core);transformed=true}catch(error){console.error(error)}
+try{
+  core=encounter.transform(baseCore);
+  core=core.replace('return randomPoint(100)','return{x:100+Math.random()*(W-200),y:100+Math.random()*(H-200)}').replaceAll('11.37.0','11.37.1');
+  new Function(core);transformed=true;
+}catch(error){console.error(error)}
 const prog=read('balance_progression_v11_36.js');
 const ui=read('balance_ui_v11_36.js');
 const sys21=read('balance_systems21_v11_36.js');
@@ -24,11 +29,14 @@ const sysOriginal=read('systems_v11_21.js');
 const extrasOriginal=read('progression_extras_v11_32.js');
 const world=read('worldscale_core_v11_34.js');
 
-ok('encounter transform compiles',transformed);
-ok('index build 11.37.0',has(index,'BUILD 11.37.0'));
-ok('index loads encounter core',has(index,'balance_core_v11_37.js?v=11.37.0'));
+ok('encounter transform + hotfix compiles',transformed);
+ok('index build 11.37.1',has(index,'BUILD 11.37.1'));
+ok('index loads encounter hotfix core',has(index,'balance_core_v11_37_1.js?v=11.37.1'));
+ok('hotfix wraps 11.37 core',has(hotfix,"const BASE='balance_core_v11_37.js';"));
+ok('hotfix removes undefined randomPoint fallback',has(hotfix,"return{x:100+Math.random()*(W-200),y:100+Math.random()*(H-200)}"));
 for(const f of ['balance_progression_v11_36.js','balance_ui_v11_36.js','balance_systems21_v11_36.js','balance_progression_extras_v11_36.js'])ok('index loads '+f,has(index,f+'?v=11.36.0'));
-ok('old core loader not directly loaded',!has(index,'<script src="balance_core_v11_36.js'));
+ok('old 11.36 core loader not directly loaded',!has(index,'<script src="balance_core_v11_36.js'));
+ok('unfixed 11.37 core loader not directly loaded',!has(index,'<script src="balance_core_v11_37.js'));
 ok('legacy world core loader removed',!has(index,'<script src="worldscale_core_v11_34.js'));
 ok('legacy progression loader removed',!has(index,'<script src="progression_v11_17.js'));
 ok('legacy ui loader removed',!has(index,'<script src="ui_v11_17.js'));
@@ -77,6 +85,7 @@ ok('attack slots protect HP curve',has(core,'attackSlots:{qingyun:2,blackwind:3,
 ok('pack initializer installed',has(core,'initEncounterPacks();'));
 ok('pack runtime installed',has(core,'updateEncounterPacks(dt);'));
 ok('eco3 owns quality',has(core,"const enhancedChance=[0,.04,.07,.09,.12,.15][er]||0;"));
+ok('undefined fallback absent in final core',!has(core,'return randomPoint(100)'));
 ok('core 25s left untouched via original',has(game,'const RUN_TIME=25;'));
 ok('progression q9 total nodes new',has(prog,"T('q9_harmony','사법조화'"));
 ok('progression f1 cost model',has(prog,"T('f1_harmony','진원순환'"));
@@ -84,4 +93,4 @@ ok('UI single-rank wording',has(ui,"keys=['pow'],nm=['숙련']"));
 ok('extras disabled',has(extras,'const EXTRA=[];'));
 
 if(failures){console.error(`\n${failures} validation failure(s)`);process.exit(1)}
-console.log('\nBalance + encounter patch anchors validated.');
+console.log('\nBalance + encounter 11.37.1 patch anchors validated.');
