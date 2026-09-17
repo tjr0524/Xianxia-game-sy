@@ -32,8 +32,8 @@ document.addEventListener('pointerdown',event=>{
 document.addEventListener('pointermove',event=>{
   const p=pointers.get(event.pointerId);if(!p)return;
   if(!p.moved&&dist(p,event.clientX,event.clientY)>=DRAG_THRESHOLD)p.moved=true;
-  // A gesture that began on a node never becomes a camera pan.  Users can pan
-  // from the empty background; this makes node taps deterministic on phones.
+  // A gesture that began on a node never becomes a camera pan. Users can pan
+  // from empty background; this makes node taps deterministic on phones.
   if(p.kind==='node')event.stopPropagation();
 },true);
 
@@ -68,7 +68,7 @@ document.addEventListener('pointercancel',event=>{
 },true);
 
 // If a node-origin gesture actually travelled far enough to count as a drag,
-// suppress only that node's immediate synthetic click.  Ordinary taps pass.
+// suppress only that node's immediate synthetic click. Ordinary taps pass.
 document.addEventListener('click',event=>{
   const node=closest(event.target,NODE_SELECTOR);if(!node)return;
   const until=cancelledClicks.get(node)||0;
@@ -79,8 +79,26 @@ document.addEventListener('click',event=>{
   }
 },true);
 
+function openDeveloperMenu(){
+  const controls=document.querySelector('.controls');
+  const dev=document.querySelector('details.dev');
+  if(controls)controls.classList.add('open');
+  if(dev){
+    dev.open=true;
+    requestAnimationFrame(()=>dev.scrollIntoView({block:'nearest',behavior:'smooth'}));
+  }
+}
+
+document.addEventListener('click',event=>{
+  const badge=closest(event.target,'#buildVersion');
+  if(!badge)return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  openDeveloperMenu();
+},true);
+
 const style=document.createElement('style');
 style.id='tree-touch-fix-v11-37-4';
-style.textContent=`${NODE_SELECTOR}{touch-action:manipulation!important;-webkit-user-select:none!important;user-select:none!important}`;
+style.textContent=`${NODE_SELECTOR}{touch-action:manipulation!important;-webkit-user-select:none!important;user-select:none!important}.build-version{pointer-events:auto!important;cursor:pointer!important;touch-action:manipulation!important}`;
 (document.head||document.documentElement).appendChild(style);
 })();
