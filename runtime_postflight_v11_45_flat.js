@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
-const VERSION='11.49.0';
-const FLAT_VERSION='11.49.0-test5';
+const VERSION='11.49.1';
+const FLAT_VERSION='11.49.1-test6';
 
 window.__xianxiaFlatPreflight?.restoreBasic?.();
 if(window.__xianxiaProgression)window.__xianxiaProgression.balanceVersion='core-v0.1';
