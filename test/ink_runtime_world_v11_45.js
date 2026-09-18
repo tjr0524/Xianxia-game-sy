@@ -2,8 +2,10 @@
 (()=>{
 'use strict';
 if(window.__xianxiaInkRuntime?.version==='11.31.2')return;
-const W=1800,H=2400,EXIT={x:900,y:1200},BASE='assets/ink_v1/',ENV_BASE='assets/region_env_v1/';
-const CACHE=new URL(document.currentScript?.src||location.href).searchParams.get('v')||'dev';
+const W=1800,H=2400,EXIT={x:900,y:1200},BASE='assets/ink_v1/';
+const SCRIPT_URL=new URL(document.currentScript?.src||location.href);
+const ENV_BASE=new URL(/\/test\//.test(SCRIPT_URL.pathname)?'../assets/region_env_v1/':'assets/region_env_v1/',SCRIPT_URL).href;
+const CACHE=SCRIPT_URL.searchParams.get('v')||'dev';
 const files={
  player:'source/player_core.png',objects:'source/world_objects.png',effects:'source/skill_effects.png',
  qingyun_guard:'source/qingyun_stone_boar.png',qingyun_chaser:'source/qingyun_wind_wolf.png',qingyun_basic:'source/qingyun_mist_goat_v1.png',
