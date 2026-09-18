@@ -208,6 +208,7 @@ function areaMoveScale(){
   else if(M.area==='thunder'){const d=M.realm.major>1?4:M.realm.major===1?clamp((M.realm.stage||1)-1,0,4):0;s=.68+.04*d}
   if(M.trainingNodes?.q3_shadow)s+=(1-s)*.05;
   if(M.trainingNodes?.q9_harmony)s+=(1-s)*.03;
+  if(M.trainingNodes?.f1_harmony)s+=(1-s)*.10;
   return Math.min(1,s);
 }
 function areaPickupScale(){
@@ -230,6 +231,29 @@ function playerProgressTier(){return M.realm.major>0?9+(M.realm.stage||1):(M.rea
 function areaBaseTier(){return({qingyun:1,blackwind:3,blood:6,thunder:10}[M.area]||1)}
 function areaOverlevelGap(){return Math.max(0,playerProgressTier()-areaBaseTier())}
 function incomingDamageScale(){const slots=Math.max(1,({qingyun:2,blackwind:3,blood:3,thunder:3}[M.area]||3));const multi=1/(1+.25*(slots-1));const over=Math.pow(.85,areaOverlevelGap());return multi*over}
+function takePlayerDamage(dmg,grantGrace=false){
+  dmg=Math.max(0,+dmg||0);
+  if(!dmg)return;
+  P.hp-=dmg;
+  if(run){
+    run.minHp=Math.min(run.minHp,P.hp);
+    run.lastDamageAt=elapsed;
+    run.regenPulse=0;
+  }
+  if(grantGrace)P.hitGrace=1.15;
+}
+function updateNonCombatRecovery(dt){
+  if(!M.trainingNodes?.f1_harmony||P.hp<=0||P.hp>=P.max)return;
+  const threatened=enemies.some(e=>e.type!=='spirit'&&e.hp>0&&(e.aggressive||distance(P,e)<150));
+  if(threatened||elapsed-(run.lastDamageAt??-999)<3)return;
+  const before=P.hp;
+  P.hp=Math.min(P.max,P.hp+P.max*.025*dt);
+  run.regenPulse=(run.regenPulse||0)+dt;
+  if(run.regenPulse>=1.25&&P.hp>before){
+    run.regenPulse=0;
+    pop(P.x,P.y-22,`기혈 회복 +${Math.max(1,Math.round(P.max*.025*1.25))}`,'#79b98f',.65);
+  }
+}
 const cap=()=>isMortal()?1:2+M.realm.major*9+(M.realm.stage-1);
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
@@ -869,6 +893,7 @@ function begin(){
     herbLeft:herbTotal-herbInitial,beastLeft:beastTotal-beastInitial,
     herbTimer:7+Math.random()*3,beastTimer:4.2+Math.random()*1.8,rogueTimer:6,
     lightningTimer:M.area==='thunder'?2.2:999,
+    lastDamageAt:-999,regenPulse:0,
     skillCooldowns:Object.fromEntries(SKILLS.map(skill=>[skill.id,0])),scheduledHits:[]
   };
   P.x=P.tx=EXIT_APPROACH.x;
@@ -993,7 +1018,7 @@ function spawnLightning(){
 
 function updateHazards(dt){
   if(M.area!=='thunder')return;run.lightningTimer-=dt;if(run.lightningTimer<=0){const chain=rank('storm1')>=3?2+(rank('storm1')>=5?1:0):1;for(let i=0;i<chain;i++)setTimeout(()=>{if(phase==='run')spawnLightning()},i*180);run.lightningTimer=Math.max(2.7,5.0-rank('storm1')*.32)}
-  for(const h of hazards){h.t-=dt;if(h.t<=0&&!h.struck){h.struck=1;h.t=.28;h.ttl=.28;if(distance(P,h)<h.r){let dmg=Math.ceil(beastConfig().hit*.55);P.hp-=dmg;run.minHp=Math.min(run.minHp,P.hp);pop(P.x,P.y,'천뢰 -'+dmg,'#ff9fa0',1)}else{run.dodges++;drop('s',h.x,h.y,h.reward);pop(h.x,h.y,'천뢰 회피','#bfc5ff',.9)}ring(h.x,h.y,h.r,'#d6d5ff',.3)}}hazards=hazards.filter(h=>h.t>0)
+  for(const h of hazards){h.t-=dt;if(h.t<=0&&!h.struck){h.struck=1;h.t=.28;h.ttl=.28;if(distance(P,h)<h.r){let dmg=Math.ceil(beastConfig().hit*.55);takePlayerDamage(dmg);pop(P.x,P.y,'천뢰 -'+dmg,'#ff9fa0',1)}else{run.dodges++;drop('s',h.x,h.y,h.reward);pop(h.x,h.y,'천뢰 회피','#bfc5ff',.9)}ring(h.x,h.y,h.r,'#d6d5ff',.3)}}hazards=hazards.filter(h=>h.t>0)
 }
 
 function update(dt){
@@ -1011,22 +1036,22 @@ function update(dt){
   updateEncounterPacks(dt);
   if(branches().includes('fate')&&rank('fate1')>0){run.rogueTimer-=dt;if(run.rogueTimer<=0){actor(Math.random()<.68?'rogue':'rat');run.rogueTimer=Math.max(4.2,10-rank('fate1')*.75)}}
   const pr=autoPickupRange();objects=objects.filter(o=>{if(distance(P,o)<pr+o.r){if(o.type==='h')gainHerb(o.value,o.grade,o.x,o.y);else gainStone(o.value,o.x,o.y);return false}return true});
-  if(vein&&vein.stock>0&&distance(P,vein)<vein.r+P.r+10){vein.progress+=dt;const r3=rank('res3');if(r3>=3&&vein.waveStage<1&&vein.progress>=1){vein.waveStage=1;for(let i=0;i<2;i++){const a=Math.random()*6.28,p={x:vein.x+Math.cos(a)*130,y:vein.y+Math.sin(a)*130};actor(i?'chaser':'guard',{p,homeX:p.x,homeY:p.y})}}if(r3>=3&&vein.waveStage<2&&vein.progress>=2){vein.waveStage=2;for(let i=0;i<2+(r3>=5?2:0);i++){const a=Math.random()*6.28,p={x:vein.x+Math.cos(a)*(130+Math.random()*40),y:vein.y+Math.sin(a)*(130+Math.random()*40)};actor(i%2?'attacker':'chaser',{p,homeX:p.x,homeY:p.y})}}if(vein.progress>=3){const mined=vein.stock;vein.stock=0;run.mined+=mined;gainStone(mined,vein.x,vein.y);pop(vein.x,vein.y-34,'영맥 채굴 완료','#b8d7ef',1.1)}}
+  if(vein&&vein.stock>0&&distance(P,vein)<vein.r+P.r+10){vein.progress+=dt;const r3=rank('res3');if(r3>=3&&vein.waveStage<1&&vein.progress>=1){vein.waveStage=1;for(let i=0;i<2;i++){const a=Math.random()*6.28,p={x:vein.x+Math.cos(a)*130,y:vein.y+Math.sin(a)*130};actor(i?'chaser':'guard',{p,homeX:p.x,homeY:p.y})}}if(r3>=3&&vein.waveStage<2&&vein.progress>=2){vein.waveStage=2;for(let i=0;i<2+(r3>=5?2:0);i++){const a=Math.random()*6.28,p={x:vein.x+Math.cos(a)*(130+Math.random()*40),y:vein.y+Math.sin(a)*(130+Math.random()*40)};actor(i%2?'attacker':'chaser',{p,homeX:p.x,homeY:p.y})}}if(vein.progress>=3){const mined=vein.stock,x=vein.x,y=vein.y,doneVein=vein;run.mined+=mined;gainStone(mined,x,y);pop(x,y-34,'영맥 채굴 완료','#b8d7ef',1.1);if(P.target===doneVein)P.target=null;vein=null}}
   const strikeSet=attackStrikeSet();
   for(const enemy of enemies){
     enemy.cd=Math.max(0,enemy.cd-dt);
-    if(enemy.type==='attacker'&&enemy.windup>0){enemy.windup-=dt;if(enemy.windup<=0&&enemy.pendingStrike){enemy.pendingStrike=0;if(distance(enemy,P)<P.r+enemy.r+16){let dmg=(enemy.attack||beastConfig().hit)*incomingDamageScale();if(enemies.some(o=>o!==enemy&&o.rareTrait==='howl'&&o.hp>0&&distance(o,enemy)<130))dmg*=1.15;if(P.hitGrace>0&&M.trainingNodes?.q6_spirit)dmg*=M.trainingNodes?.q9_harmony ? .90 : .92;dmg=Math.ceil(dmg);P.hp-=dmg;run.minHp=Math.min(run.minHp,P.hp);P.hitGrace=1.15;ring(P.x,P.y,P.r+9,'#c96893',.20)}}}
+    if(enemy.type==='attacker'&&enemy.windup>0){enemy.windup-=dt;if(enemy.windup<=0&&enemy.pendingStrike){enemy.pendingStrike=0;if(distance(enemy,P)<P.r+enemy.r+16){let dmg=(enemy.attack||beastConfig().hit)*incomingDamageScale();if(enemies.some(o=>o!==enemy&&o.rareTrait==='howl'&&o.hp>0&&distance(o,enemy)<130))dmg*=1.15;if(P.hitGrace>0&&M.trainingNodes?.q6_spirit)dmg*=M.trainingNodes?.q9_harmony ? .90 : .92;dmg=Math.ceil(dmg);takePlayerDamage(dmg,true);ring(P.x,P.y,P.r+9,'#c96893',.20)}}}
     if(enemy.type==='spirit'){const d=distance(enemy,P);if(d<40){enemy.bond+=dt;if(enemy.bond>1.3){gainHerb(1+Math.floor(Math.random()*2),Math.min(2,areaIndex()),enemy.x,enemy.y);enemy.hp=0}}else enemy.bond=Math.max(0,enemy.bond-dt*.3);if(rank('fate3')>=3&&d<130){const dx=enemy.x-P.x,dy=enemy.y-P.y,n=Math.hypot(dx,dy)||1;enemy.vx=dx/n*enemy.speed;enemy.vy=dy/n*enemy.speed}enemy.x=clamp(enemy.x+enemy.vx*dt,18,W-18);enemy.y=clamp(enemy.y+enemy.vy*dt,18,H-18);continue}
     if(enemy.type==='rogue'||enemy.type==='rat'){enemy.stealCd=Math.max(0,enemy.stealCd-dt);const dP=distance(enemy,P);if(enemy.type==='rogue'&&enemy.treasure&&rank('fate2')>=3&&dP<170)enemy.escape=1;let target=null,nearest=Infinity;if(!enemy.escape&&rank('fate1')>=3){for(const o of objects){const d=distance(enemy,o);if(d<nearest){nearest=d;target=o}}}if(target){moveToward(enemy,target.x,target.y,enemy.speed,dt);if(nearest<enemy.r+target.r+4&&enemy.stealCd<=0){const idx=objects.indexOf(target);if(idx>=0){objects.splice(idx,1);enemy.carry.push({type:target.type,value:target.value,grade:target.grade});enemy.stealCd=.35;if(enemy.type==='rat'||enemy.carry.length>=2)enemy.escape=1}}}else if(enemy.carry.length)enemy.escape=1;else if(!enemy.escape){enemy.x=clamp(enemy.x+enemy.vx*dt,18,W-18);enemy.y=clamp(enemy.y+enemy.vy*dt,18,H-18)}if(elapsed>21)enemy.escape=1;if(enemy.escape)moveToward(enemy,enemy.x<W/2?-30:W+30,enemy.y,enemy.speed*1.2,dt);continue}
     const d=distance(enemy,P),home=Math.hypot(enemy.x-enemy.homeX,enemy.y-enemy.homeY),aggro=enemy.type==='chaser'?220:enemy.type==='elite'?105:120;
     if(enemy.type==='chaser'){if(d<aggro)enemy.aggressive=1;if(d>aggro*1.45)enemy.aggressive=0}else{if(d<aggro)enemy.aggressive=1;if(home>210&&d>aggro)enemy.aggressive=0}
     let speedMul=1,period=enemy.attackPeriod||1;if(enemy.rareTrait==='frenzy'&&enemy.hp/enemy.max<.5){speedMul=1.15;period*=.8}if(enemy.aggressive){if(strikeSet.has(enemy))moveToward(enemy,P.x,P.y,enemy.speed*speedMul,dt);else{const rr=58+(enemy.r||12),tx=P.x+Math.cos(enemy.slotAngle||0)*rr,ty=P.y+Math.sin(enemy.slotAngle||0)*rr;moveToward(enemy,tx,ty,enemy.speed*.82*speedMul,dt)}}else if(home>5)moveToward(enemy,enemy.homeX,enemy.homeY,enemy.speed*.55,dt);
-    if(strikeSet.has(enemy)&&d<P.r+enemy.r+3&&enemy.cd<=0){if(enemy.type==='attacker'){enemy.windup=.55;enemy.pendingStrike=1;enemy.cd=period+.55;ring(enemy.x,enemy.y,enemy.r+18,'#c96893',.55)}else{let dmg=(enemy.attack||beastConfig().hit)*incomingDamageScale();if(enemies.some(o=>o!==enemy&&o.rareTrait==='howl'&&o.hp>0&&distance(o,enemy)<130))dmg*=1.15;if(P.hitGrace>0&&M.trainingNodes?.q6_spirit)dmg*=M.trainingNodes?.q9_harmony ? .90 : .92;dmg=Math.ceil(dmg);P.hp-=dmg;run.minHp=Math.min(run.minHp,P.hp);P.hitGrace=1.15;enemy.cd=period;ring(P.x,P.y,P.r+7,'#f47b6f',.16)}}
+    if(strikeSet.has(enemy)&&d<P.r+enemy.r+3&&enemy.cd<=0){if(enemy.type==='attacker'){enemy.windup=.55;enemy.pendingStrike=1;enemy.cd=period+.55;ring(enemy.x,enemy.y,enemy.r+18,'#c96893',.55)}else{let dmg=(enemy.attack||beastConfig().hit)*incomingDamageScale();if(enemies.some(o=>o!==enemy&&o.rareTrait==='howl'&&o.hp>0&&distance(o,enemy)<130))dmg*=1.15;if(P.hitGrace>0&&M.trainingNodes?.q6_spirit)dmg*=M.trainingNodes?.q9_harmony ? .90 : .92;dmg=Math.ceil(dmg);takePlayerDamage(dmg,true);enemy.cd=period;ring(P.x,P.y,P.r+7,'#f47b6f',.16)}}
   }
   enemies=enemies.filter(e=>{if((e.type==='rogue'||e.type==='rat')&&(e.x<-10||e.x>W+10))return false;if(e.hp<=0){if(e.type!=='spirit')reward(e);return false}return true});
   if(!isMortal()&&P.cd<=0){const range=basicAttackRange(),targets=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&distance(P,e)<range).sort((a,b)=>distance(P,a)-distance(P,b)).slice(0,basicAttackTargets());if(targets.length){const dmg=basicDamage()*combatPower(),scales=[1,.62,.48,.36];targets.forEach((target,i)=>{target.hp-=dmg*(scales[i]||.32);slash(P.x,P.y,target.x,target.y,i?'#e8d6a5':'#f7e5ad')});P.cd=basicInterval()}}
   for(const skill of SKILLS){const st=skillState(skill.id);if(!st.u)continue;if(run.skillCooldowns[skill.id]<=0&&cast(skill))run.skillCooldowns[skill.id]=skillCooldown(skill.id)}
-  updateHazards(dt);if(P.hp<=0){P.hp=0;finish('dead');return}syncHud();
+  updateHazards(dt);updateNonCombatRecovery(dt);if(P.hp<=0){P.hp=0;finish('dead');return}syncHud();
 }
 
 function fortune(reason){
@@ -1217,7 +1242,7 @@ function drawStone(object){
 }
 
 function drawVein(){
-  if(!vein)return;
+  if(!vein||vein.stock<=0)return;
   g.save();g.translate(vein.x,vein.y);
   g.shadowColor='#8ab6ff';g.shadowBlur=18;
   const color=vein.cleared?'#8bd9d0':'#718ec8';
@@ -1225,8 +1250,13 @@ function drawVein(){
   for(const [x,y,s] of [[-11,4,12],[2,-4,17],[13,5,10]]){
     g.beginPath();g.moveTo(x,y-s);g.lineTo(x+s*.45,y);g.lineTo(x,y+s*.55);g.lineTo(x-s*.45,y);g.closePath();g.fill();g.stroke();
   }
-  g.shadowBlur=0;g.fillStyle='#e7f0ff';g.font='10px sans-serif';g.textAlign='center';
-  g.fillText(`영맥 ${vein.stock}`,0,38);
+  const progress=clamp((vein.progress||0)/3,0,1);
+  g.shadowBlur=0;g.textAlign='center';
+  g.fillStyle='#081016aa';g.fillRect(-30,30,60,7);
+  g.fillStyle='#8bd9d0';g.fillRect(-29,31,58*progress,5);
+  g.strokeStyle='#d9e8ff88';g.strokeRect(-30,30,60,7);
+  g.fillStyle='#e7f0ff';g.font='10px sans-serif';
+  g.fillText(`영맥 ${vein.stock} · 채굴 ${Math.round(progress*100)}%`,0,49);
   g.restore();
 }
 
@@ -1261,6 +1291,16 @@ function drawEnemy(enemy){
   }
   g.restore();
 
+  if(enemy.type==='spirit'){
+    const capture=clamp((enemy.bond||0)/1.3,0,1),near=distance(P,enemy)<40;
+    const width=46,y=enemy.y-enemy.r-18;
+    g.fillStyle='#061012b8';g.fillRect(enemy.x-width/2,y,width,6);
+    g.fillStyle=near||capture>0?'#79ded6':'#829b99';g.fillRect(enemy.x-width/2+1,y+1,(width-2)*capture,4);
+    g.strokeStyle='#d9ffffaa';g.strokeRect(enemy.x-width/2,y,width,6);
+    g.fillStyle='#d9ffff';g.font='bold 9px sans-serif';g.textAlign='center';
+    g.fillText(capture>0?`포획 ${Math.round(capture*100)}%`:'영수 · 접근해 포획',enemy.x,enemy.y+enemy.r+19);
+    g.textAlign='left';
+  }
   if(enemy.type!=='spirit'){
     const width=enemy.type==='elite'?48:36;
     g.fillStyle='#04080aa8';g.fillRect(enemy.x-width/2,enemy.y-enemy.r-13,width,5);
@@ -1367,12 +1407,12 @@ function pointFromEvent(event){
   return {x:(event.clientX-bounds.left)*W/bounds.width,y:(event.clientY-bounds.top)*H/bounds.height};
 }
 function setDestination(point,allowTarget=true){
-  let target=null;
-  let nearest=allowTarget?32:0;
+  let target=null,nearest=Infinity;
   if(allowTarget){
     for(const candidate of [...enemies,...objects,...(vein?[vein]:[])]){
       const d=distance(point,candidate);
-      if(d<nearest){nearest=d;target=candidate}
+      const hitRadius=candidate===vein?60:candidate.type==='spirit'?46:32;
+      if(d<hitRadius&&d<nearest){nearest=d;target=candidate}
     }
   }
   P.target=target;
