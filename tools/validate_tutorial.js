@@ -7,16 +7,29 @@ const index=read('index.html');
 const tutorial=read('tutorial_runtime_v11_49.js');
 
 if(!index.includes('tutorial_runtime_v11_49.js'))throw new Error('tutorial runtime is not loaded');
-if(!tutorial.includes("const VERSION='11.49.0'"))throw new Error('tutorial runtime version mismatch');
-if(!tutorial.includes("(s.M?.stats?.totalRuns||0)===0"))throw new Error('tutorial is not limited to first entry');
-if(!tutorial.includes("s.M?.area==='qingyun'"))throw new Error('tutorial is not limited to Qingyun first area');
-if(!tutorial.includes("(s.M?.realm?.major??-1)<0"))throw new Error('tutorial is not limited to mortal phase');
-if(!tutorial.includes('요수를 피해서 영초'))throw new Error('first-entry collection instruction missing');
-if(!tutorial.includes('가까이 가면 자동으로 채집'))throw new Error('auto-pickup explanation missing');
-if(!tutorial.includes('귀환진'))throw new Error('return instruction missing');
-if(!tutorial.includes('WASD·방향키'))throw new Error('desktop control hint missing');
-if(!tutorial.includes('화면을 탭하거나 드래그'))throw new Error('mobile control hint missing');
-if(!tutorial.includes("hub.subscribe('first-run-tutorial',frame,80)"))throw new Error('tutorial is not on shared frame hub');
+if(!tutorial.includes("const VERSION='11.49.7-tutorial'"))throw new Error('guided tutorial version mismatch');
+if(!tutorial.includes("const META_KEY='xianxia_tutorial_guided_v2'"))throw new Error('guided tutorial resume state missing');
+if(!tutorial.includes("const GUIDE_DONE_KEY='blackwind-first-entry'"))throw new Error('tutorial graduation state missing');
+if(!tutorial.includes("return Math.max(0,+s?.M?.herb||0)+Math.max(0,+s?.run?.h0||0)"))
+  throw new Error('combined persistent + run herb progress missing');
+if(!tutorial.includes("progress:'하급 영초 '+lowerHerbs(s)+'/8'")&&!tutorial.includes("하급 영초 8"))
+  throw new Error('mortal eight-herb onboarding target missing');
+if(!tutorial.includes('초입의 발자취')||!tutorial.includes('생환지인'))
+  throw new Error('journal reward guidance missing');
+if(!tutorial.includes('요수를 잡아 영석을 모으세요')||!tutorial.includes("k>=3&&h>=1"))
+  throw new Error('post-cultivation hunt guidance missing');
+if(!tutorial.includes("M.skillUnlocks?.sword")||!tutorial.includes('어검술'))
+  throw new Error('first spell unlock guidance missing');
+if(!tutorial.includes("trainingCount(M,'q1_')")||!tutorial.includes('/25'))
+  throw new Error('first training guidance missing');
+if(!tutorial.includes("mapGateTarget('blackwind')")||!tutorial.includes("areaPickerTarget('흑풍곡')"))
+  throw new Error('Blackwind gate/selection guidance missing');
+if(!tutorial.includes("hub.subscribe('guided-onboarding-tutorial',frame,95)"))
+  throw new Error('guided tutorial is not on shared frame hub');
+if(!tutorial.includes("mini.textContent='길잡이'"))
+  throw new Error('closable tutorial reopen control missing');
+if(!tutorial.includes("classList.add('v1150-focus')"))
+  throw new Error('tutorial focus highlight missing');
 if(/new\s+MutationObserver/.test(tutorial))throw new Error('tutorial must not use MutationObserver');
 
-console.log('first-run tutorial validation: OK');
+console.log('guided onboarding tutorial validation: OK');
