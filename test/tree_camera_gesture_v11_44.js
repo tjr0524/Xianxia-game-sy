@@ -123,7 +123,7 @@ function cameraForTarget(target){
 function cameraForPointer(e){
   return cameraForTarget(e.target)||Object.values(cams).find(c=>c.pointers.has(e.pointerId))||null;
 }
-function interactiveInside(target){return !!target?.closest?.('.camera,.v17float,.detail-popover38,.detail-action,.detail-close38')}
+function interactiveInside(target){return !!target?.closest?.('.camera,.v17float,.detail-popover38,.detail-action,.detail-close38,.asc-node,.map-node')}
 
 // Own viewport pointers before legacy handlers. Safari can otherwise leave one handler
 // believing a finger is still down while another has already ended the gesture.
