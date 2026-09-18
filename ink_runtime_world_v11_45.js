@@ -16,7 +16,7 @@ const files={
 const S={version:'11.31.1',ready:false,error:null,images:{},layer:null,ctx:null};
 window.__xianxiaInkRuntime=S;
 const tracks=new Map(),deaths=[],casts=[],impacts=[],pickups=[],floaters=[];
-let nextId=1,prevP=null,pFacing=1,prevCooldowns={},lastArea=null,lastPhase=null,prevObjects=[],prevRun=null,hitStopUntil=0,lastSnapshot=null;
+let nextId=1,prevP=null,pFacing=1,prevCooldowns={},lastArea=null,lastPhase=null,prevObjects=[],prevRun=null,hitStopUntil=0,lastSnapshot=null,lastClearRect=null;
 const bounds=new Map(),refs=new Map();
 function load(path){return new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('image failed: '+path));im.src=BASE+path+'?v='+encodeURIComponent(CACHE)})}
 function makeLayer(){const game=document.querySelector('#game'),base=document.querySelector('#cv');if(!game||!base)return false;let c=document.querySelector('#v1131InkLayer');if(!c){c=document.createElement('canvas');c.id='v1131InkLayer';c.width=W;c.height=H;c.setAttribute('aria-hidden','true');base.insertAdjacentElement('afterend',c)}S.layer=c;S.ctx=c.getContext('2d');S.ctx.imageSmoothingEnabled=true;return true}
@@ -70,7 +70,11 @@ function match(curr,now,area){
   }
   return out;
 }
-function drawBackground(area){const c=S.ctx,img=S.images['bg_'+area]||S.images.bg_qingyun;c.globalAlpha=1;c.drawImage(img,0,0,W,H);const wash=c.createLinearGradient(0,0,0,H);wash.addColorStop(0,'rgba(247,243,229,.04)');wash.addColorStop(1,'rgba(20,31,28,.06)');c.fillStyle=wash;c.fillRect(0,0,W,H)}
+function applyBackground(area){const img=S.images['bg_'+area]||S.images.bg_qingyun;if(!S.layer||!img)return;S.layer.style.backgroundImage=`linear-gradient(rgba(247,243,229,.04),rgba(20,31,28,.06)),url("${img.src}")`;S.layer.style.backgroundSize='100% 100%,100% 100%';S.layer.style.backgroundRepeat='no-repeat';S.layer.style.backgroundPosition='0 0,0 0'}
+function renderBounds(s){const m=window.__xianxiaExplorationMode;if(s?.phase==='run'&&m?.active&&Number.isFinite(m.camX)&&Number.isFinite(m.camY)&&Number.isFinite(m.viewW)&&Number.isFinite(m.viewH)){const pad=140,x=Math.max(0,m.camX-m.viewW/2-pad),y=Math.max(0,m.camY-m.viewH/2-pad),x2=Math.min(W,m.camX+m.viewW/2+pad),y2=Math.min(H,m.camY+m.viewH/2+pad);return{x,y,w:Math.max(1,x2-x),h:Math.max(1,y2-y)}}return{x:0,y:0,w:W,h:H}}
+function clearDynamic(c,r){if(lastClearRect){const p=lastClearRect,x=Math.min(p.x,r.x),y=Math.min(p.y,r.y),x2=Math.max(p.x+p.w,r.x+r.w),y2=Math.max(p.y+p.h,r.y+r.h);c.clearRect(x,y,x2-x,y2-y)}else c.clearRect(r.x,r.y,r.w,r.h);lastClearRect={...r}}
+function clipBounds(c,r){c.beginPath();c.rect(r.x,r.y,r.w,r.h);c.clip()}
+function drawGatherRings(s,t){const c=S.ctx;for(const o of s.objects||[]){if(o.type!=='h')continue;const g=Math.max(0,Math.min(2,o.grade||0)),r=[16,18,20][g],pulse=1+Math.sin(t*3+o.x*.04+o.y*.03)*.04;c.save();c.globalAlpha=[.65,.72,.82][g];c.strokeStyle=['#4e8068','#4f7899','#8a609f'][g];c.lineWidth=[1.6,1.9,2.2][g];c.beginPath();c.ellipse(o.x,o.y+17,r*pulse,r*.42*pulse,0,0,Math.PI*2);c.stroke();c.globalAlpha=[.10,.13,.17][g];c.fillStyle=c.strokeStyle;c.fill();c.restore()}}
 function drawPortal(t){shadow(EXIT.x,EXIT.y+2,32,6,.18);centered('objects',3,6,frame(t,7,6),EXIT.x,EXIT.y-12,74,false,.9)}
 function drawObjects(s,t){for(const o of s.objects||[]){if(o.type==='h'){const row=Math.max(0,Math.min(2,o.grade||0)),ground=o.y+16;shadow(o.x,ground,9,2.5,.13);anchored('objects',row,4,frame(t,1.55,4,(o.x+o.y)*.0015),o.x,ground,40,false,.96,String(row))}else{const ground=o.y+14;shadow(o.x,ground,9,3,.15);anchored('objects',4,4,0,o.x,ground,34,false,1,'4')}}if(s.vein){const ground=s.vein.y+22;shadow(s.vein.x,ground,18,5,.2);anchored('objects',4,4,3,s.vein.x,ground,58,false,1,'4')}}
 function drawHazards(s){const c=S.ctx;for(const h of s.hazards||[]){c.save();const p=h.struck?1:1-Math.max(0,h.t)/(h.ttl||1);c.globalAlpha=h.struck?.8:.25+p*.45;c.strokeStyle=h.struck?'#eaf4ff':'#495b82';c.lineWidth=h.struck?4:2;c.setLineDash(h.struck?[]:[6,6]);c.beginPath();c.arc(h.x,h.y,h.r*(.82+p*.18),0,Math.PI*2);c.stroke();if(h.struck){c.beginPath();c.moveTo(h.x-7,h.y-60);c.lineTo(h.x+5,h.y-24);c.lineTo(h.x-3,h.y-24);c.lineTo(h.x+9,h.y);c.stroke()}c.restore()}}
@@ -86,9 +90,36 @@ function objectKey(o){return `${o.type}:${o.grade??'-'}:${Math.round(o.x)}:${Mat
 function detectRewards(s,now){if(s.phase!=='run'||!s.run){prevObjects=(s.objects||[]).map(o=>({...o}));prevRun=s.run?{...s.run}:null;return}const prev=prevRun||s.run,ds=Math.max(0,(s.run.s||0)-(prev.s||0)),dh=[0,1,2].map(i=>Math.max(0,(s.run['h'+i]||0)-(prev['h'+i]||0)));const curKeys=new Set((s.objects||[]).map(objectKey)),gone=prevObjects.filter(o=>!curKeys.has(objectKey(o)));const recentDeath=deaths.length?deaths[deaths.length-1]:null;const takeOrigin=(kind,grade)=>{const ix=gone.findIndex(o=>o.type===kind&&(grade==null||o.grade===grade));if(ix>=0)return gone.splice(ix,1)[0];if(recentDeath)return {x:recentDeath.x,y:recentDeath.y};if(s.vein)return {x:s.vein.x,y:s.vein.y};return {x:s.P?.x||350,y:s.P?.y||230}};if(ds>0){const o=takeOrigin('s');pickups.push({kind:'s',x:o.x,y:o.y,start:now,d:.3,amount:ds});floaters.push({text:`+${ds} 영석`,color:'#9e792f',start:now+.18,d:.8})}for(let g=0;g<3;g++)if(dh[g]>0){const o=takeOrigin('h',g);pickups.push({kind:'h',grade:g,x:o.x,y:o.y,start:now,d:.28,amount:dh[g]});floaters.push({text:`+${dh[g]} ${['하급','중급','상급'][g]} 영초`,color:['#477d53','#397d6b','#76549a'][g],start:now+.16,d:.82})}prevObjects=(s.objects||[]).map(o=>({...o}));prevRun={s:s.run.s||0,h0:s.run.h0||0,h1:s.run.h1||0,h2:s.run.h2||0}}
 function drawPickupFx(s,t,now){const c=S.ctx,p=s.P||{x:350,y:230};for(let i=pickups.length-1;i>=0;i--){const q=pickups[i],age=now-q.start,u=Math.max(0,Math.min(1,age/q.d));if(u>=1){pickups.splice(i,1);continue}const ease=1-Math.pow(1-u,3),bend=Math.sin(Math.PI*u)*-18,x=q.x+(p.x-q.x)*ease,y=q.y+(p.y-18-q.y)*ease+bend,alpha=1-u*.25,scale=1-u*.55;if(q.kind==='h'){const row=q.grade||0;anchored('objects',row,4,frame(t,1.5,4),x,y+13,32*scale,false,alpha,String(row))}else{c.save();c.globalAlpha=alpha;c.fillStyle='#d9c06d';c.shadowColor='#f5e7a6';c.shadowBlur=8;c.beginPath();c.arc(x,y,5*scale+2,0,Math.PI*2);c.fill();c.restore()}c.save();c.globalAlpha=.25*(1-u);c.strokeStyle=q.kind==='h'?'#79a982':'#c7a95b';c.lineWidth=2;c.beginPath();c.moveTo(q.x,q.y);c.quadraticCurveTo((q.x+p.x)/2,(q.y+p.y)/2-26,x,y);c.stroke();c.restore()}for(let i=floaters.length-1;i>=0;i--){const f=floaters[i],age=now-f.start;if(age<0)continue;if(age>f.d){floaters.splice(i,1);continue}const u=age/f.d;c.save();c.globalAlpha=Math.min(1,age/.1)*(1-u);c.fillStyle=f.color;c.strokeStyle='rgba(250,246,231,.88)';c.lineWidth=3;c.font='700 15px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';c.textAlign='center';const x=p.x,y=p.y-46-u*24;c.strokeText(f.text,x,y);c.fillText(f.text,x,y);c.restore()}}
 function drawImpacts(now){const c=S.ctx;for(let i=impacts.length-1;i>=0;i--){const q=impacts[i],age=now-q.start;if(age>.42){impacts.splice(i,1);continue}const u=age/.42;c.save();if(age<.14){const beamU=Math.min(1,age/.1),tx=q.fromX+(q.x-q.fromX)*beamU,ty=q.fromY+(q.y-q.fromY)*beamU;c.globalAlpha=1-age/.16;c.strokeStyle='#f6efd3';c.shadowColor='#fff7d6';c.shadowBlur=9;c.lineWidth=4;c.beginPath();c.moveTo(q.fromX,q.fromY);c.lineTo(tx,ty);c.stroke();c.strokeStyle='#8caea3';c.lineWidth=1.4;c.beginPath();c.moveTo(q.fromX,q.fromY+2);c.lineTo(tx,ty+2);c.stroke()}c.globalAlpha=(1-u)*.9;c.strokeStyle='#fff7df';c.lineWidth=2.5;c.beginPath();c.arc(q.x,q.y,7+u*18,0,Math.PI*2);c.stroke();c.beginPath();c.moveTo(q.x-11-u*6,q.y+8);c.lineTo(q.x+12+u*8,q.y-10);c.moveTo(q.x-7,q.y-12-u*4);c.lineTo(q.x+8,q.y+10+u*5);c.stroke();c.globalAlpha=1-u;c.fillStyle='#8b352d';c.strokeStyle='#f8f1dc';c.lineWidth=3;c.font='800 13px sans-serif';c.textAlign='center';const text=`-${Math.max(1,Math.round(q.damage))}`;c.strokeText(text,q.x,q.y-28-u*18);c.fillText(text,q.x,q.y-28-u*18);c.restore()}}
-function resetRunVisuals(){tracks.clear();deaths.length=0;casts.length=0;impacts.length=0;pickups.length=0;floaters.length=0;prevP=null;prevCooldowns={};prevObjects=[];prevRun=null;hitStopUntil=0;lastSnapshot=null}
-function draw(ms){requestAnimationFrame(draw);if(!S.ready)return;let s;try{s=window.__xianxiaDebug?.snapshot?.()}catch{}if(!s)return;const c=S.ctx,t=ms/1000,now=performance.now()/1000,area=s.M?.area||'qingyun';if(area!==lastArea||s.phase!==lastPhase)resetRunVisuals();lastArea=area;lastPhase=s.phase;detectRewards(s,now);if(now<hitStopUntil){drawImpacts(now);drawPickupFx(s,t,now);lastSnapshot=s;return}c.clearRect(0,0,W,H);drawBackground(area);drawPortal(t);drawHazards(s);drawObjects(s,t);detectCasts(s,now);drawEnemies(s,t,now);drawCasts(now);drawPlayer(s,t);drawImpacts(now);drawPickupFx(s,t,now);lastSnapshot=s}
-async function boot(){try{if(!makeLayer())throw new Error('game canvas not found');const entries=await Promise.all(Object.entries(files).map(async([k,v])=>[k,await load(v)]));S.images=Object.fromEntries(entries);prepare('player',[4,6,6]);for(const area of ['qingyun','blackwind','blood','thunder']){prepare(area+'_guard',[6,6,4]);prepare(area+'_chaser',[6,6,4])}prepare('objects',[4,4,4,6,4]);prepare('effects',[4,4,4,4,4]);S.ready=true;document.documentElement.dataset.inkAssets='11.31.1-ready';console.info('[xianxia] ink runtime 11.31.1 feedback ready');requestAnimationFrame(draw)}catch(e){S.error=String(e?.message||e);document.documentElement.dataset.inkAssets='11.31.1-error';console.warn('[xianxia] ink asset runtime failed',e)}}
+function resetRunVisuals(){tracks.clear();deaths.length=0;casts.length=0;impacts.length=0;pickups.length=0;floaters.length=0;prevP=null;prevCooldowns={};prevObjects=[];prevRun=null;hitStopUntil=0;lastSnapshot=null;lastClearRect=null;if(S.ctx)S.ctx.clearRect(0,0,W,H)}
+function drawFrame(s,meta){
+  if(!S.ready||!s)return;
+  const ms=meta?.now??performance.now(),t=ms/1000,now=ms/1000,area=s.M?.area||'qingyun';
+  const changed=area!==lastArea||s.phase!==lastPhase;
+  if(changed){resetRunVisuals();applyBackground(area)}
+  lastArea=area;lastPhase=s.phase;
+  if(s.phase!=='run'&&!changed)return;
+  detectRewards(s,now);
+  const c=S.ctx,bounds=renderBounds(s);
+  if(now<hitStopUntil){
+    c.save();clipBounds(c,bounds);drawImpacts(now);drawPickupFx(s,t,now);c.restore();
+    lastSnapshot=s;return;
+  }
+  clearDynamic(c,bounds);
+  c.save();clipBounds(c,bounds);
+  drawPortal(t);
+  drawHazards(s);
+  drawGatherRings(s,t);
+  drawObjects(s,t);
+  detectCasts(s,now);
+  drawEnemies(s,t,now);
+  drawCasts(now);
+  drawPlayer(s,t);
+  drawImpacts(now);
+  drawPickupFx(s,t,now);
+  c.restore();
+  lastSnapshot=s;
+}
+async function boot(){try{if(!makeLayer())throw new Error('game canvas not found');const entries=await Promise.all(Object.entries(files).map(async([k,v])=>[k,await load(v)]));S.images=Object.fromEntries(entries);prepare('player',[4,6,6]);for(const area of ['qingyun','blackwind','blood','thunder']){prepare(area+'_guard',[6,6,4]);prepare(area+'_chaser',[6,6,4])}prepare('objects',[4,4,4,6,4]);prepare('effects',[4,4,4,4,4]);S.ready=true;document.querySelector('#v1132GatherLayer')?.remove();document.documentElement.dataset.inkAssets='11.31.1-ready';console.info('[xianxia] ink runtime 11.31.1 feedback ready');const hub=window.__xianxiaFrameHub;if(!hub?.subscribe)throw new Error('shared frame hub unavailable');hub.subscribe('ink-render',drawFrame,25);hub.wake?.()}catch(e){S.error=String(e?.message||e);document.documentElement.dataset.inkAssets='11.31.1-error';console.warn('[xianxia] ink asset runtime failed',e)}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
 
