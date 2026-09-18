@@ -92,7 +92,7 @@ function installLayer(){
     base.insertAdjacentElement('afterend',objectLayer);
   }
   objectCtx=nativeGetContext.call(objectLayer,'2d');
-  if(!started){started=true;requestAnimationFrame(renderOverlay)}
+  started=true;
   return true;
 }
 function snap(){
@@ -190,7 +190,6 @@ function drawHazard(ctx,h){
   const charging=!h.struck;ctx.save();ctx.strokeStyle=charging?'rgba(88,94,156,.78)':'#5d64a0';ctx.lineWidth=charging?2:4;ctx.setLineDash(charging?[6,5]:[]);ctx.beginPath();ctx.arc(h.x,h.y,h.r,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.restore();
 }
 function renderOverlay(now){
-  requestAnimationFrame(renderOverlay);
   if(now-lastFrame<32)return;lastFrame=now;
   if(!objectLayer||!objectCtx){installLayer();return}
   objectCtx.clearRect(0,0,W,H);

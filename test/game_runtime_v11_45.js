@@ -885,6 +885,7 @@ function begin(){
   UI.ret.disabled=false;
   UI.notice.textContent=`${planCopy(plan)[0]} 시작. 배치를 읽고 목표와 귀환 동선을 함께 잡으세요.`;
   syncHud();
+  window.__xianxiaFrameHub?.wake?.();
 }
 
 function gainStone(amount,x=P.x,y=P.y){
@@ -1071,6 +1072,7 @@ function finish(reason){
   UI.ox.innerHTML=`${safe?'전리품 전량 확보':'전리품 40% 회수'}<br><b>영석 ${stone} · 영초 下${h0} 中${h1} 上${h2}</b>${objective}${event}`;
   render();
   draw();
+  window.__xianxiaFrameHub?.wake?.();
 }
 
 function syncHud(){
@@ -1333,17 +1335,17 @@ function draw(){
   drawFx();
 }
 
-function loop(now){
-  const dt=Math.min(.035,(now-last)/1000);
+function frameStep(_snapshot,meta){
+  const now=meta?.now??performance.now();
+  const dt=Math.min(.035,Math.max(0,(now-last)/1000));
   last=now;
+  if(phase!=='run')return;
   for(const effect of fx){
     effect.t-=dt;
     if(effect.kind==='text')effect.y-=21*dt;
   }
   fx=fx.filter(effect=>effect.t>0);
   update(dt);
-  draw();
-  requestAnimationFrame(loop);
 }
 
 function pointFromEvent(event){
@@ -1525,15 +1527,25 @@ document.addEventListener('touchend',event=>{
 },{passive:false});
 document.addEventListener('gesturestart',event=>event.preventDefault(),{passive:false});
 
+function frameSnapshot(){
+  return {
+    M:{...M,realm:{...M.realm},cult:{...M.cult}},
+    phase,
+    elapsed,
+    run:run?{...run}:null,
+    P:{...P},
+    enemies:enemies.map(enemy=>({id:enemy.id,type:enemy.type,x:enemy.x,y:enemy.y,hp:enemy.hp,max:enemy.max,rare:enemy.rare,treasure:enemy.treasure})),
+    objects:objects.map(object=>({type:object.type,x:object.x,y:object.y,value:object.value,grade:object.grade})),
+    vein:vein?{...vein}:null,
+    hazards:hazards.map(hazard=>({...hazard}))
+  };
+}
+
 window.__xianxiaDebug={
   version:VERSION,
   constants:{W,H,EXIT,EXIT_APPROACH,RUN_TIME,AREAS,TREE,SKILLS,PLANS},
-  snapshot:()=>JSON.parse(JSON.stringify({
-    M,phase,elapsed,run,P,
-    enemies:enemies.map(enemy=>({id:enemy.id,type:enemy.type,x:enemy.x,y:enemy.y,hp:enemy.hp,max:enemy.max,rare:enemy.rare,treasure:enemy.treasure})),
-    objects:objects.map(object=>({type:object.type,x:object.x,y:object.y,value:object.value,grade:object.grade})),
-    vein,hazards
-  })),
+  frameSnapshot,
+  snapshot:()=>JSON.parse(JSON.stringify(frameSnapshot())),
   replaceState:value=>{
     M={...fresh(),...value};
     M=loadNormalized(M);
@@ -1574,7 +1586,13 @@ function loadNormalized(value){
 render();
 syncHud();
 draw();
-requestAnimationFrame(loop);
+const frameHub=window.__xianxiaFrameHub;
+if(frameHub?.subscribe){
+  frameHub.subscribe('game-simulation',frameStep,-100);
+  frameHub.wake?.();
+}else{
+  console.error('[xianxia] shared frame hub missing; simulation not started');
+}
 })();
 
 //# sourceURL=game_runtime_v11_45.js
