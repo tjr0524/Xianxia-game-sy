@@ -39,6 +39,19 @@ function ensureWorld(){
   return world;
 }
 
+function releaseWorld(){
+  const game=$('#game');
+  if(!game)return;
+  const overlay=$('#ov');
+  const nodes=[$('#cv'),$('#v1131InkLayer'),$('#v1132GatherLayer')].filter(Boolean);
+  for(const node of nodes){
+    if(node.parentElement===world){
+      if(overlay&&overlay.parentElement===game)game.insertBefore(node,overlay);
+      else game.appendChild(node);
+    }
+  }
+}
+
 function resetCamera(){
   camera.ready=false;camera.prevX=camera.prevY=null;camera.leadX=camera.leadY=0;camera.lastTime=0;
   if(world)world.style.transform='';
@@ -96,9 +109,12 @@ function updateCamera(mode,snap){
 
 function cameraFrame(snap){
   const mode=window.__xianxiaExplorationMode;
-  ensureWorld();
   if(mode?.active&&snap?.phase==='run')updateCamera(mode,snap);
-  else{resetCamera();badge(`BUILD ${VERSION} · CAM ✓ · WORLD ${W}×${H}`)}
+  else{
+    resetCamera();
+    releaseWorld();
+    badge(`BUILD ${VERSION} · CAM ✓ · WORLD ${W}×${H}`);
+  }
 }
 function subscribeFrame(){
   const hub=window.__xianxiaFrameHub;
@@ -114,5 +130,5 @@ function subscribeFrame(){
   requestAnimationFrame(fallback);
 }
 
-installCss();ensureWorld();badge(`BUILD ${VERSION} · CAM ✓ · WORLD ${W}×${H}`);subscribeFrame();
+installCss();releaseWorld();badge(`BUILD ${VERSION} · CAM ✓ · WORLD ${W}×${H}`);subscribeFrame();
 })();
