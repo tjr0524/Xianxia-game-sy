@@ -59,18 +59,22 @@ body.v1133-run #v1133Hud{display:block}
 #v1133HpFill{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#8b3e36,#bd6957);transition:width .12s linear}
 #v1133Return{position:absolute;right:calc(env(safe-area-inset-right) + 14px);bottom:calc(env(safe-area-inset-bottom) + 18px);pointer-events:auto;min-width:74px;min-height:42px;padding:7px 12px;border:1px solid rgba(238,232,214,.62);border-radius:12px;background:rgba(238,231,212,.82);color:#2b3b35;font-weight:800;font-size:11px;box-shadow:0 5px 18px rgba(20,28,24,.2);backdrop-filter:blur(5px)}
 #v1133Return.returning{background:rgba(186,211,195,.9);border-color:rgba(79,119,102,.48)}
-#v1133Guide{position:absolute;z-index:32;display:none;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(235,230,213,.9);border:1px solid rgba(74,98,86,.48);box-shadow:0 5px 17px rgba(20,28,24,.24);backdrop-filter:blur(5px);pointer-events:none}
-#v1133GuideArrow{position:absolute;inset:0;transform-origin:50% 50%}
-#v1133GuideArrow::before{content:"";position:absolute;left:15px;top:10px;width:0;height:0;border-top:11px solid transparent;border-bottom:11px solid transparent;border-left:18px solid #527a6d;filter:drop-shadow(0 1px 1px rgba(255,255,255,.55))}
-#v1133GuideLabel{position:absolute;left:50%;top:47px;transform:translateX(-50%);padding:2px 6px;border-radius:999px;background:rgba(235,230,213,.88);font-size:8px;font-weight:800;white-space:nowrap;color:#385448}
+#v1133Return.urgent{border-color:rgba(180,76,57,.78);background:rgba(246,222,198,.94);color:#7e3029;animation:v1133ReturnUrgent .72s ease-in-out infinite}
+@keyframes v1133ReturnUrgent{0%,100%{transform:scale(1);box-shadow:0 5px 18px rgba(20,28,24,.2),0 0 0 0 rgba(189,70,51,0)}50%{transform:scale(1.07);box-shadow:0 7px 24px rgba(120,35,27,.30),0 0 0 7px rgba(189,70,51,.16)}}
+#v1133Guide{position:absolute;z-index:32;display:none;width:52px;height:52px;margin:-26px 0 0 -26px;pointer-events:none}
+#v1133GuideArrow{position:absolute;left:50%;top:54%;width:31px;height:23px;margin:-11.5px 0 0 -15.5px;transform-origin:50% 50%}
+#v1133GuideArrow svg{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 2px 2px rgba(49,29,10,.28));animation:v1133GuidePulse .9s ease-in-out infinite}
+#v1133GuideArrow path{fill:rgba(255,222,164,.97);stroke:rgba(126,72,34,.95);stroke-width:2.2;stroke-linejoin:round}
+#v1133GuideLabel{position:absolute;left:50%;top:-2px;transform:translateX(-50%);padding:2px 6px;border-radius:999px;background:rgba(54,38,23,.72);font-size:8px;font-weight:800;white-space:nowrap;color:#ffe6b8;text-shadow:0 1px 2px rgba(0,0,0,.32)}
+@keyframes v1133GuidePulse{0%,100%{opacity:.84;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
 @media(max-width:560px){
  #v1133Loot{left:calc(env(safe-area-inset-left) + 9px);top:calc(env(safe-area-inset-top) + 9px);min-width:112px;padding:7px 9px;font-size:10px}
  #v1133Timer{right:calc(env(safe-area-inset-right) + 9px);top:calc(env(safe-area-inset-top) + 9px);font-size:11px}
  #v1133Objective{left:calc(env(safe-area-inset-left) + 9px);top:calc(env(safe-area-inset-top) + 79px);max-width:64vw}
  #v1133Hp{width:min(300px,62vw);bottom:calc(env(safe-area-inset-bottom) + 12px)}
  #v1133Return{right:calc(env(safe-area-inset-right) + 9px);bottom:calc(env(safe-area-inset-bottom) + 10px);min-width:66px;min-height:38px}
- #v1133Guide{width:40px;height:40px;margin:-20px 0 0 -20px}
- #v1133GuideArrow::before{left:14px;top:9px;border-top-width:10px;border-bottom-width:10px;border-left-width:16px}
+ #v1133Guide{width:48px;height:48px;margin:-24px 0 0 -24px}
+ #v1133GuideArrow{width:29px;height:21px;margin:-10.5px 0 0 -14.5px}
 }
 `;
   document.head.appendChild(style);
@@ -98,7 +102,7 @@ function makeHud(){
    <div id="v1133Objective"></div>
    <div id="v1133Hp"><div id="v1133HpText">36 / 36</div><div id="v1133HpTrack"><i id="v1133HpFill"></i></div></div>
    <button id="v1133Return" type="button">귀환</button>
-   <div id="v1133Guide"><div id="v1133GuideArrow"></div><span id="v1133GuideLabel">귀환진</span></div>`;
+   <div id="v1133Guide"><div id="v1133GuideArrow"><svg viewBox="-9 -11 27 22" aria-hidden="true"><path d="M16 0 L-7 -9 L-2 0 L-7 9 Z"/></svg></div><span id="v1133GuideLabel">귀환진</span></div>`;
   game.appendChild(hud);
   hud.querySelector('#v1133Return').addEventListener('pointerdown',e=>e.stopPropagation(),true);
   hud.querySelector('#v1133Return').onclick=e=>{e.preventDefault();e.stopPropagation();state.returning=true;ret?.click()};
@@ -131,6 +135,7 @@ function deactivate(){
   state.prevPX=state.prevPY=null;state.leadX=state.leadY=0;
   document.body.classList.remove('v1133-run');clearLayerStyles();
   const guide=$('#v1133Guide');if(guide)guide.style.display='none';
+  $('#v1133Return')?.classList.remove('urgent','returning');
   buildBadge(`BUILD ${VERSION} · CAM ✓`);
 }
 
@@ -145,15 +150,14 @@ function guidePosition(player,target,vw,vh){
   return{x:clamp(player.x+dx*t,left,right),y:clamp(player.y+dy*t,top,bottom),angle:Math.atan2(dy,dx)*180/Math.PI};
 }
 function updateReturnGuide(s,remaining){
-  const guide=$('#v1133Guide'),arrow=$('#v1133GuideArrow'),button=$('#v1133Return');if(!guide)return;
-  const danger=remaining<=10||game.classList.contains('danger'),show=state.returning||danger;
-  if(button){button.classList.toggle('returning',state.returning);button.textContent=state.returning?'귀환 중':'귀환'}
-  if(!show){guide.style.display='none';return}
-  const target=worldToScreen(EXIT_APPROACH.x,EXIT_APPROACH.y),p=s.P||{x:W/2,y:H/2},player=worldToScreen(p.x,p.y);
-  const vw=window.innerWidth||390,vh=window.innerHeight||844;
-  if(target.x>42&&target.x<vw-42&&target.y>58&&target.y<vh-78){guide.style.display='none';return}
-  const q=guidePosition(player,target,vw,vh);guide.style.display='block';guide.style.left=`${q.x}px`;guide.style.top=`${q.y}px`;
-  if(arrow)arrow.style.transform=`rotate(${q.angle}deg)`;
+  const guide=$('#v1133Guide'),button=$('#v1133Return');
+  const danger=remaining<=10||game.classList.contains('danger');
+  if(button){
+    button.classList.toggle('returning',state.returning);
+    button.classList.toggle('urgent',danger);
+    button.textContent=state.returning?'귀환 중':'귀환';
+  }
+  if(guide)guide.style.display='none';
 }
 
 function updateHud(s){

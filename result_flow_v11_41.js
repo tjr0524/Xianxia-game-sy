@@ -122,7 +122,7 @@ function backToPreparation(){
 }
 function resultMeta(title){
   if(/중상|불능|사망/.test(title))return{kind:'dead',seal:'傷',sub:'이번 원정은 여기서 끝났습니다.'};
-  if(/붕괴/.test(title))return{kind:'collapse',seal:'危',sub:'비경이 붕괴되어 일부 전리품만 회수했습니다.'};
+  if(/붕괴/.test(title))return{kind:'collapse',seal:'危',sub:'공간 붕괴로 강제 이탈했습니다 · 전리품 일부가 소실되었습니다.'};
   return{kind:'safe',seal:'歸',sub:'이번 원정의 결과를 확인하세요.'};
 }
 function showResult(){
@@ -149,7 +149,9 @@ function showResult(){
 }
 function onRunFinished(s){
   holdCombatScene();
-  const dead=(+s?.P?.hp||0)<=0 || /육신 중상|전투 불능/.test($('#ot')?.textContent||'');
+  const title=$('#ot')?.textContent||'';
+  const dead=(+s?.P?.hp||0)<=0 || /육신 중상|전투 불능/.test(title);
+  const collapsed=/붕괴/.test(title);
   if(dead){
     requestAnimationFrame(()=>{
       const text=$('#v1140DeathFx .v1140-death-copy span');
@@ -157,6 +159,9 @@ function onRunFinished(s){
     });
     clearTimeout(pendingTimer);
     pendingTimer=setTimeout(()=>{pendingTimer=0;showResult()},1120);
+  }else if(collapsed){
+    clearTimeout(pendingTimer);
+    pendingTimer=setTimeout(()=>{pendingTimer=0;showResult()},1040);
   }else{
     showResult();
   }

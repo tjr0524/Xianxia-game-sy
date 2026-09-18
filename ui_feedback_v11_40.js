@@ -9,6 +9,9 @@ let mapObserver=null;
 let priorPhase=null;
 let lastRunFrame=null;
 let deathActive=false;
+let collapseActive=false;
+let mortalThreat=false;
+let mortalWarnActive=false;
 
 function badge(){}
 
@@ -139,6 +142,25 @@ function installStyles(){
 @keyframes v1140DeathCopy{to{opacity:1;transform:translate(-50%,0)}}
 @keyframes v1140DeathVeil{0%,76%{opacity:1}100%{opacity:0}}
 
+/* 범인 전투 경고: 설명을 읽지 않아도 요수 접근 자체가 위험 신호가 된다 */
+#v1140MortalWarn{position:fixed;z-index:30020;inset:0;pointer-events:none;display:grid;place-items:start center;padding-top:max(96px,calc(env(safe-area-inset-top) + 82px));background:radial-gradient(circle at 50% 46%,rgba(174,31,24,0) 18%,rgba(174,31,24,.20) 72%,rgba(117,12,10,.48) 100%);animation:v1140MortalWarn .9s ease-out both}
+#v1140MortalWarn .v1140-mortal-copy{padding:10px 15px;border:1px solid rgba(255,196,181,.72);border-radius:10px 3px 10px 3px;background:rgba(93,18,15,.88);box-shadow:0 10px 30px rgba(83,8,6,.34);color:#fff3e8;text-align:center}
+#v1140MortalWarn b{display:block;font:900 17px/1.1 var(--v25-serif,serif);letter-spacing:.06em}
+#v1140MortalWarn span{display:block;margin-top:4px;font:700 10px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#ffd3c4}
+@keyframes v1140MortalWarn{0%{opacity:0;background-color:rgba(211,37,24,.55)}12%{opacity:1}42%{background-color:rgba(211,37,24,.12)}100%{opacity:0}}
+
+/* 시간 초과는 일반 결과창이 아니라 공간 붕괴 → 강제 이탈로 먼저 체감 */
+#v1140CollapseFx{position:fixed;z-index:30010;inset:0;overflow:hidden;pointer-events:none;background:radial-gradient(circle at 50% 48%,rgba(236,183,104,.04) 0 22%,rgba(92,30,24,.42) 72%,rgba(20,8,7,.78) 100%);animation:v1140CollapseVeil 1.08s ease-out both}
+#v1140CollapseFx::before{content:"";position:absolute;inset:-8%;background:repeating-linear-gradient(112deg,transparent 0 47px,rgba(255,215,164,.15) 49px,rgba(101,26,22,.34) 51px,transparent 54px 96px);mix-blend-mode:screen;animation:v1140CollapseCrack .54s steps(2,end) 2}
+.v1140-collapse-copy{position:absolute;left:50%;top:47%;transform:translate(-50%,-50%) scale(.92);min-width:220px;padding:13px 16px;border:1px solid rgba(236,187,142,.55);border-radius:12px 3px 12px 3px;background:rgba(39,20,18,.76);color:#fff0df;text-align:center;box-shadow:0 14px 44px rgba(0,0,0,.42);animation:v1140CollapseCopy .82s cubic-bezier(.18,.8,.2,1) both}
+.v1140-collapse-copy b{display:block;font:900 24px/1.1 var(--v25-serif,serif);letter-spacing:.12em}
+.v1140-collapse-copy span{display:block;margin-top:6px;font:700 10px/1.35 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#e9b9a2}
+#game.v1140-collapse-shake{animation:v1140CollapseShake .18s linear 5}
+@keyframes v1140CollapseShake{0%,100%{transform:translate(0,0)}25%{transform:translate(-4px,2px)}50%{transform:translate(3px,-3px)}75%{transform:translate(2px,3px)}}
+@keyframes v1140CollapseCrack{0%{transform:translate(-2%,1%) scale(1.02);opacity:.25}50%{transform:translate(2%,-1%) scale(1.05);opacity:.75}100%{transform:translate(0,0) scale(1.08);opacity:.3}}
+@keyframes v1140CollapseCopy{0%{opacity:0;transform:translate(-50%,-50%) scale(.82)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}100%{opacity:.92;transform:translate(-50%,-50%) scale(1)}}
+@keyframes v1140CollapseVeil{0%,72%{opacity:1}100%{opacity:0}}
+
 @media(max-width:560px){
   .v25-theme .detail-popover38.v17float,.v25-theme #ascDetail.v17float,.v25-theme #mapDetail.v17float{max-width:205px!important;max-height:160px!important}
   .v25-theme .map-point{width:47px!important;height:47px!important}
@@ -209,13 +231,46 @@ function showDeath(){
   setTimeout(()=>{layer.remove();deathActive=false},1320);
 }
 
+function showMortalWarning(){
+  if(mortalWarnActive)return;
+  mortalWarnActive=true;
+  $('#v1140MortalWarn')?.remove();
+  const layer=document.createElement('div');
+  layer.id='v1140MortalWarn';
+  layer.innerHTML='<div class="v1140-mortal-copy"><b>요수 접근 위험</b><span>범인은 요수와 싸울 수 없습니다 · 즉시 거리를 벌리세요</span></div>';
+  document.body.appendChild(layer);
+  setTimeout(()=>{layer.remove();mortalWarnActive=false},940);
+}
+function updateMortalWarning(s){
+  const mortal=(s?.M?.realm?.major??-1)<0,p=s?.P;
+  const danger=!!(mortal&&p&&(s.enemies||[]).some(e=>e.hp>0&&!['spirit','rat','rogue'].includes(e.type)&&Math.hypot(e.x-p.x,e.y-p.y)<190));
+  if(danger&&!mortalThreat)showMortalWarning();
+  mortalThreat=danger;
+}
+function showCollapse(){
+  if(collapseActive)return;
+  collapseActive=true;
+  $('#v1140CollapseFx')?.remove();
+  const layer=document.createElement('div');
+  layer.id='v1140CollapseFx';
+  layer.innerHTML='<div class="v1140-collapse-copy"><b>비경 붕괴</b><span>공간이 무너집니다 · 강제로 이탈합니다</span></div>';
+  const game=$('#game');game?.classList.add('v1140-collapse-shake');
+  document.body.appendChild(layer);
+  setTimeout(()=>{game?.classList.remove('v1140-collapse-shake');layer.remove();collapseActive=false},1100);
+}
 function frame(s){
   const phase=s?.phase||null;
   if(phase==='run'){
     followPlayerHp(s);
-  }else if(priorPhase==='run'){
-    const dead=(+s?.P?.hp||0)<=0 || $('#ot')?.textContent?.includes('육신 중상');
-    if(dead)showDeath();
+    updateMortalWarning(s);
+  }else{
+    mortalThreat=false;
+    if(priorPhase==='run'){
+      const title=$('#ot')?.textContent||'';
+      const dead=(+s?.P?.hp||0)<=0 || title.includes('육신 중상');
+      if(dead)showDeath();
+      else if(title.includes('비경 붕괴'))showCollapse();
+    }
   }
   priorPhase=phase;
 }
