@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.49.2';
+const VERSION='11.49.3';
 if(window.__xianxiaFrameHub?.version===VERSION)return;
 
 const subscribers=new Map();
