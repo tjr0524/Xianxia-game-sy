@@ -8,7 +8,7 @@ const camera=read('tree_camera_gesture_v11_44.js');
 const progression=read('progression_runtime_v11_45.js');
 const touch=read('tree_touch_fix_v11_37_4.js');
 
-if(!camera.includes(".detail-close38,.asc-node,.map-node'))"))
+if(!camera.includes(".detail-close38,.asc-node,.map-node')"))
   throw new Error('shared tree camera still captures node taps');
 if(!progression.includes("closest('.camera,.v17float,.asc-node,.map-node')"))
   throw new Error('legacy progression camera still starts gestures on nodes');
