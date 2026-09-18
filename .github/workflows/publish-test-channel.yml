@@ -43,6 +43,8 @@ jobs:
           node --check testsrc/runtime_preflight_v11_45_flat.js
           node --check testsrc/runtime_postflight_v11_45_flat.js
           node --check testsrc/runtime_frame_hub_v11_47.js
+          node --check testsrc/tree_camera_gesture_v11_44.js
+          node --check testsrc/tree_touch_fix_v11_37_4.js
           node --check testsrc/tutorial_runtime_v11_49.js
           node --check testsrc/exploration_world_v11_33_4.js
           node --check testsrc/ui_runtime_v11_48.js
