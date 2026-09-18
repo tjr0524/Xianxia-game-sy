@@ -1534,7 +1534,7 @@ function frameSnapshot(){
     elapsed,
     run:run?{...run}:null,
     P:{...P},
-    enemies:enemies.map(enemy=>({id:enemy.id,type:enemy.type,x:enemy.x,y:enemy.y,hp:enemy.hp,max:enemy.max,rare:enemy.rare,treasure:enemy.treasure})),
+    enemies:enemies.map(enemy=>({id:enemy.id,type:enemy.type,x:enemy.x,y:enemy.y,hp:enemy.hp,max:enemy.max,rare:enemy.rare,rareTrait:enemy.rareTrait,treasure:enemy.treasure,carryCount:enemy.carry?.length||0})),
     objects:objects.map(object=>({type:object.type,x:object.x,y:object.y,value:object.value,grade:object.grade})),
     vein:vein?{...vein}:null,
     hazards:hazards.map(hazard=>({...hazard}))
