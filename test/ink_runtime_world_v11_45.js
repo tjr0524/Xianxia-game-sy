@@ -197,6 +197,21 @@ function visible(x,y,pad=120){
 }
 function drawGatherRings(s,t){const c=S.ctx;for(const o of s.objects||[]){if(o.type!=='h'||!visible(o.x,o.y,40))continue;const g=Math.max(0,Math.min(2,o.grade||0)),r=[16,18,20][g],pulse=1+Math.sin(t*3+o.x*.04+o.y*.03)*.04;c.save();c.globalAlpha=[.65,.72,.82][g];c.strokeStyle=['#4e8068','#4f7899','#8a609f'][g];c.lineWidth=[1.6,1.9,2.2][g];c.beginPath();c.ellipse(o.x,o.y+17,r*pulse,r*.42*pulse,0,0,Math.PI*2);c.stroke();c.globalAlpha=[.10,.13,.17][g];c.fillStyle=c.strokeStyle;c.fill();c.restore()}}
 function drawPortal(t){if(!visible(EXIT.x,EXIT.y,90))return;shadow(EXIT.x,EXIT.y+2,32,6,.18);centered('objects',3,6,frame(t,7,6),EXIT.x,EXIT.y-12,74,false,.9)}
+function drawMortalHerbGuide(s,t){
+  if((s.M?.realm?.major??-1)>=0||s.phase!=='run'||25-(+s.elapsed||0)<=10)return;
+  const p=s.P,herbs=(s.objects||[]).filter(o=>o.type==='h');
+  if(!p||!herbs.length)return;
+  let target=null,best=Infinity;
+  for(const h of herbs){const d=Math.hypot(h.x-p.x,h.y-p.y);if(d<best){best=d;target=h}}
+  if(!target||best<34)return;
+  const dx=target.x-p.x,dy=target.y-p.y,n=Math.hypot(dx,dy)||1,ux=dx/n,uy=dy/n;
+  const x=p.x+ux*62,y=p.y+uy*62,angle=Math.atan2(uy,ux),pulse=.84+.16*Math.sin(t*5.4);
+  const c=S.ctx;c.save();c.translate(x,y);c.rotate(angle);c.globalAlpha=pulse;
+  c.fillStyle='rgba(225,246,210,.96)';c.strokeStyle='rgba(38,91,60,.92)';c.lineWidth=2.2;
+  c.beginPath();c.moveTo(16,0);c.lineTo(-7,-9);c.lineTo(-2,0);c.lineTo(-7,9);c.closePath();c.fill();c.stroke();c.restore();
+  c.save();c.globalAlpha=.94;c.font='800 10px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';c.textAlign='center';c.textBaseline='middle';
+  c.strokeStyle='rgba(20,48,34,.88)';c.lineWidth=3.2;c.fillStyle='#efffe9';c.strokeText('영초',x,y-17);c.fillText('영초',x,y-17);c.restore();
+}
 function drawObjects(s,t){for(const o of s.objects||[]){if(!visible(o.x,o.y,70))continue;if(o.type==='h'){const row=Math.max(0,Math.min(2,o.grade||0)),ground=o.y+16;shadow(o.x,ground,9,2.5,.13);anchored('objects',row,4,frame(t,1.55,4,(o.x+o.y)*.0015),o.x,ground,40,false,.96,String(row))}else{const ground=o.y+14;shadow(o.x,ground,9,3,.15);anchored('objects',4,4,0,o.x,ground,34,false,1,'4')}}if(s.vein&&visible(s.vein.x,s.vein.y,90)){const ground=s.vein.y+22;shadow(s.vein.x,ground,18,5,.2);anchored('objects',4,4,3,s.vein.x,ground,58,false,1,'4')}}
 function drawVeinProgress(s,t){
   const v=s.vein,p=s.P;
@@ -355,6 +370,7 @@ function drawFrame(s,meta){
   drawEnemies(s,t,now);
   drawCasts(now);
   drawPlayer(s,t);
+  drawMortalHerbGuide(s,t);
   drawImpacts(now);
   drawPickupFx(s,t,now);
   lastSnapshot=s;

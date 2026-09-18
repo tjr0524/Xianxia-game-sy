@@ -1106,8 +1106,9 @@ function finish(reason){
 
   UI.ov.classList.remove('hide');
   UI.ret.disabled=true;
-  UI.ot.textContent=safe?'무사 귀환':reason==='dead'?'육신 중상':'비경 붕괴';
-  UI.ox.innerHTML=`${safe?'전리품 전량 확보':'전리품 40% 회수'}<br><b>영석 ${stone} · 영초 下${h0} 中${h1} 上${h2}</b>${objective}${event}`;
+  UI.ot.textContent=safe?'무사 귀환':reason==='dead'?'육신 중상':'비경 붕괴 · 강제 이탈';
+  const resultLead=safe?'전리품 전량 확보':reason==='dead'?'전투 불능 · 전리품 40% 회수':'비경이 무너지며 강제로 튕겨났습니다.<br><b>전리품 60% 소실</b> · 40%만 회수';
+  UI.ox.innerHTML=`${resultLead}<br><b>영석 ${stone} · 영초 下${h0} 中${h1} 上${h2}</b>${objective}${event}`;
   render();
   draw();
   window.__xianxiaFrameHub?.wake?.();
