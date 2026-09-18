@@ -1,19 +1,20 @@
 /* GENERATED FLAT RUNTIME 11.45 · source chain: ink_runtime_v11_31 -> worldscale_core_v11_34 */
 (()=>{
 'use strict';
-if(window.__xianxiaInkRuntime?.version==='11.31.1')return;
+if(window.__xianxiaInkRuntime?.version==='11.31.2')return;
 const W=1800,H=2400,EXIT={x:900,y:1200},BASE='assets/ink_v1/';
 const CACHE=new URL(document.currentScript?.src||location.href).searchParams.get('v')||'dev';
 const files={
  player:'source/player_core.png',objects:'source/world_objects.png',effects:'source/skill_effects.png',
- qingyun_guard:'source/qingyun_stone_boar.png',qingyun_chaser:'source/qingyun_wind_wolf.png',
- blackwind_guard:'source/blackwind_horned_yak.png',blackwind_chaser:'source/blackwind_ink_panther.png',
- blood_guard:'source/blood_armored_bear.png',blood_chaser:'source/blood_ember_fox.png',
- thunder_guard:'source/thunder_stone_rhino.png',thunder_chaser:'source/thunder_lightning_leopard.png',
+ qingyun_guard:'source/qingyun_stone_boar.png',qingyun_chaser:'source/qingyun_wind_wolf.png',qingyun_basic:'source/qingyun_mist_goat_v1.png',
+ blackwind_guard:'source/blackwind_horned_yak.png',blackwind_chaser:'source/blackwind_ink_panther.png',blackwind_basic:'source/blackwind_shadow_badger_v1.png',blackwind_attacker:'source/blackwind_sickle_mantis_v1.png',
+ blood_guard:'source/blood_armored_bear.png',blood_chaser:'source/blood_ember_fox.png',blood_basic:'source/blood_bloodscale_lizard_v1.png',blood_attacker:'source/blood_crimson_quill_v1.png',blood_elite:'source/blood_crystal_qilin_v1.png',
+ thunder_guard:'source/thunder_stone_rhino.png',thunder_chaser:'source/thunder_lightning_leopard.png',thunder_basic:'source/thunder_horn_ram_v1.png',thunder_attacker:'source/thunder_storm_marten_v1.png',thunder_elite:'source/thunder_basalt_tortoise_v1.png',
+ spirit_deer:'source/spirit_deer_v1.png',treasure_rat:'source/treasure_rat_v1.png',wandering_rival:'source/wandering_rival_v1.png',trait_fx:'source/trait_fx_atlas_v1.png',
  bg_qingyun:'../ink_v2/runtime/backgrounds/qingyun.webp',bg_blackwind:'../ink_v2/runtime/backgrounds/blackwind.webp',
  bg_blood:'../ink_v2/runtime/backgrounds/blood.webp',bg_thunder:'../ink_v2/runtime/backgrounds/thunder.webp'
 };
-const S={version:'11.31.1',ready:false,error:null,images:{},layer:null,ctx:null,renderScale:1,bufferWidth:0,bufferHeight:0,dprCap:1.5,maxPixels:2600000};
+const S={version:'11.31.2',ready:false,error:null,images:{},layer:null,ctx:null,renderScale:1,bufferWidth:0,bufferHeight:0,dprCap:1.5,maxPixels:2600000,assetBindings:'11.49.6'};
 window.__xianxiaInkRuntime=S;
 const tracks=new Map(),deaths=[],casts=[],impacts=[],pickups=[],floaters=[];
 let nextId=1,prevP=null,pFacing=1,prevCooldowns={},lastArea=null,lastPhase=null,prevObjects=[],prevRun=null,hitStopUntil=0,lastSnapshot=null,activeBounds={x:0,y:0,w:W,h:H};
@@ -25,7 +26,7 @@ function progress(p,count){return Math.max(0,Math.min(count-1,Math.floor(Math.ma
 function median(values){const a=[...values].sort((x,y)=>x-y);return a.length?a[Math.floor(a.length/2)]:1}
 function spansFor(data,img,y0,y1,cols){const spans=[];let start=-1,last=-1;for(let px=0;px<img.width;px++){let hits=0;for(let py=y0;py<y1;py++)if(data[(py*img.width+px)*4+3]>28)hits++;if(hits>2){if(start<0||px-last>8){if(start>=0)spans.push({l:start,r:last});start=px}last=px}}if(start>=0)spans.push({l:start,r:last});const minWidth=Math.max(12,Math.floor(img.width/cols*.18)),usable=spans.filter(s=>s.r-s.l+1>=minWidth);if(usable.length>=cols)return usable.sort((a,b)=>(b.r-b.l)-(a.r-a.l)).slice(0,cols).sort((a,b)=>a.l-b.l).map(s=>({l:Math.max(0,s.l-6),r:Math.min(img.width-1,s.r+6)}));return Array.from({length:cols},(_,i)=>({l:Math.floor(i*img.width/cols),r:Math.floor((i+1)*img.width/cols)-1}))}
 function largestOpaqueBox(data,img,x0,x1,y0,y1){const w=x1-x0,h=y1-y0,seen=new Uint8Array(w*h),queue=new Int32Array(w*h);let best=null,bestSize=0;for(let sy=0;sy<h;sy++)for(let sx=0;sx<w;sx++){const seed=sy*w+sx;if(seen[seed]||data[((y0+sy)*img.width+x0+sx)*4+3]<=28)continue;let head=0,tail=1,size=0,l=sx,r=sx,t=sy,b=sy;queue[0]=seed;seen[seed]=1;while(head<tail){const at=queue[head++],px=at%w,py=(at/w)|0;size++;if(px<l)l=px;if(px>r)r=px;if(py<t)t=py;if(py>b)b=py;let n;if(px>0){n=at-1;if(!seen[n]&&data[((y0+py)*img.width+x0+px-1)*4+3]>28){seen[n]=1;queue[tail++]=n}}if(px<w-1){n=at+1;if(!seen[n]&&data[((y0+py)*img.width+x0+px+1)*4+3]>28){seen[n]=1;queue[tail++]=n}}if(py>0){n=at-w;if(!seen[n]&&data[((y0+py-1)*img.width+x0+px)*4+3]>28){seen[n]=1;queue[tail++]=n}}if(py<h-1){n=at+w;if(!seen[n]&&data[((y0+py+1)*img.width+x0+px)*4+3]>28){seen[n]=1;queue[tail++]=n}}}if(size>bestSize){bestSize=size;const pad=4,ll=Math.max(0,l-pad),rr=Math.min(w-1,r+pad),tt=Math.max(0,t-pad),bb=Math.min(h-1,b+pad);best={x:x0+ll,y:y0+tt,w:rr-ll+1,h:bb-tt+1}}}return best}
-function prepare(key,counts){const img=S.images[key],rows=counts.length,c=document.createElement('canvas');c.width=img.width;c.height=img.height;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(img,0,0);const data=x.getImageData(0,0,c.width,c.height).data,body=[],beast=/_guard$|_chaser$/.test(key);counts.forEach((cols,row)=>{const rowHeights=[],y0=Math.floor(row*img.height/rows),y1=Math.floor((row+1)*img.height/rows),spans=spansFor(data,img,y0,y1,cols);for(let index=0;index<cols;index++){const pad=beast?32:0,x0=beast?Math.max(0,Math.floor(index*img.width/cols)-pad):spans[index].l,x1=beast?Math.min(img.width,Math.floor((index+1)*img.width/cols)+pad):spans[index].r+1,component=beast?largestOpaqueBox(data,img,x0,x1,y0,y1):null;let l=component?.x??x1,t=component?.y??y1,r=component?component.x+component.w-1:x0,b=component?component.y+component.h-1:y0;if(!component)for(let py=y0;py<y1;py++)for(let px=x0;px<x1;px++)if(data[(py*img.width+px)*4+3]>28){if(px<l)l=px;if(px>r)r=px;if(py<t)t=py;if(py>b)b=py}if(r<l||b<t){l=x0;r=x1-1;t=y0;b=y1-1}const box={x:l,y:t,w:r-l+1,h:b-t+1};bounds.set(`${key}:${row}:${cols}:${index}`,box);rowHeights.push(box.h);if(row<2)body.push(box.h)}refs.set(`${key}:${row}`,median(rowHeights))});refs.set(`${key}:body`,median(body))}
+function prepare(key,counts){const img=S.images[key],rows=counts.length,c=document.createElement('canvas');c.width=img.width;c.height=img.height;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(img,0,0);const data=x.getImageData(0,0,c.width,c.height).data,body=[],beast=/_guard$|_chaser$|_basic$|_attacker$|_elite$/.test(key)||/^(spirit_deer|treasure_rat|wandering_rival)$/.test(key);counts.forEach((cols,row)=>{const rowHeights=[],y0=Math.floor(row*img.height/rows),y1=Math.floor((row+1)*img.height/rows),spans=spansFor(data,img,y0,y1,cols);for(let index=0;index<cols;index++){const pad=beast?32:0,x0=beast?Math.max(0,Math.floor(index*img.width/cols)-pad):spans[index].l,x1=beast?Math.min(img.width,Math.floor((index+1)*img.width/cols)+pad):spans[index].r+1,component=beast?largestOpaqueBox(data,img,x0,x1,y0,y1):null;let l=component?.x??x1,t=component?.y??y1,r=component?component.x+component.w-1:x0,b=component?component.y+component.h-1:y0;if(!component)for(let py=y0;py<y1;py++)for(let px=x0;px<x1;px++)if(data[(py*img.width+px)*4+3]>28){if(px<l)l=px;if(px>r)r=px;if(py<t)t=py;if(py>b)b=py}if(r<l||b<t){l=x0;r=x1-1;t=y0;b=y1-1}const box={x:l,y:t,w:r-l+1,h:b-t+1};bounds.set(`${key}:${row}:${cols}:${index}`,box);rowHeights.push(box.h);if(row<2)body.push(box.h)}refs.set(`${key}:${row}`,median(rowHeights))});refs.set(`${key}:body`,median(body))}
 function boxFor(key,row,cols,index){return bounds.get(`${key}:${row}:${cols}:${index}`)}
 function anchored(key,row,cols,index,x,groundY,targetHeight,flip=false,alpha=1,group='body',filter='none'){const img=S.images[key],b=boxFor(key,row,cols,index);if(!img||!b)return;const scale=targetHeight/(refs.get(`${key}:${group}`)||b.h),dw=b.w*scale,dh=b.h*scale,c=S.ctx;c.save();c.globalAlpha=alpha;c.filter=filter;c.translate(x,groundY);if(flip)c.scale(-1,1);c.drawImage(img,b.x,b.y,b.w,b.h,-dw/2,-dh,dw,dh);c.restore()}
 function centered(key,row,cols,index,x,y,targetHeight,flip=false,alpha=1,filter='none'){const img=S.images[key],b=boxFor(key,row,cols,index);if(!img||!b)return;const scale=targetHeight/(refs.get(`${key}:${row}`)||b.h),dw=b.w*scale,dh=b.h*scale,c=S.ctx;c.save();c.globalAlpha=alpha;c.filter=filter;c.translate(x,y);if(flip)c.scale(-1,1);c.drawImage(img,b.x,b.y,b.w,b.h,-dw/2,-dh/2,dw,dh);c.restore()}
@@ -119,10 +120,54 @@ function drawGatherRings(s,t){const c=S.ctx;for(const o of s.objects||[]){if(o.t
 function drawPortal(t){if(!visible(EXIT.x,EXIT.y,90))return;shadow(EXIT.x,EXIT.y+2,32,6,.18);centered('objects',3,6,frame(t,7,6),EXIT.x,EXIT.y-12,74,false,.9)}
 function drawObjects(s,t){for(const o of s.objects||[]){if(!visible(o.x,o.y,70))continue;if(o.type==='h'){const row=Math.max(0,Math.min(2,o.grade||0)),ground=o.y+16;shadow(o.x,ground,9,2.5,.13);anchored('objects',row,4,frame(t,1.55,4,(o.x+o.y)*.0015),o.x,ground,40,false,.96,String(row))}else{const ground=o.y+14;shadow(o.x,ground,9,3,.15);anchored('objects',4,4,0,o.x,ground,34,false,1,'4')}}if(s.vein&&visible(s.vein.x,s.vein.y,90)){const ground=s.vein.y+22;shadow(s.vein.x,ground,18,5,.2);anchored('objects',4,4,3,s.vein.x,ground,58,false,1,'4')}}
 function drawHazards(s){const c=S.ctx;for(const h of s.hazards||[]){if(!visible(h.x,h.y,(h.r||0)+80))continue;c.save();const p=h.struck?1:1-Math.max(0,h.t)/(h.ttl||1);c.globalAlpha=h.struck?.8:.25+p*.45;c.strokeStyle=h.struck?'#eaf4ff':'#495b82';c.lineWidth=h.struck?4:2;c.setLineDash(h.struck?[]:[6,6]);c.beginPath();c.arc(h.x,h.y,h.r*(.82+p*.18),0,Math.PI*2);c.stroke();if(h.struck){c.beginPath();c.moveTo(h.x-7,h.y-60);c.lineTo(h.x+5,h.y-24);c.lineTo(h.x-3,h.y-24);c.lineTo(h.x+9,h.y);c.stroke()}c.restore()}}
-function enemyKey(area,type){if(type==='guard'||type==='elite')return area+'_guard';return area+'_chaser'}
+const enemyAssets={
+  qingyun:{basic:'qingyun_basic',guard:'qingyun_guard',chaser:'qingyun_chaser',attacker:'qingyun_chaser',elite:'qingyun_guard'},
+  blackwind:{basic:'blackwind_basic',guard:'blackwind_guard',chaser:'blackwind_chaser',attacker:'blackwind_attacker',elite:'blackwind_guard'},
+  blood:{basic:'blood_basic',guard:'blood_guard',chaser:'blood_chaser',attacker:'blood_attacker',elite:'blood_elite'},
+  thunder:{basic:'thunder_basic',guard:'thunder_guard',chaser:'thunder_chaser',attacker:'thunder_attacker',elite:'thunder_elite'}
+};
+const specialEnemyAssets={spirit:'spirit_deer',rat:'treasure_rat',rogue:'wandering_rival'};
+function enemyKey(area,type){return specialEnemyAssets[type]||enemyAssets[area]?.[type]||enemyAssets[area]?.chaser||'qingyun_chaser'}
+const traitRows={frenzy:0,iron:1,howl:2,devour:3};
+function drawTraitFx(tr,t,x,y,h){
+  const row=traitRows[tr.e?.rareTrait];if(row===undefined)return;
+  centered('trait_fx',row,4,frame(t,5,4,tr.id*.13),x,y-h*.34,Math.max(72,h*1.18),false,.62);
+}
 function drawBar(x,y,w,ratio,elite=false){const c=S.ctx;c.save();c.fillStyle='rgba(32,29,24,.68)';c.fillRect(x-w/2,y,w,5);c.fillStyle=elite?'#9b3e34':'#d5cba7';c.fillRect(x-w/2+1,y+1,(w-2)*Math.max(0,Math.min(1,ratio)),3);c.strokeStyle='rgba(244,238,215,.82)';c.lineWidth=.7;c.strokeRect(x-w/2+.5,y+.5,w-1,4);c.restore()}
 function drawEnemyMarker(x,y,h,elite=false,rare=false){const c=S.ctx;c.save();c.globalAlpha=.88;c.strokeStyle=rare?'#b78c45':elite?'#9b3e34':'rgba(244,238,215,.88)';c.lineWidth=elite?2.3:1.5;c.beginPath();c.ellipse(x,y+20,elite?31:25,elite?9:7,0,0,Math.PI*2);c.stroke();c.globalAlpha=.35;c.strokeStyle='#1c2925';c.lineWidth=4;c.beginPath();c.ellipse(x,y+20,elite?34:28,elite?11:9,0,0,Math.PI*2);c.stroke();c.restore()}
-function drawEnemies(s,t,now){const area=s.M?.area||'qingyun',matched=match(s.enemies||[],now,area);for(const tr of matched){const e=tr.e;if(!visible(e.x,e.y,180))continue;if(e.type==='spirit'){centered('effects',0,4,frame(t,3.2,4),e.x,e.y,48,false,.7);continue}const near=dist(e,s.P)<(e.type==='elite'?70:48);if(near&&now-tr.lastAttack>.72){tr.attackStart=now;tr.lastAttack=now;tr.facing=(s.P?.x??e.x)>=e.x?1:-1}const attacking=now-tr.attackStart<.55,moving=Math.hypot(tr.x-tr.px,tr.y-tr.py)>.15,key=enemyKey(area,e.type);let row=0,idx=moving?frame(t,9,6,tr.id*.09):frame(t,2.15,6,tr.id*.17),h=e.type==='elite'?88:e.type==='rat'?42:e.type==='rogue'?54:e.type==='guard'?66:60;if(attacking){row=1;idx=progress((now-tr.attackStart)/.55,6)}const idle=!moving&&!attacking,roamAmp=e.type==='chaser'?6:e.type==='guard'?3.5:e.type==='elite'?2:2.5,rx=idle?Math.sin(t*.82+tr.id*1.71)*roamAmp:0,ry=idle?Math.sin(t*.57+tr.id*.91)*1.5:0,x=e.x+rx,y=e.y+ry;if(e.rare){const c=S.ctx;c.save();c.globalAlpha=.28;c.strokeStyle=area==='blood'?'#ba493b':'#ad8b43';c.lineWidth=3;c.beginPath();c.arc(x,y,31,0,Math.PI*2);c.stroke();c.restore()}drawEnemyMarker(x,y,h,e.type==='elite',e.rare);const ground=y+22;shadow(x,ground,25,5,.24);const hit=now<tr.hitUntil,filter=hit?'brightness(2.15) saturate(.3)':'none';anchored(key,row,6,idx,x,ground,h,tr.facing<0,1,'body',filter);const hpRatio=(e.hp||0)/(tr.maxHp||e.hp||1);if(e.type==='elite'||hit||dist(e,s.P)<145)drawBar(x,ground-h-9,e.type==='elite'?52:40,hpRatio,e.type==='elite')}for(let i=deaths.length-1;i>=0;i--){const d=deaths[i],age=now-d.start;if(age>.72){deaths.splice(i,1);continue}if(!visible(d.x,d.y,180))continue;const key=enemyKey(d.area||area,d.type),ground=d.y+22,h=d.type==='elite'?88:d.type==='guard'?66:60;shadow(d.x,ground,25,4,.14*(1-age/.72));anchored(key,2,4,progress(age/.72,4),d.x,ground,h,d.facing<0,1-age*.55)}}
+function drawEnemies(s,t,now){
+  const area=s.M?.area||'qingyun',matched=match(s.enemies||[],now,area);
+  for(const tr of matched){
+    const e=tr.e;if(!visible(e.x,e.y,180))continue;
+    const special=e.type==='spirit'||e.type==='rat'||e.type==='rogue';
+    const canAttack=!special;
+    const near=canAttack&&dist(e,s.P)<(e.type==='elite'?70:48);
+    if(near&&now-tr.lastAttack>.72){tr.attackStart=now;tr.lastAttack=now;tr.facing=(s.P?.x??e.x)>=e.x?1:-1}
+    const attacking=canAttack&&now-tr.attackStart<.55,moving=Math.hypot(tr.x-tr.px,tr.y-tr.py)>.15,key=enemyKey(area,e.type);
+    let row=0,idx=moving?frame(t,9,6,tr.id*.09):frame(t,2.15,6,tr.id*.17);
+    let h=e.type==='elite'?96:e.type==='spirit'?62:e.type==='rat'?44:e.type==='rogue'?76:e.type==='guard'?66:e.type==='attacker'?64:60;
+    if(attacking){row=1;idx=progress((now-tr.attackStart)/.55,6)}
+    const idle=!moving&&!attacking,roamAmp=e.type==='chaser'?6:e.type==='guard'?3.5:e.type==='elite'?2:e.type==='spirit'?4:2.5;
+    const rx=idle?Math.sin(t*.82+tr.id*1.71)*roamAmp:0,ry=idle?Math.sin(t*.57+tr.id*.91)*1.5:0,x=e.x+rx,y=e.y+ry;
+    if(e.rare){
+      const cc=S.ctx;cc.save();cc.globalAlpha=.24;cc.strokeStyle=area==='blood'?'#ba493b':'#ad8b43';cc.lineWidth=2;cc.beginPath();cc.arc(x,y,31,0,Math.PI*2);cc.stroke();cc.restore();
+    }
+    if(e.type!=='spirit')drawEnemyMarker(x,y,h,e.type==='elite',e.rare);
+    const ground=y+22;shadow(x,ground,e.type==='rat'?15:e.type==='spirit'?19:25,e.type==='rat'?3:5,.22);
+    drawTraitFx(tr,t,x,y,h);
+    const hit=now<tr.hitUntil,filter=hit?'brightness(2.15) saturate(.3)':'none';
+    anchored(key,row,6,idx,x,ground,h,tr.facing<0,1,'body',filter);
+    const hpRatio=(e.hp||0)/(tr.maxHp||e.hp||1);
+    if(e.type!=='spirit'&&(e.type==='elite'||hit||dist(e,s.P)<145))drawBar(x,ground-h-9,e.type==='elite'?52:e.type==='rat'?30:40,hpRatio,e.type==='elite');
+  }
+  for(let i=deaths.length-1;i>=0;i--){
+    const d=deaths[i],age=now-d.start;if(age>.72){deaths.splice(i,1);continue}
+    if(!visible(d.x,d.y,180))continue;
+    const key=enemyKey(d.area||area,d.type),ground=d.y+22,h=d.type==='elite'?96:d.type==='spirit'?62:d.type==='rat'?44:d.type==='rogue'?76:d.type==='guard'?66:60;
+    shadow(d.x,ground,d.type==='rat'?15:25,4,.14*(1-age/.72));
+    anchored(key,2,4,progress(age/.72,4),d.x,ground,h,d.facing<0,1-age*.55);
+  }
+}
 function drawPlayer(s,t){const p=s.P;if(!p)return;let moving=false,dx=0;if(prevP){dx=p.x-prevP.x;moving=Math.hypot(dx,p.y-prevP.y)>.16}if(Math.abs(dx)>.12)pFacing=dx<0?-1:1;if(p.tx!==undefined&&Math.abs(p.tx-p.x)>2)pFacing=p.tx<p.x?-1:1;const mortal=(s.M?.realm?.major??-1)<0,atk=s.M?.cult?.atk||1,maxCd=Math.max(.2,.55-(atk-1)*.02),att=!mortal&&p.cd>0.01,attackPhase=att?1-Math.min(maxCd,p.cd)/maxCd:0;let row=0,cols=4,idx=frame(t,4,4);if(att){row=2;cols=6;idx=attackPhase<.36?0:attackPhase<.72?1:0}else if(moving){row=1;cols=6;idx=frame(t,10,6)}const ground=p.y+23;shadow(p.x,ground,11,3,.19);anchored('player',row,cols,idx,p.x,ground,100,pFacing<0);if(att)drawPlayerSlash(p.x,ground,attackPhase,pFacing<0);prevP={x:p.x,y:p.y}}
 const effectRow={sword:0,wave:1,chain:2,thunder:3,array:4};
 function detectCasts(s,now){const cds=s.run?.skillCooldowns||{};for(const[id,value]of Object.entries(cds)){const before=prevCooldowns[id]??value;if(value>before+.12){let x=s.P?.x||350,y=s.P?.y||230;if(id==='sword')x+=pFacing*48;else if(id==='thunder'&&s.enemies?.length){x=s.enemies[0].x;y=s.enemies[0].y}casts.push({id,x,y,start:now,facing:pFacing})}prevCooldowns[id]=value}}
@@ -168,7 +213,16 @@ function drawFrame(s,meta){
   drawPickupFx(s,t,now);
   lastSnapshot=s;
 }
-async function boot(){try{if(!makeLayer())throw new Error('game canvas not found');const entries=await Promise.all(Object.entries(files).map(async([k,v])=>[k,await load(v)]));S.images=Object.fromEntries(entries);prepare('player',[4,6,6]);for(const area of ['qingyun','blackwind','blood','thunder']){prepare(area+'_guard',[6,6,4]);prepare(area+'_chaser',[6,6,4])}prepare('objects',[4,4,4,6,4]);prepare('effects',[4,4,4,4,4]);S.ready=true;document.querySelector('#v1132GatherLayer')?.remove();document.documentElement.dataset.inkAssets='11.31.1-ready';console.info('[xianxia] ink runtime 11.31.1 feedback ready');const hub=window.__xianxiaFrameHub;if(!hub?.subscribe)throw new Error('shared frame hub unavailable');hub.subscribe('ink-render',drawFrame,25);hub.wake?.()}catch(e){S.error=String(e?.message||e);document.documentElement.dataset.inkAssets='11.31.1-error';console.warn('[xianxia] ink asset runtime failed',e)}}
+async function boot(){try{
+  if(!makeLayer())throw new Error('game canvas not found');
+  const entries=await Promise.all(Object.entries(files).map(async([k,v])=>[k,await load(v)]));S.images=Object.fromEntries(entries);
+  prepare('player',[4,6,6]);
+  for(const key of ['qingyun_guard','qingyun_chaser','qingyun_basic','blackwind_guard','blackwind_chaser','blackwind_basic','blackwind_attacker','blood_guard','blood_chaser','blood_basic','blood_attacker','blood_elite','thunder_guard','thunder_chaser','thunder_basic','thunder_attacker','thunder_elite','spirit_deer','treasure_rat','wandering_rival'])prepare(key,[6,6,4]);
+  prepare('objects',[4,4,4,6,4]);prepare('effects',[4,4,4,4,4]);prepare('trait_fx',[4,4,4,4]);
+  S.ready=true;document.querySelector('#v1132GatherLayer')?.remove();document.documentElement.dataset.inkAssets='11.31.2-ready';
+  console.info('[xianxia] ink runtime 11.31.2 · 13 prepared assets bound');
+  const hub=window.__xianxiaFrameHub;if(!hub?.subscribe)throw new Error('shared frame hub unavailable');hub.subscribe('ink-render',drawFrame,25);hub.wake?.()
+}catch(e){S.error=String(e?.message||e);document.documentElement.dataset.inkAssets='11.31.2-error';console.warn('[xianxia] ink asset runtime failed',e)}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
 
