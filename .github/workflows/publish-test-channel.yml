@@ -81,6 +81,10 @@ jobs:
           root = Path("stable/test")
           index = root / "index.html"
           text = index.read_text(encoding="utf-8")
+          version = json.loads((root / "version.json").read_text(encoding="utf-8"))
+          build = str(version.get("build") or "").strip()
+          if not build:
+              raise RuntimeError("test build is missing from version.json")
 
           marker = """
           <style id="test-channel-style">
@@ -101,21 +105,21 @@ jobs:
           if 'id="test-channel-style"' not in text:
               text = text.replace("</head>", marker + "\n</head>")
 
-          badge = '<div id="testChannelBadge">TEST 11.49.3</div>'
+          badge = f'<div id="testChannelBadge">TEST {build}</div>'
           if 'id="testChannelBadge"' not in text:
               text = text.replace("<body", "<body", 1)
               pos = text.find(">", text.find("<body"))
               text = text[:pos+1] + "\n" + badge + text[pos+1:]
 
-          if "<title>" in text and "[TEST 11.49.3]" not in text:
-              text = text.replace("<title>", "<title>[TEST 11.49.3] ", 1)
+          if "<title>" in text and f"[TEST {build}]" not in text:
+              text = text.replace("<title>", f"<title>[TEST {build}] ", 1)
 
           index.write_text(text, encoding="utf-8")
 
           (root / "test-channel.json").write_text(json.dumps({
               "channel": "test",
               "source_sha": os.environ.get("GITHUB_SHA", ""),
-              "build": "11.49.3",
+              "build": build,
           }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
           PY
 
