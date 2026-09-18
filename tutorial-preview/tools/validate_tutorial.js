@@ -7,7 +7,7 @@ const index=read('index.html');
 const tutorial=read('tutorial_runtime_v11_49.js');
 
 if(!index.includes('tutorial_runtime_v11_49.js'))throw new Error('tutorial runtime is not loaded');
-if(!tutorial.includes("const VERSION='11.49.7-tutorial'"))throw new Error('guided tutorial version mismatch');
+if(!tutorial.includes("const VERSION='11.49.8-tutorial'"))throw new Error('guided tutorial version mismatch');
 if(!tutorial.includes("const META_KEY='xianxia_tutorial_guided_v2'"))throw new Error('guided tutorial resume state missing');
 if(!tutorial.includes("const GUIDE_DONE_KEY='blackwind-first-entry'"))throw new Error('tutorial graduation state missing');
 if(!tutorial.includes("return Math.max(0,+s?.M?.herb||0)+Math.max(0,+s?.run?.h0||0)"))
