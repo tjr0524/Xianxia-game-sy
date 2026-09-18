@@ -1,0 +1,37 @@
+:root{color-scheme:light;--ink-paper:#eee8d6;--ink-paper-deep:#ded4bd;--ink:#182323;--ink-soft:#526260;--ink-jade:#547f72;--ink-cinnabar:#9a453a;--ink-gold:#a88745;--text:#182323;--muted:#68736d;--line:#4b5c5455;--jade:#547f72;--gold:#a88745}
+html,body{background:#d8d0bf url("assets/paper_fiber.svg");color:var(--ink)}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background:linear-gradient(115deg,#fff8e946,#5d70620d 45%,#7b34270a);mix-blend-mode:multiply}
+.topbar{padding:4px 8px 10px;border-bottom:1px solid #31413b38}
+.brand-mark{width:58px;height:58px;border:0;background:url("assets/ink_v1/runtime/ui/emblem.png") center/contain no-repeat;color:transparent;filter:drop-shadow(0 3px 4px #26363038)}
+.brand h1{color:#172321;font-family:"Hahmlet","Gowun Batang",serif;text-shadow:0 1px #fff9}
+.brand p,.small,.arena-head p,.footer{color:#68736d}
+.resource,.card,.section,.hud-item,.skill-status,.objective{color:var(--ink);border-color:#4b5c5455;background:#ece5d4dc;box-shadow:0 10px 30px #332b1e1c,inset 0 0 28px #fff5}
+.card{background:#e9e2d0ed url("assets/paper_fiber.svg");border-color:#34483f66;box-shadow:0 18px 50px #30291e2d}
+.arena-card{border-image:url("assets/ink_v1/runtime/ui/panel_wide.png") 120 fill / 24px / 0 round}
+.game{border-color:#263b3566;background:#c8c4b5;box-shadow:inset 0 0 46px #27342f33,0 8px 22px #3b30221f}
+#cv{position:relative;z-index:1;opacity:.16;filter:sepia(.15)}
+#v1131InkLayer{position:absolute;inset:0;z-index:2;width:100%;height:100%;pointer-events:none;image-rendering:auto}
+#v1128SpriteLayer,#v1129SpriteLayer,#v1130SpriteLayer,#v27ObjectLayer{display:none!important}
+.overlay{background:linear-gradient(#e7e1d3cc,#d4ccbadb);backdrop-filter:blur(3px)}
+.dialog{color:var(--ink);border:0;background:#eee7d7e8 url("assets/paper_fiber.svg");border-image:url("assets/ink_v1/runtime/ui/panel_dialog.png") 110 fill / 30px / 4px round;box-shadow:0 18px 50px #31291d4a}
+.dialog h3{color:#24342f}.dialog .intro{color:#56645f}
+.plan-card,.train-btn,.area-btn,.breakthrough,.tab-btn,.soft{color:#263530;border-color:#53655c66;background:#e6decbcc}
+.plan-card.active,.tab-btn.active{color:#203a33;border-color:#527a6d;background:#a8c5b68f;box-shadow:inset 0 -3px #577f7180}
+.primary{border:0;color:#f8f3e7;background:url("assets/ink_v1/runtime/ui/button_primary.png") center/100% 100% no-repeat;text-shadow:0 1px 2px #16362f;box-shadow:none}
+.soft,.breakthrough,.prog-action,.detail button{background:#ede5d3 url("assets/ink_v1/runtime/ui/button_secondary.png") center/100% 100% no-repeat!important;border:0!important;color:#263830!important}
+.tabs{background:#e3dccaea;border-color:#42564c44}.tab-btn{position:relative;display:flex;align-items:center;justify-content:center;gap:5px}
+.tab-btn::before{content:"";width:21px;height:21px;flex:0 0 auto;background-image:url("assets/ink_v1/source/ui_icons.png");background-size:500% 400%;background-repeat:no-repeat;filter:saturate(.72) contrast(.9)}
+.tab-btn[data-tab="train"]::before{background-position:0 0}.tab-btn[data-tab="skills"]::before{background-position:50% 66.666%}.tab-btn[data-tab="areas"]::before,.tab-btn[data-tab="tree"]::before{background-position:75% 33.333%}
+.hpbar{background:#b9b4a6;border-color:#6b746d}.hpbar i{background:linear-gradient(90deg,#8e392f,#c06b58)}
+.badge{color:#263831;border-color:#56685f;background:#e9e1cf}
+.notice{color:#52625d}.objective{color:#4b4934;border-color:#8f804f80}
+.asc-world{background:linear-gradient(#f2ecddaa,#ede3cdb5),url("assets/ink_v1/runtime/ui/skill_tree.png") center/cover no-repeat!important}
+.map-world{background:linear-gradient(#eee7d5a8,#ded5c3a8),url("assets/ink_v1/runtime/ui/world_map.png") center/cover no-repeat!important}
+.asc-node,.map-node{border:0!important;background-color:transparent!important;background-image:url("assets/ink_v1/runtime/ui/node_round.png")!important;background-size:100% 100%!important;color:#24342f!important;filter:drop-shadow(0 3px 3px #24332d38)}
+.asc-leaf,.map-point{background-image:url("assets/ink_v1/runtime/ui/node_hex.png")!important}
+.asc-node.locked,.map-node.locked{filter:grayscale(1) opacity(.5)}
+.asc-node.ready,.asc-node.available,.map-node.available{filter:drop-shadow(0 0 8px #9c793f)}
+.asc-svg path,.map-svg path{stroke:#425d53!important;opacity:.66}.map-zone{background:#eee7d5a3!important;border-color:#68786f69!important}
+.section-head{padding-bottom:8px;background:url("assets/ink_v1/runtime/ui/divider.png") center bottom/100% 13px no-repeat}
+.danger-label{color:#8b332d}.game.danger::after{box-shadow:inset 0 0 85px #a8332788;background:#96322814}
+@media(max-width:560px){.brand-mark{width:45px;height:45px}.tab-btn::before{width:18px;height:18px}}

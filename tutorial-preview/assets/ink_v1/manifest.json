@@ -1,0 +1,476 @@
+{
+  "version": "1.1.0",
+  "style": "expressive ink wash with pale mineral color",
+  "arena_camera": "three-quarter top-down orthographic",
+  "anchor_policy": "alpha-bounds with fixed bottom-center ground anchor",
+  "canvas": {
+    "width": 700,
+    "height": 460
+  },
+  "backgrounds": {
+    "qingyun": "runtime/backgrounds/qingyun.png",
+    "blackwind": "runtime/backgrounds/blackwind.png",
+    "blood": "runtime/backgrounds/blood.png",
+    "thunder": "runtime/backgrounds/thunder.png"
+  },
+  "background_source": "source/region_backgrounds_topdown_v2.png",
+  "sprites": {
+    "player": {
+      "file": "source/player_core.png",
+      "rows": [
+        {
+          "name": "idle",
+          "frames": 4
+        },
+        {
+          "name": "move",
+          "frames": 6
+        },
+        {
+          "name": "attack",
+          "frames": 6
+        }
+      ]
+    },
+    "qingyun_guard": {
+      "file": "source/qingyun_stone_boar.png",
+      "rows": [
+        {
+          "name": "move",
+          "frames": 6
+        },
+        {
+          "name": "attack",
+          "frames": 6
+        },
+        {
+          "name": "death",
+          "frames": 4
+        }
+      ]
+    },
+    "qingyun_chaser": {
+      "file": "source/qingyun_wind_wolf.png",
+      "rows": [
+        {
+          "name": "move",
+          "frames": 6
+        },
+        {
+          "name": "attack",
+          "frames": 6
+        },
+        {
+          "name": "death",
+          "frames": 4
+        }
+      ]
+    },
+    "blackwind_guard": {
+      "file": "source/blackwind_horned_yak.png",
+      "rows": [
+        {
+          "name": "move",
+          "frames": 6
+        },
+        {
+          "name": "attack",
+          "frames": 6
+        },
+        {
+          "name": "death",
+          "frames": 4
+        }
+      ]
+    },
+    "blackwind_chaser": {
+      "file": "source/blackwind_ink_panther.png",
+      "rows": [
+        {
+          "name": "move",
+          "frames": 6
+        },
+        {
+          "name": "attack",
+          "frames": 6
+        },
+        {
+          "name": "death",
+          "frames": 4
+        }
+      ]
+    },
+    "blood_guard": {
+      "file": "source/blood_armored_bear.png",
+      "rows": [
+        {
+          "name": "move",
+          "frames": 6
+        },
+        {
+          "name": "attack",
+          "frames": 6
+        },
+        {
+          "name": "death",
+          "frames": 4
+        }
+      ]
+    },
+    "blood_chaser": {
+      "file": "source/blood_ember_fox.png",
+      "rows": [
+        {
+          "name": "move",
+          "frames": 6
+        },
+        {
+          "name": "attack",
+          "frames": 6
+        },
+        {
+          "name": "death",
+          "frames": 4
+        }
+      ]
+    },
+    "thunder_guard": {
+      "file": "source/thunder_stone_rhino.png",
+      "rows": [
+        {
+          "name": "move",
+          "frames": 6
+        },
+        {
+          "name": "attack",
+          "frames": 6
+        },
+        {
+          "name": "death",
+          "frames": 4
+        }
+      ]
+    },
+    "thunder_chaser": {
+      "file": "source/thunder_lightning_leopard.png",
+      "rows": [
+        {
+          "name": "move",
+          "frames": 6
+        },
+        {
+          "name": "attack",
+          "frames": 6
+        },
+        {
+          "name": "death",
+          "frames": 4
+        }
+      ]
+    },
+    "objects": {
+      "file": "source/world_objects.png",
+      "rows": [
+        "herb_low",
+        "herb_mid",
+        "herb_high",
+        "return_portal",
+        "props"
+      ]
+    },
+    "effects": {
+      "file": "source/skill_effects.png",
+      "rows": [
+        "sword",
+        "wave",
+        "chain",
+        "thunder",
+        "array"
+      ],
+      "frames_per_row": 4
+    },
+    "qingyun_basic": {
+      "file": "source/qingyun_mist_goat_v1.png",
+      "rows": [
+        {
+          "name": "move",
+          "frames": 6
+        },
+        {
+          "name": "attack",
+          "frames": 6
+        },
+        {
+          "name": "death",
+          "frames": 4
+        }
+      ]
+    },
+    "blackwind_basic": {
+      "file": "source/blackwind_shadow_badger_v1.png",
+      "rows": [
+        {
+          "name": "move",
+          "frames": 6
+        },
+        {
+          "name": "attack",
+          "frames": 6
+        },
+        {
+          "name": "death",
+          "frames": 4
+        }
+      ]
+    },
+    "blackwind_attacker": {
+      "file": "source/blackwind_sickle_mantis_v1.png",
+      "rows": [
+        {
+          "name": "move",
+          "frames": 6
+        },
+        {
+          "name": "attack",
+          "frames": 6
+        },
+        {
+          "name": "death",
+          "frames": 4
+        }
+      ]
+    },
+    "blood_basic": {
+      "file": "source/blood_bloodscale_lizard_v1.png",
+      "rows": [
+        {
+          "name": "move",
+          "frames": 6
+        },
+        {
+          "name": "attack",
+          "frames": 6
+        },
+        {
+          "name": "death",
+          "frames": 4
+        }
+      ]
+    },
+    "blood_attacker": {
+      "file": "source/blood_crimson_quill_v1.png",
+      "rows": [
+        {
+          "name": "move",
+          "frames": 6
+        },
+        {
+          "name": "attack",
+          "frames": 6
+        },
+        {
+          "name": "death",
+          "frames": 4
+        }
+      ]
+    },
+    "blood_elite": {
+      "file": "source/blood_crystal_qilin_v1.png",
+      "rows": [
+        {
+          "name": "move",
+          "frames": 6
+        },
+        {
+          "name": "attack",
+          "frames": 6
+        },
+        {
+          "name": "death",
+          "frames": 4
+        }
+      ]
+    },
+    "thunder_basic": {
+      "file": "source/thunder_horn_ram_v1.png",
+      "rows": [
+        {
+          "name": "move",
+          "frames": 6
+        },
+        {
+          "name": "attack",
+          "frames": 6
+        },
+        {
+          "name": "death",
+          "frames": 4
+        }
+      ]
+    },
+    "thunder_attacker": {
+      "file": "source/thunder_storm_marten_v1.png",
+      "rows": [
+        {
+          "name": "move",
+          "frames": 6
+        },
+        {
+          "name": "attack",
+          "frames": 6
+        },
+        {
+          "name": "death",
+          "frames": 4
+        }
+      ]
+    },
+    "thunder_elite": {
+      "file": "source/thunder_basalt_tortoise_v1.png",
+      "rows": [
+        {
+          "name": "move",
+          "frames": 6
+        },
+        {
+          "name": "attack",
+          "frames": 6
+        },
+        {
+          "name": "death",
+          "frames": 4
+        }
+      ]
+    },
+    "spirit_deer": {
+      "file": "source/spirit_deer_v1.png",
+      "rows": [
+        {
+          "name": "move",
+          "frames": 6
+        },
+        {
+          "name": "action",
+          "frames": 6
+        },
+        {
+          "name": "vanish",
+          "frames": 4
+        }
+      ]
+    },
+    "treasure_rat": {
+      "file": "source/treasure_rat_v1.png",
+      "rows": [
+        {
+          "name": "move",
+          "frames": 6
+        },
+        {
+          "name": "action",
+          "frames": 6
+        },
+        {
+          "name": "death",
+          "frames": 4
+        }
+      ]
+    },
+    "wandering_rival": {
+      "file": "source/wandering_rival_v1.png",
+      "rows": [
+        {
+          "name": "move",
+          "frames": 6
+        },
+        {
+          "name": "action",
+          "frames": 6
+        },
+        {
+          "name": "death",
+          "frames": 4
+        }
+      ]
+    },
+    "trait_fx": {
+      "file": "source/trait_fx_atlas_v1.png",
+      "rows": [
+        {
+          "name": "frenzy",
+          "frames": 4
+        },
+        {
+          "name": "iron",
+          "frames": 4
+        },
+        {
+          "name": "howl",
+          "frames": 4
+        },
+        {
+          "name": "devour",
+          "frames": 4
+        }
+      ]
+    }
+  },
+  "ui": {
+    "logo": "runtime/ui/emblem.png",
+    "icons": "source/ui_icons.png",
+    "world_map": "runtime/ui/world_map.png",
+    "skill_tree": "runtime/ui/skill_tree.png",
+    "panel": "runtime/ui/panel_wide.png",
+    "dialog": "runtime/ui/panel_dialog.png",
+    "primary_button": "runtime/ui/button_primary.png",
+    "secondary_button": "runtime/ui/button_secondary.png",
+    "round_node": "runtime/ui/node_round.png",
+    "hex_node": "runtime/ui/node_hex.png",
+    "seal": "runtime/ui/seal.png",
+    "divider": "runtime/ui/divider.png"
+  },
+  "runtime_bindings": {
+    "version": "11.49.6",
+    "enemy_roles": {
+      "qingyun": {
+        "basic": "qingyun_basic",
+        "guard": "qingyun_guard",
+        "chaser": "qingyun_chaser",
+        "attacker": "qingyun_chaser",
+        "elite": "qingyun_guard"
+      },
+      "blackwind": {
+        "basic": "blackwind_basic",
+        "guard": "blackwind_guard",
+        "chaser": "blackwind_chaser",
+        "attacker": "blackwind_attacker",
+        "elite": "blackwind_guard"
+      },
+      "blood": {
+        "basic": "blood_basic",
+        "guard": "blood_guard",
+        "chaser": "blood_chaser",
+        "attacker": "blood_attacker",
+        "elite": "blood_elite"
+      },
+      "thunder": {
+        "basic": "thunder_basic",
+        "guard": "thunder_guard",
+        "chaser": "thunder_chaser",
+        "attacker": "thunder_attacker",
+        "elite": "thunder_elite"
+      }
+    },
+    "special": {
+      "spirit": "spirit_deer",
+      "rat": "treasure_rat",
+      "rogue": "wandering_rival"
+    },
+    "rare_traits": {
+      "frenzy": 0,
+      "iron": 1,
+      "howl": 2,
+      "devour": 3
+    }
+  }
+}
