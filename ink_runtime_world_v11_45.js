@@ -141,6 +141,20 @@ function drawTraitFx(tr,t,x,y,h){
 }
 function drawBar(x,y,w,ratio,elite=false){const c=S.ctx;c.save();c.fillStyle='rgba(32,29,24,.68)';c.fillRect(x-w/2,y,w,5);c.fillStyle=elite?'#9b3e34':'#d5cba7';c.fillRect(x-w/2+1,y+1,(w-2)*Math.max(0,Math.min(1,ratio)),3);c.strokeStyle='rgba(244,238,215,.82)';c.lineWidth=.7;c.strokeRect(x-w/2+.5,y+.5,w-1,4);c.restore()}
 function drawEnemyMarker(x,y,h,elite=false,rare=false){const c=S.ctx;c.save();c.globalAlpha=.88;c.strokeStyle=rare?'#b78c45':elite?'#9b3e34':'rgba(244,238,215,.88)';c.lineWidth=elite?2.3:1.5;c.beginPath();c.ellipse(x,y+20,elite?31:25,elite?9:7,0,0,Math.PI*2);c.stroke();c.globalAlpha=.35;c.strokeStyle='#1c2925';c.lineWidth=4;c.beginPath();c.ellipse(x,y+20,elite?34:28,elite?11:9,0,0,Math.PI*2);c.stroke();c.restore()}
+function drawSpiritCapture(e,x,y,h,s,t){
+  const c=S.ctx,bond=Math.max(0,e.bond||0),progress=Math.max(0,Math.min(1,bond/1.3)),d=dist(e,s.P),near=d<(e.captureRange||40),w=72,barY=y-h-18;
+  c.save();
+  const pulse=.78+Math.sin(t*5+e.id)*.12;
+  c.globalAlpha=pulse;c.strokeStyle=near?'#7be0d7':'#d9ffff';c.lineWidth=2.2;c.setLineDash(near?[]:[5,4]);
+  c.beginPath();c.ellipse(x,y+22,near?31:27,near?10:8,0,0,Math.PI*2);c.stroke();c.setLineDash([]);
+  c.globalAlpha=.92;c.fillStyle='rgba(5,18,20,.82)';c.fillRect(x-w/2,barY,w,9);
+  c.fillStyle='#79ded6';c.fillRect(x-w/2+1,barY+1,(w-2)*progress,7);
+  c.strokeStyle='rgba(217,255,255,.9)';c.lineWidth=1;c.strokeRect(x-w/2+.5,barY+.5,w-1,8);
+  c.font='bold 11px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#efffff';
+  c.fillText(near?`포획 ${Math.round(progress*100)}%`:'영수 · 가까이 유지',x,barY-8);
+  if(near){c.globalAlpha=.18+.10*Math.sin(t*7);c.fillStyle='#79ded6';c.beginPath();c.arc(x,y,36,0,Math.PI*2);c.fill()}
+  c.restore();
+}
 function drawEnemies(s,t,now){
   const area=s.M?.area||'qingyun',matched=match(s.enemies||[],now,area);
   for(const tr of matched){
@@ -159,6 +173,7 @@ function drawEnemies(s,t,now){
       const cc=S.ctx;cc.save();cc.globalAlpha=.24;cc.strokeStyle=area==='blood'?'#ba493b':'#ad8b43';cc.lineWidth=2;cc.beginPath();cc.arc(x,y,31,0,Math.PI*2);cc.stroke();cc.restore();
     }
     if(e.type!=='spirit')drawEnemyMarker(x,y,h,e.type==='elite',e.rare);
+    else drawSpiritCapture(e,x,y,h,s,t);
     const ground=y+22;shadow(x,ground,e.type==='rat'?15:e.type==='spirit'?19:25,e.type==='rat'?3:5,.22);
     drawTraitFx(tr,t,x,y,h);
     const hit=now<tr.hitUntil,filter=hit?'brightness(2.15) saturate(.3)':'none';
