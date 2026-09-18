@@ -5,8 +5,8 @@ const root=process.argv[2]||'.';
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const index=read('index.html');
 const kernel=read('runtime_kernel_v11_45.js');
-if(!index.includes('BUILD 11.49.5'))throw new Error('test build label is not 11.49.5');
-if(!kernel.includes("const BUILD='11.49.5'"))throw new Error('canonical test build is not 11.49.5');
+if(!index.includes('BUILD 11.49.6'))throw new Error('test build label is not 11.49.6');
+if(!kernel.includes("const BUILD='11.49.6'"))throw new Error('canonical test build is not 11.49.6');
 const flat=[
   'runtime_frame_hub_v11_47.js',
   'game_runtime_v11_45.js',
@@ -61,4 +61,25 @@ for(const p of order){
   if(i<0||i<=last)throw new Error('runtime order invalid at '+p);
   last=i;
 }
+const ink=read('ink_runtime_world_v11_45.js');
+const game=read('game_runtime_v11_45.js');
+const manifest=JSON.parse(read('assets/ink_v1/manifest.json'));
+const preparedAssets=[
+  'qingyun_mist_goat_v1.png','blackwind_shadow_badger_v1.png','blackwind_sickle_mantis_v1.png',
+  'blood_bloodscale_lizard_v1.png','blood_crimson_quill_v1.png','blood_crystal_qilin_v1.png',
+  'thunder_basalt_tortoise_v1.png','thunder_horn_ram_v1.png','thunder_storm_marten_v1.png',
+  'spirit_deer_v1.png','treasure_rat_v1.png','wandering_rival_v1.png','trait_fx_atlas_v1.png'
+];
+for(const asset of preparedAssets){
+  const assetPath=path.join(root,'assets','ink_v1','source',asset);
+  if(!fs.existsSync(assetPath))throw new Error('prepared runtime asset missing: '+asset);
+  if(!ink.includes(asset))throw new Error('prepared runtime asset is not bound: '+asset);
+}
+if(manifest.version!=='1.1.0'||manifest.runtime_bindings?.version!=='11.49.6')
+  throw new Error('ink manifest/runtime binding version mismatch');
+for(const token of ["spirit:'spirit_deer'","rat:'treasure_rat'","rogue:'wandering_rival'","blood_elite:'source/blood_crystal_qilin_v1.png'","thunder_elite:'source/thunder_basalt_tortoise_v1.png'","prepare('trait_fx',[4,4,4,4])"]){
+  if(!ink.includes(token))throw new Error('runtime asset binding token missing: '+token);
+}
+if(!game.includes('rareTrait:enemy.rareTrait'))throw new Error('rare trait metadata is not exposed to renderer');
+
 console.log('flat runtime validation: OK');
