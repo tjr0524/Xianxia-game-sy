@@ -12,13 +12,13 @@ let wasDanger=false,bannerTimer=0;function dangerRefresh(){dangerUi();const sh=D
 const ACH=[
 {id:'first_run',g:'步',n:'초입의 발자취',d:'처음으로 비경에 발을 들였다.',r:{s:20},ok:m=>(m.stats?.totalRuns||0)>=1},
 {id:'first_safe',g:'歸',n:'생환지인',d:'처음으로 전리품을 지닌 채 무사 귀환했다.',r:{s:30,h:2,hg:0},ok:m=>(m.stats?.totalSafe||0)>=1},
-{id:'qi',g:'氣',n:'범골을 벗다',d:'범인의 몸을 벗고 연기경에 입문했다.',r:{s:55},ok:m=>(m.realm?.major||-1)>=0},
+{id:'qi',g:'氣',n:'범골을 벗다',d:'범인의 몸을 벗고 연기경에 입문했다.',r:{s:55},ok:m=>(m.realm?.major??-1)>=0},
 {id:'sword',g:'劍',n:'검기 첫 울림',d:'첫 법술 어검술의 전승을 이었다.',r:{s:80,h:2,hg:0},ok:m=>!!m.skillUnlocks?.sword},
 {id:'safe5',g:'生',n:'오귀무상',d:'다섯 차례 비경에서 온전히 살아 돌아왔다.',r:{s:140,h:4,hg:0},ok:m=>(m.stats?.totalSafe||0)>=5},
 {id:'blackwind',g:'風',n:'흑풍유객',d:'흑풍곡의 관문을 열어 새로운 땅에 닿았다.',r:{s:190,h:4,hg:0},ok:m=>!!m.unlocked?.blackwind},
 {id:'kill30',g:'斬',n:'삼십참',d:'요수와 적대자를 누적 서른 번 쓰러뜨렸다.',r:{s:280},ok:m=>(m.stats?.totalKills||0)>=30},
 {id:'blood',g:'血',n:'적혈각명',d:'적혈비경에 자신의 행적을 새겼다.',r:{s:520,h:3,hg:1},ok:m=>!!m.unlocked?.blood},
-{id:'foundation',g:'基',n:'기해성축',d:'진원을 굳혀 축기경에 올랐다.',r:{s:950,h:2,hg:2},ok:m=>(m.realm?.major||-1)>=1},
+{id:'foundation',g:'基',n:'기해성축',d:'진원을 굳혀 축기경에 올랐다.',r:{s:950,h:2,hg:2},ok:m=>(m.realm?.major??-1)>=1},
 {id:'thunder',g:'雷',n:'천뢰문답',d:'천뢰봉의 문을 열고 천뢰와 마주할 자격을 얻었다.',r:{s:1250,h:3,hg:2},ok:m=>!!m.unlocked?.thunder}
 ];
 const herbKey=g=>g===0?'herb':g===1?'herb2':'herb3';function rewardText(r){return[ r.s?`◆ ${r.s}`:'',r.h?`${['초록','파랑','보라'][r.hg]||''} ❧ ${r.h}`:'' ].filter(Boolean).join(' · ')}
