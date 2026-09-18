@@ -1,0 +1,242 @@
+{
+  "asset_pack": "foundation_trial_assets_v1",
+  "art_revision": "ink_wash_guardian_v2",
+  "style": "sumi_e_ink_wash_with_restrained_celadon",
+  "background": {
+    "file": "background/foundation_trial_arena.png",
+    "width": 1024,
+    "height": 1536
+  },
+  "boss_sheet": {
+    "file": "boss/foundation_guardian_sheet_6x4.png",
+    "columns": 6,
+    "rows": 4,
+    "frame_width": 256,
+    "frame_height": 256,
+    "safe_margin_px": 20,
+    "row_actions": [
+      "idle_move_01_to_06",
+      "basic_attack_01_to_06",
+      "charge_windup_01_to_03_then_dash_01_to_03",
+      "roar_01_to_02_then_stagger_01_to_02_then_death_01_to_02"
+    ]
+  },
+  "normal_enemies": [
+    {
+      "id": "ink_armored_charging_boar",
+      "name_ko": "묵갑돌저",
+      "first_appearance": "축기 1층",
+      "mechanic": "telegraphed_straight_charge",
+      "file": "enemies/ink_armored_charging_boar/ink_armored_charging_boar_sheet_6x3.png",
+      "columns": 6,
+      "rows": 3,
+      "frame_width": 256,
+      "frame_height": 256,
+      "pivot": [128, 224],
+      "body_safe_margin_px": 32
+    },
+    {
+      "id": "celadon_mist_toad",
+      "name_ko": "벽연섬",
+      "first_appearance": "축기 2층",
+      "mechanic": "target_position_ranged_projectile",
+      "file": "enemies/celadon_mist_toad/celadon_mist_toad_sheet_6x3.png",
+      "columns": 6,
+      "rows": 3,
+      "frame_width": 256,
+      "frame_height": 256,
+      "pivot": [128, 224],
+      "body_safe_margin_px": 32
+    },
+    {
+      "id": "cracked_stone_beetle",
+      "name_ko": "균열석충",
+      "first_appearance": "축기 4층",
+      "mechanic": "friendly_fire_circular_explosion",
+      "file": "enemies/cracked_stone_beetle/cracked_stone_beetle_sheet_6x3.png",
+      "columns": 6,
+      "rows": 3,
+      "frame_width": 256,
+      "frame_height": 256,
+      "pivot": [128, 224],
+      "body_safe_margin_px": 30
+    },
+    {
+      "id": "ink_command_ape",
+      "name_ko": "묵령후원",
+      "first_appearance": "축기 5층",
+      "mechanic": "nearby_monster_command_buff",
+      "file": "enemies/ink_command_ape/ink_command_ape_sheet_6x3.png",
+      "columns": 6,
+      "rows": 3,
+      "frame_width": 256,
+      "frame_height": 256,
+      "pivot": [128, 224],
+      "body_safe_margin_px": 30
+    },
+    {
+      "id": "jade_scale_pangolin",
+      "name_ko": "옥린천산갑",
+      "first_appearance": "축기 6층",
+      "mechanic": "nearby_monster_shield",
+      "file": "enemies/jade_scale_pangolin/jade_scale_pangolin_sheet_6x3.png",
+      "columns": 6,
+      "rows": 3,
+      "frame_width": 256,
+      "frame_height": 256,
+      "pivot": [128, 224],
+      "body_safe_margin_px": 30
+    }
+  ],
+  "taixu_guardians": [
+    {
+      "id": "taixu_sword_sentinel",
+      "name_ko": "태허검위",
+      "first_appearance": "축기 7층",
+      "mechanic": "sword_zone_pressure",
+      "file": "enemies/taixu_sword_sentinel/taixu_sword_sentinel_sheet_6x3.png",
+      "columns": 6,
+      "rows": 3,
+      "frame_width": 256,
+      "frame_height": 256,
+      "pivot": [128, 224],
+      "body_safe_margin_px": 32
+    },
+    {
+      "id": "taixu_formation_warden",
+      "name_ko": "태허법위",
+      "first_appearance": "축기 8층",
+      "mechanic": "formation_target_projectile",
+      "file": "enemies/taixu_formation_warden/taixu_formation_warden_sheet_6x3.png",
+      "columns": 6,
+      "rows": 3,
+      "frame_width": 256,
+      "frame_height": 256,
+      "pivot": [128, 224],
+      "body_safe_margin_px": 32
+    }
+  ],
+  "taixu_final_boss": {
+    "id": "taixu_formation_sovereign",
+    "name_ko": "태허진령",
+    "first_appearance": "축기 9층",
+    "mechanic": "moving_formation_zones_and_area_control",
+    "file": "boss/taixu_formation_sovereign/taixu_formation_sovereign_sheet_6x4.png",
+    "columns": 6,
+    "rows": 4,
+    "frame_width": 256,
+    "frame_height": 256,
+    "pivot": [128, 224],
+    "body_safe_margin_px": 24
+  },
+  "regions": {
+    "thunder_peak": {
+      "name_ko": "천뢰봉",
+      "background_and_lightning": "reuse_existing_runtime",
+      "objects": [
+        "regions/thunder_peak/objects/lightning_conduction_node_512.png"
+      ]
+    },
+    "purple_cloud_marsh": {
+      "name_ko": "자운택",
+      "background": "regions/purple_cloud_marsh/background/purple_cloud_marsh_battlefield_1024x1536.png",
+      "decor_atlas": "regions/purple_cloud_marsh/decor/purple_cloud_marsh_decor_atlas_2x2.png",
+      "decor_cells": [
+        "willow_stump_512.png",
+        "reeds_lotus_512.png",
+        "sunken_stone_lantern_512.png",
+        "roots_stones_mushrooms_512.png"
+      ],
+      "environment_fx_atlas": "regions/purple_cloud_marsh/fx/purple_cloud_marsh_fx_atlas_2x2.png",
+      "environment_fx_cells": [
+        "low_mist_ribbon_512.png",
+        "water_ripple_512.png",
+        "foot_wake_512.png",
+        "purple_cloud_hazard_512.png"
+      ],
+      "map_node": "regions/purple_cloud_marsh/ui/purple_cloud_marsh_map_node_724.png"
+    },
+    "taixu_ruins": {
+      "name_ko": "태허유적",
+      "background": "regions/taixu_ruins/background/taixu_ruins_battlefield_1024x1536.png",
+      "formation_node": "regions/taixu_ruins/objects/taixu_formation_node_512.png",
+      "decor_atlas": "regions/taixu_ruins/decor/taixu_ruins_decor_atlas_2x2.png",
+      "decor_cells": [
+        "broken_pillar_512.png",
+        "rune_stone_pile_512.png",
+        "collapsed_arch_512.png",
+        "floating_shards_512.png"
+      ]
+    }
+  },
+  "common_fx": [
+    {
+      "id": "shield_break",
+      "file": "fx/common/shield_break/shield_break_sheet_6x1.png",
+      "columns": 6,
+      "rows": 1,
+      "frame_width": 256,
+      "frame_height": 256,
+      "preview": "qa/shield_break_preview.gif"
+    },
+    {
+      "id": "area_field_activation",
+      "file": "fx/common/area_field/area_field_activation_sheet_6x1.png",
+      "columns": 6,
+      "rows": 1,
+      "frame_width": 256,
+      "frame_height": 256,
+      "preview": "qa/area_field_activation_preview.gif"
+    }
+  ],
+  "taixu_ui_sheet": {
+    "file": "ui/taixu_ruins_ui_sheet_2x1.png",
+    "columns": 2,
+    "rows": 1,
+    "cell_width": 724,
+    "cell_height": 724,
+    "cells": [
+      "taixu_formation_sovereign_portrait.png",
+      "taixu_ruins_map_node.png"
+    ],
+    "transparent_background": true,
+    "safe_margin_px": 40
+  },
+  "node_icons": {
+    "manifest": "ui/node_icons/node_icon_manifest.json",
+    "guide": "ui/node_icons/NODE_ICON_GUIDE.md",
+    "icon_count": 63,
+    "state_frame_count": 4,
+    "master_size": [256, 256],
+    "runtime_small_size": [64, 64],
+    "transparent_background": true,
+    "categories": [
+      "training_core",
+      "training_advanced",
+      "combat_abilities",
+      "combat_modifiers",
+      "combat_mechanics",
+      "expedition",
+      "battlefield"
+    ],
+    "state_frames": [
+      "locked",
+      "available",
+      "selected",
+      "mastered"
+    ],
+    "qa_overview": "qa/node_icons/node_icons_overview.jpg"
+  },
+  "ui_sheet": {
+    "file": "ui/foundation_guardian_ui_sheet_3x1.png",
+    "columns": 3,
+    "rows": 1,
+    "cell_width": 724,
+    "cell_height": 724,
+    "cells": [
+      "foundation_guardian_portrait.png",
+      "foundation_trial_map_node.png",
+      "foundation_trial_warning_crest.png"
+    ]
+  }
+}

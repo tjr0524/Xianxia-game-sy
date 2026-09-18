@@ -1,0 +1,26 @@
+{
+  "id": "taixu_formation_sovereign",
+  "name_ko": "태허진령",
+  "role": "taixu_final_boss",
+  "first_appearance": "축기 9층",
+  "sheet": {
+    "columns": 6,
+    "rows": 4,
+    "frame_width": 256,
+    "frame_height": 256,
+    "pivot": [
+      128,
+      224
+    ],
+    "uniform_source_scale": 0.8125
+  },
+  "layers": [
+    "body",
+    "fx",
+    "combined"
+  ],
+  "mechanic_assets": {
+    "grand_formation": "grand_formation_floor_sheet_6x1.png",
+    "moving_zone": "moving_formation_zone_256.png"
+  }
+}

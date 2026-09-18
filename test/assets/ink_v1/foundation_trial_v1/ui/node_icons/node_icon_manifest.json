@@ -1,0 +1,471 @@
+{
+  "version": "1.0",
+  "canvas": 256,
+  "small_preview": 64,
+  "composition": "Place pictogram below node-state frame. Use one lineage icon for all rank nodes; show rank separately.",
+  "icons": [
+    {
+      "id": "sword_formula",
+      "label_ko": "검결",
+      "category": "training_core",
+      "path": "ui/node_icons/training_core/sword_formula_256.png",
+      "small_path": "ui/node_icons/training_core/sword_formula_64.png"
+    },
+    {
+      "id": "body_training",
+      "label_ko": "체수련",
+      "category": "training_core",
+      "path": "ui/node_icons/training_core/body_training_256.png",
+      "small_path": "ui/node_icons/training_core/body_training_64.png"
+    },
+    {
+      "id": "movement_art",
+      "label_ko": "경신법",
+      "category": "training_core",
+      "path": "ui/node_icons/training_core/movement_art_256.png",
+      "small_path": "ui/node_icons/training_core/movement_art_64.png"
+    },
+    {
+      "id": "spirit_sense",
+      "label_ko": "신식",
+      "category": "training_core",
+      "path": "ui/node_icons/training_core/spirit_sense_256.png",
+      "small_path": "ui/node_icons/training_core/spirit_sense_64.png"
+    },
+    {
+      "id": "body_guard",
+      "label_ko": "호체",
+      "category": "training_core",
+      "path": "ui/node_icons/training_core/body_guard_256.png",
+      "small_path": "ui/node_icons/training_core/body_guard_64.png"
+    },
+    {
+      "id": "rapid_sword",
+      "label_ko": "속검",
+      "category": "training_core",
+      "path": "ui/node_icons/training_core/rapid_sword_256.png",
+      "small_path": "ui/node_icons/training_core/rapid_sword_64.png"
+    },
+    {
+      "id": "wind_adaptation",
+      "label_ko": "풍압 적응",
+      "category": "training_core",
+      "path": "ui/node_icons/training_core/wind_adaptation_256.png",
+      "small_path": "ui/node_icons/training_core/wind_adaptation_64.png"
+    },
+    {
+      "id": "afterimage_step",
+      "label_ko": "잔영보",
+      "category": "training_core",
+      "path": "ui/node_icons/training_core/afterimage_step_256.png",
+      "small_path": "ui/node_icons/training_core/afterimage_step_64.png"
+    },
+    {
+      "id": "spirit_tracking",
+      "label_ko": "영각·추적",
+      "category": "training_core",
+      "path": "ui/node_icons/training_core/spirit_tracking_256.png",
+      "small_path": "ui/node_icons/training_core/spirit_tracking_64.png"
+    },
+    {
+      "id": "qi_cycle",
+      "label_ko": "정기순환",
+      "category": "training_advanced",
+      "path": "ui/node_icons/training_advanced/qi_cycle_256.png",
+      "small_path": "ui/node_icons/training_advanced/qi_cycle_64.png"
+    },
+    {
+      "id": "threat_sense",
+      "label_ko": "심안·위협감지",
+      "category": "training_advanced",
+      "path": "ui/node_icons/training_advanced/threat_sense_256.png",
+      "small_path": "ui/node_icons/training_advanced/threat_sense_64.png"
+    },
+    {
+      "id": "shadowless_step",
+      "label_ko": "무영보",
+      "category": "training_advanced",
+      "path": "ui/node_icons/training_advanced/shadowless_step_256.png",
+      "small_path": "ui/node_icons/training_advanced/shadowless_step_64.png"
+    },
+    {
+      "id": "sword_heart",
+      "label_ko": "검심",
+      "category": "training_advanced",
+      "path": "ui/node_icons/training_advanced/sword_heart_256.png",
+      "small_path": "ui/node_icons/training_advanced/sword_heart_64.png"
+    },
+    {
+      "id": "art_harmony",
+      "label_ko": "사법조화",
+      "category": "training_advanced",
+      "path": "ui/node_icons/training_advanced/art_harmony_256.png",
+      "small_path": "ui/node_icons/training_advanced/art_harmony_64.png"
+    },
+    {
+      "id": "true_essence_core",
+      "label_ko": "진원핵",
+      "category": "training_advanced",
+      "path": "ui/node_icons/training_advanced/true_essence_core_256.png",
+      "small_path": "ui/node_icons/training_advanced/true_essence_core_64.png"
+    },
+    {
+      "id": "true_essence_cycle",
+      "label_ko": "진원순환",
+      "category": "training_advanced",
+      "path": "ui/node_icons/training_advanced/true_essence_cycle_256.png",
+      "small_path": "ui/node_icons/training_advanced/true_essence_cycle_64.png"
+    },
+    {
+      "id": "recovery_start",
+      "label_ko": "회복 개시",
+      "category": "training_advanced",
+      "path": "ui/node_icons/training_advanced/recovery_start_256.png",
+      "small_path": "ui/node_icons/training_advanced/recovery_start_64.png"
+    },
+    {
+      "id": "slow_resistance",
+      "label_ko": "감속 저항",
+      "category": "training_advanced",
+      "path": "ui/node_icons/training_advanced/slow_resistance_256.png",
+      "small_path": "ui/node_icons/training_advanced/slow_resistance_64.png"
+    },
+    {
+      "id": "basic_sword",
+      "label_ko": "기본 검격",
+      "category": "combat_abilities",
+      "path": "ui/node_icons/combat_abilities/basic_sword_256.png",
+      "small_path": "ui/node_icons/combat_abilities/basic_sword_64.png"
+    },
+    {
+      "id": "sword_control",
+      "label_ko": "어검술",
+      "category": "combat_abilities",
+      "path": "ui/node_icons/combat_abilities/sword_control_256.png",
+      "small_path": "ui/node_icons/combat_abilities/sword_control_64.png"
+    },
+    {
+      "id": "sword_wind",
+      "label_ko": "검풍",
+      "category": "combat_abilities",
+      "path": "ui/node_icons/combat_abilities/sword_wind_256.png",
+      "small_path": "ui/node_icons/combat_abilities/sword_wind_64.png"
+    },
+    {
+      "id": "chain_flying_sword",
+      "label_ko": "연환비검",
+      "category": "combat_abilities",
+      "path": "ui/node_icons/combat_abilities/chain_flying_sword_256.png",
+      "small_path": "ui/node_icons/combat_abilities/chain_flying_sword_64.png"
+    },
+    {
+      "id": "thunder_talisman",
+      "label_ko": "낙뢰부",
+      "category": "combat_abilities",
+      "path": "ui/node_icons/combat_abilities/thunder_talisman_256.png",
+      "small_path": "ui/node_icons/combat_abilities/thunder_talisman_64.png"
+    },
+    {
+      "id": "myriad_sword_formation",
+      "label_ko": "만검진",
+      "category": "combat_abilities",
+      "path": "ui/node_icons/combat_abilities/myriad_sword_formation_256.png",
+      "small_path": "ui/node_icons/combat_abilities/myriad_sword_formation_64.png"
+    },
+    {
+      "id": "evasive_step",
+      "label_ko": "신법",
+      "category": "combat_abilities",
+      "path": "ui/node_icons/combat_abilities/evasive_step_256.png",
+      "small_path": "ui/node_icons/combat_abilities/evasive_step_64.png"
+    },
+    {
+      "id": "temporary_overdrive",
+      "label_ko": "일시 강화",
+      "category": "combat_abilities",
+      "path": "ui/node_icons/combat_abilities/temporary_overdrive_256.png",
+      "small_path": "ui/node_icons/combat_abilities/temporary_overdrive_64.png"
+    },
+    {
+      "id": "perfect_dodge",
+      "label_ko": "완벽 회피",
+      "category": "combat_abilities",
+      "path": "ui/node_icons/combat_abilities/perfect_dodge_256.png",
+      "small_path": "ui/node_icons/combat_abilities/perfect_dodge_64.png"
+    },
+    {
+      "id": "power_up",
+      "label_ko": "위력 증가",
+      "category": "combat_modifiers",
+      "path": "ui/node_icons/combat_modifiers/power_up_256.png",
+      "small_path": "ui/node_icons/combat_modifiers/power_up_64.png"
+    },
+    {
+      "id": "cooldown_down",
+      "label_ko": "재사용 감소",
+      "category": "combat_modifiers",
+      "path": "ui/node_icons/combat_modifiers/cooldown_down_256.png",
+      "small_path": "ui/node_icons/combat_modifiers/cooldown_down_64.png"
+    },
+    {
+      "id": "range_up",
+      "label_ko": "사거리 증가",
+      "category": "combat_modifiers",
+      "path": "ui/node_icons/combat_modifiers/range_up_256.png",
+      "small_path": "ui/node_icons/combat_modifiers/range_up_64.png"
+    },
+    {
+      "id": "extra_projectile",
+      "label_ko": "추가 투사체",
+      "category": "combat_modifiers",
+      "path": "ui/node_icons/combat_modifiers/extra_projectile_256.png",
+      "small_path": "ui/node_icons/combat_modifiers/extra_projectile_64.png"
+    },
+    {
+      "id": "pierce",
+      "label_ko": "관통",
+      "category": "combat_modifiers",
+      "path": "ui/node_icons/combat_modifiers/pierce_256.png",
+      "small_path": "ui/node_icons/combat_modifiers/pierce_64.png"
+    },
+    {
+      "id": "chain_effect",
+      "label_ko": "연쇄",
+      "category": "combat_modifiers",
+      "path": "ui/node_icons/combat_modifiers/chain_effect_256.png",
+      "small_path": "ui/node_icons/combat_modifiers/chain_effect_64.png"
+    },
+    {
+      "id": "area_expand",
+      "label_ko": "범위 확장",
+      "category": "combat_modifiers",
+      "path": "ui/node_icons/combat_modifiers/area_expand_256.png",
+      "small_path": "ui/node_icons/combat_modifiers/area_expand_64.png"
+    },
+    {
+      "id": "duration_up",
+      "label_ko": "지속 증가",
+      "category": "combat_modifiers",
+      "path": "ui/node_icons/combat_modifiers/duration_up_256.png",
+      "small_path": "ui/node_icons/combat_modifiers/duration_up_64.png"
+    },
+    {
+      "id": "elite_focus",
+      "label_ko": "정예 특화",
+      "category": "combat_modifiers",
+      "path": "ui/node_icons/combat_modifiers/elite_focus_256.png",
+      "small_path": "ui/node_icons/combat_modifiers/elite_focus_64.png"
+    },
+    {
+      "id": "dodge_spell_link",
+      "label_ko": "회피·술법 연계",
+      "category": "combat_mechanics",
+      "path": "ui/node_icons/combat_mechanics/dodge_spell_link_256.png",
+      "small_path": "ui/node_icons/combat_mechanics/dodge_spell_link_64.png"
+    },
+    {
+      "id": "extra_dodge_charge",
+      "label_ko": "회피 충전 추가",
+      "category": "combat_mechanics",
+      "path": "ui/node_icons/combat_mechanics/extra_dodge_charge_256.png",
+      "small_path": "ui/node_icons/combat_mechanics/extra_dodge_charge_64.png"
+    },
+    {
+      "id": "afterimage_branch",
+      "label_ko": "잔상 분기",
+      "category": "combat_mechanics",
+      "path": "ui/node_icons/combat_mechanics/afterimage_branch_256.png",
+      "small_path": "ui/node_icons/combat_mechanics/afterimage_branch_64.png"
+    },
+    {
+      "id": "charging_enemy",
+      "label_ko": "돌진형",
+      "category": "combat_mechanics",
+      "path": "ui/node_icons/combat_mechanics/charging_enemy_256.png",
+      "small_path": "ui/node_icons/combat_mechanics/charging_enemy_64.png"
+    },
+    {
+      "id": "ranged_enemy",
+      "label_ko": "원거리형",
+      "category": "combat_mechanics",
+      "path": "ui/node_icons/combat_mechanics/ranged_enemy_256.png",
+      "small_path": "ui/node_icons/combat_mechanics/ranged_enemy_64.png"
+    },
+    {
+      "id": "environment_lightning",
+      "label_ko": "환경 낙뢰",
+      "category": "combat_mechanics",
+      "path": "ui/node_icons/combat_mechanics/environment_lightning_256.png",
+      "small_path": "ui/node_icons/combat_mechanics/environment_lightning_64.png"
+    },
+    {
+      "id": "exploding_enemy",
+      "label_ko": "폭발형",
+      "category": "combat_mechanics",
+      "path": "ui/node_icons/combat_mechanics/exploding_enemy_256.png",
+      "small_path": "ui/node_icons/combat_mechanics/exploding_enemy_64.png"
+    },
+    {
+      "id": "commanding_enemy",
+      "label_ko": "호령형",
+      "category": "combat_mechanics",
+      "path": "ui/node_icons/combat_mechanics/commanding_enemy_256.png",
+      "small_path": "ui/node_icons/combat_mechanics/commanding_enemy_64.png"
+    },
+    {
+      "id": "shielded_enemy",
+      "label_ko": "수호형",
+      "category": "combat_mechanics",
+      "path": "ui/node_icons/combat_mechanics/shielded_enemy_256.png",
+      "small_path": "ui/node_icons/combat_mechanics/shielded_enemy_64.png"
+    },
+    {
+      "id": "beast_tracks",
+      "label_ko": "요수 흔적",
+      "category": "expedition",
+      "path": "ui/node_icons/expedition/beast_tracks_256.png",
+      "small_path": "ui/node_icons/expedition/beast_tracks_64.png"
+    },
+    {
+      "id": "monster_pack",
+      "label_ko": "요수 군락",
+      "category": "expedition",
+      "path": "ui/node_icons/expedition/monster_pack_256.png",
+      "small_path": "ui/node_icons/expedition/monster_pack_64.png"
+    },
+    {
+      "id": "rare_beast",
+      "label_ko": "희귀 요수",
+      "category": "expedition",
+      "path": "ui/node_icons/expedition/rare_beast_256.png",
+      "small_path": "ui/node_icons/expedition/rare_beast_64.png"
+    },
+    {
+      "id": "wandering_cultivator",
+      "label_ko": "산수의 소문",
+      "category": "expedition",
+      "path": "ui/node_icons/expedition/wandering_cultivator_256.png",
+      "small_path": "ui/node_icons/expedition/wandering_cultivator_64.png"
+    },
+    {
+      "id": "treasure_contest",
+      "label_ko": "보물 쟁탈",
+      "category": "expedition",
+      "path": "ui/node_icons/expedition/treasure_contest_256.png",
+      "small_path": "ui/node_icons/expedition/treasure_contest_64.png"
+    },
+    {
+      "id": "spirit_beast_trail",
+      "label_ko": "영수의 흔적",
+      "category": "expedition",
+      "path": "ui/node_icons/expedition/spirit_beast_trail_256.png",
+      "small_path": "ui/node_icons/expedition/spirit_beast_trail_64.png"
+    },
+    {
+      "id": "spirit_vein",
+      "label_ko": "영맥 감응",
+      "category": "expedition",
+      "path": "ui/node_icons/expedition/spirit_vein_256.png",
+      "small_path": "ui/node_icons/expedition/spirit_vein_64.png"
+    },
+    {
+      "id": "guarded_spirit_vein",
+      "label_ko": "수호 영맥",
+      "category": "expedition",
+      "path": "ui/node_icons/expedition/guarded_spirit_vein_256.png",
+      "small_path": "ui/node_icons/expedition/guarded_spirit_vein_64.png"
+    },
+    {
+      "id": "grand_spirit_vein",
+      "label_ko": "대형 영맥",
+      "category": "expedition",
+      "path": "ui/node_icons/expedition/grand_spirit_vein_256.png",
+      "small_path": "ui/node_icons/expedition/grand_spirit_vein_64.png"
+    },
+    {
+      "id": "thunder_trace",
+      "label_ko": "뢰흔 개방",
+      "category": "battlefield",
+      "path": "ui/node_icons/battlefield/thunder_trace_256.png",
+      "small_path": "ui/node_icons/battlefield/thunder_trace_64.png"
+    },
+    {
+      "id": "hazardous_ground",
+      "label_ko": "위험 장판",
+      "category": "battlefield",
+      "path": "ui/node_icons/battlefield/hazardous_ground_256.png",
+      "small_path": "ui/node_icons/battlefield/hazardous_ground_64.png"
+    },
+    {
+      "id": "formation_node",
+      "label_ko": "진법 결절",
+      "category": "battlefield",
+      "path": "ui/node_icons/battlefield/formation_node_256.png",
+      "small_path": "ui/node_icons/battlefield/formation_node_64.png"
+    },
+    {
+      "id": "moving_formation",
+      "label_ko": "이동 진법",
+      "category": "battlefield",
+      "path": "ui/node_icons/battlefield/moving_formation_256.png",
+      "small_path": "ui/node_icons/battlefield/moving_formation_64.png"
+    },
+    {
+      "id": "boss_gate",
+      "label_ko": "보스 관문",
+      "category": "battlefield",
+      "path": "ui/node_icons/battlefield/boss_gate_256.png",
+      "small_path": "ui/node_icons/battlefield/boss_gate_64.png"
+    },
+    {
+      "id": "return_gate",
+      "label_ko": "귀환 관문",
+      "category": "battlefield",
+      "path": "ui/node_icons/battlefield/return_gate_256.png",
+      "small_path": "ui/node_icons/battlefield/return_gate_64.png"
+    },
+    {
+      "id": "reward_node",
+      "label_ko": "보상 노드",
+      "category": "battlefield",
+      "path": "ui/node_icons/battlefield/reward_node_256.png",
+      "small_path": "ui/node_icons/battlefield/reward_node_64.png"
+    },
+    {
+      "id": "locked_node",
+      "label_ko": "잠긴 노드",
+      "category": "battlefield",
+      "path": "ui/node_icons/battlefield/locked_node_256.png",
+      "small_path": "ui/node_icons/battlefield/locked_node_64.png"
+    },
+    {
+      "id": "active_node",
+      "label_ko": "현재 노드",
+      "category": "battlefield",
+      "path": "ui/node_icons/battlefield/active_node_256.png",
+      "small_path": "ui/node_icons/battlefield/active_node_64.png"
+    }
+  ],
+  "frames": [
+    {
+      "id": "locked",
+      "label_ko": "잠금",
+      "path": "ui/node_icons/node_frames/frame_locked_256.png"
+    },
+    {
+      "id": "available",
+      "label_ko": "해금 가능",
+      "path": "ui/node_icons/node_frames/frame_available_256.png"
+    },
+    {
+      "id": "selected",
+      "label_ko": "선택",
+      "path": "ui/node_icons/node_frames/frame_selected_256.png"
+    },
+    {
+      "id": "mastered",
+      "label_ko": "완성",
+      "path": "ui/node_icons/node_frames/frame_mastered_256.png"
+    }
+  ]
+}
