@@ -7,7 +7,7 @@ const index=read('index.html');
 const tutorial=read('tutorial_runtime_v11_49.js');
 
 if(!index.includes('tutorial_runtime_v11_49.js'))throw new Error('tutorial runtime is not loaded');
-if(!tutorial.includes("const VERSION='11.49.8-tutorial'"))throw new Error('guided tutorial version mismatch');
+if(!tutorial.includes("const VERSION='11.49.17-tutorial'"))throw new Error('guided tutorial version mismatch');
 if(!tutorial.includes("const META_KEY='xianxia_tutorial_guided_v2'"))throw new Error('guided tutorial resume state missing');
 if(!tutorial.includes("const GUIDE_DONE_KEY='blackwind-first-entry'"))throw new Error('tutorial graduation state missing');
 if(!tutorial.includes("return Math.max(0,+s?.M?.herb||0)+Math.max(0,+s?.run?.h0||0)"))
@@ -26,6 +26,12 @@ if(!tutorial.includes("mapGateTarget('blackwind')")||!tutorial.includes("areaPic
   throw new Error('Blackwind gate/selection guidance missing');
 if(!tutorial.includes("hub.subscribe('guided-onboarding-tutorial',frame,95)"))
   throw new Error('guided tutorial is not on shared frame hub');
+if(!tutorial.includes("key:'feature-spirit'")||!tutorial.includes('포획 게이지를 100%'))
+  throw new Error('spirit capture feature tutorial missing');
+if(!tutorial.includes("key:'feature-vein'")||!tutorial.includes('총 3초'))
+  throw new Error('vein mining feature tutorial missing');
+if(!tutorial.includes('meta.spiritTutorialDone')||!tutorial.includes('meta.veinTutorialDone'))
+  throw new Error('feature tutorial completion persistence missing');
 if(!tutorial.includes("mini.textContent='길잡이'"))
   throw new Error('closable tutorial reopen control missing');
 if(!tutorial.includes("classList.add('v1150-focus')"))

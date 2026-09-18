@@ -796,7 +796,7 @@ function slash(x1,y1,x2,y2,color='#e9f4ff'){
 function drop(type,x,y,value=1,grade=null){
   if(type==='h'&&grade==null){
     const index=areaIndex();
-    grade=index===0?0:index===1?(Math.random()<.78?1:0):(Math.random()<.72?2:1);
+    grade=index===0?0:index===1?(Math.random()<.78?1:0):index===2?(Math.random()<.12?2:1):(Math.random()<.72?2:1);
   }
   objects.push({type,x,y,r:type==='h'?8:7,value,grade,pulse:Math.random()*6.28});
 }
