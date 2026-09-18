@@ -5,8 +5,8 @@ const root=process.argv[2]||'.';
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const index=read('index.html');
 const kernel=read('runtime_kernel_v11_45.js');
-if(!index.includes('BUILD 11.49.4'))throw new Error('test build label is not 11.49.4');
-if(!kernel.includes("const BUILD='11.49.4'"))throw new Error('canonical test build is not 11.49.4');
+if(!index.includes('BUILD 11.49.5'))throw new Error('test build label is not 11.49.5');
+if(!kernel.includes("const BUILD='11.49.5'"))throw new Error('canonical test build is not 11.49.5');
 const flat=[
   'runtime_frame_hub_v11_47.js',
   'game_runtime_v11_45.js',

@@ -26,9 +26,11 @@ if(!(hubPos>=0&&gamePos>hubPos&&tutorialPos>gamePos&&explorePos>tutorialPos))
   throw new Error('frame hub/game/tutorial load order is invalid');
 
 if((hub.match(/requestAnimationFrame\s*\(frame\)/g)||[]).length!==1)
-  throw new Error('frame hub must own exactly one continuous RAF');
-if(!hub.includes("const ACTIVE_FPS=60")||!hub.includes("const IDLE_FPS=8"))
-  throw new Error('frame pacing limits are missing');
+  throw new Error('frame hub must own exactly one active continuous RAF');
+if(!hub.includes("const ACTIVE_FPS=60")||!hub.includes("const IDLE_FPS=0"))
+  throw new Error('active/idle frame pacing is invalid');
+if(!hub.includes("idleEventDriven:IDLE_FPS===0"))
+  throw new Error('idle event-driven mode is missing');
 if(!hub.includes("document.addEventListener('visibilitychange'"))
   throw new Error('hidden-tab frame suspension is missing');
 if(!hub.includes("D.frameSnapshot"))
@@ -45,17 +47,31 @@ if(ink.includes('requestAnimationFrame(draw)')||ink.includes('__xianxiaDebug?.sn
   throw new Error('ink runtime still owns a private frame/snapshot loop');
 if(!ink.includes("hub.subscribe('ink-render',drawFrame,25)"))
   throw new Error('ink renderer is not subscribed to the shared frame');
-if(ink.includes('drawImage(img,0,0,W,H)'))
-  throw new Error('ink renderer still redraws the full background bitmap every frame');
-if(!ink.includes('function renderBounds(s)')||!ink.includes('function clipBounds(c,r)'))
-  throw new Error('ink renderer viewport clipping is missing');
+if(ink.includes('c.width=W;c.height=H')||ink.includes('clearRect(0,0,W,H)'))
+  throw new Error('ink renderer still allocates/clears a full-world backing canvas');
+for(const token of ['function viewportMetrics(s)','function ensureViewport(m)','function setWorldTransform(m)','function visible(x,y,pad=120)','maxPixels:2600000','dprCap:1.5']){
+  if(!ink.includes(token))throw new Error('viewport renderer missing '+token);
+}
+if(ink.includes('function renderBounds(s)')||ink.includes('function clipBounds(c,r)'))
+  throw new Error('legacy full-world clip renderer survived');
+if(!ink.includes("filter=hit?'brightness(2.15) saturate(.3)':'none'"))
+  throw new Error('per-enemy default drop-shadow filter survived');
 if(!ink.includes('function drawGatherRings(s,t)'))
-  throw new Error('gather rings were not merged into the ink renderer');
+  throw new Error('gather rings are not owned by the ink renderer');
 
 if(extras.includes('function makeGatherLayer')||extras.includes('drawGatherRings')||extras.includes('requestAnimationFrame(drawGatherRings)'))
   throw new Error('progression extras still owns the full-world gather canvas/RAF');
 if(theme.includes('requestAnimationFrame(renderOverlay)'))
   throw new Error('hidden legacy canvas overlay RAF is still active');
+
+if(world.includes('matrix(')||world.includes('will-change:transform'))
+  throw new Error('full-world CSS camera compositor survived');
+if(!world.includes("mode.cameraOwner='viewport-renderer'"))
+  throw new Error('camera is not publishing viewport ownership');
+if(!explore.includes('body.v1133-run #cv{display:none!important;opacity:0!important}'))
+  throw new Error('base canvas is still composited during combat');
+if(explore.includes('layer.style.width=')||explore.includes('ink.width=Math.round(W*dpr)'))
+  throw new Error('exploration runtime still forces full-world canvas sizing');
 
 const checks=[
   ['exploration runtime',explore,'requestAnimationFrame(frame)','function frame(){'],
@@ -80,4 +96,4 @@ if(!resultFlow.includes("hub.subscribe('result-flow',frame,60)"))throw new Error
 if(!visual.includes("hub.subscribe('visual-state',visualFrame,70)"))throw new Error('visual-state priority changed');
 if(!tutorial.includes("hub.subscribe('first-run-tutorial',frame,80)"))throw new Error('tutorial priority changed');
 
-console.log('frame ownership validation: OK');
+console.log('frame ownership + viewport renderer validation: OK');

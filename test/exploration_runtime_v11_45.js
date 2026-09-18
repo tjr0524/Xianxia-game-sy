@@ -41,7 +41,7 @@ body.v1133-run .layout{display:block!important;width:100%!important;height:100%!
 body.v1133-run .arena-card{position:fixed!important;z-index:1000!important;inset:0!important;width:100vw!important;height:100dvh!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:#101713!important;overflow:hidden!important}
 body.v1133-run #game{position:absolute!important;inset:0!important;width:100vw!important;height:100dvh!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:hidden!important;background:#101713!important}
 body.v1133-run #game canvas{max-width:none!important;max-height:none!important;touch-action:none!important}
-body.v1133-run #cv{opacity:0!important}
+body.v1133-run #cv{display:none!important;opacity:0!important}
 body.v1133-run #v19DangerSvg,body.v1133-run #v19DangerBanner{display:none!important}
 body.v1133-run .danger-label{z-index:28!important;left:50%!important;top:calc(env(safe-area-inset-top) + 14px)!important;transform:translateX(-50%)!important;font-size:11px!important;white-space:nowrap!important}
 #v1133Backdrop{position:absolute;z-index:0;inset:-4%;pointer-events:none;background-position:center;background-size:cover;background-repeat:no-repeat;filter:saturate(.88) contrast(.96) brightness(.91);transform:scale(1.04)}
@@ -105,35 +105,16 @@ function makeHud(){
   return hud;
 }
 
-function layers(){return [cv,$('#v1131InkLayer'),$('#v1132GatherLayer')].filter(Boolean)}
 function clearLayerStyles(){
-  for(const layer of layers()){
-    for(const key of ['position','left','top','right','bottom','width','height','maxWidth','maxHeight','transform','transformOrigin'])layer.style[key]='';
-  }
+  const layer=$('#v1131InkLayer');
+  if(!layer)return;
+  for(const key of ['position','left','top','right','bottom','width','height','maxWidth','maxHeight','transform','transformOrigin'])layer.style[key]='';
 }
-
 function patchInkRuntime(){
-  const ink=$('#v1131InkLayer'),runtime=window.__xianxiaInkRuntime,ctx=runtime?.ctx;
-  if(!ink||!ctx)return;
-  if(!state.hires&&ink.width===W&&ink.height===H){
-    const dpr=1;
-    ink.width=Math.round(W*dpr);ink.height=Math.round(H*dpr);
-    ctx.setTransform(dpr,0,0,dpr,0,0);ctx.imageSmoothingEnabled=true;state.hires=dpr;
-  }
-  if(state.patched)return;
-  const raw=ctx.drawImage.bind(ctx);
-  ctx.drawImage=(...args)=>{
-    if(state.active&&args.length>=3){
-      const src=String(args[0]?.currentSrc||args[0]?.src||'');
-      // Background is now rendered in the same world canvas as actors.
-      if(args.length===9&&/player_core|qingyun_(stone_boar|wind_wolf)|blackwind_(horned_yak|ink_panther)|blood_(armored_bear|ember_fox)|thunder_(stone_rhino|lightning_leopard)/.test(src)){
-        const k=1,dx=args[5],dy=args[6],dw=args[7],dh=args[8],ground=dy+dh;
-        args[7]=dw*k;args[8]=dh*k;args[5]=dx+(dw-args[7])/2;args[6]=ground-args[8];
-      }
-    }
-    return raw(...args);
-  };
+  const runtime=window.__xianxiaInkRuntime;
+  if(!runtime)return;
   state.patched=true;
+  state.hires=runtime.renderScale||1;
 }
 
 function activate(s){
@@ -153,45 +134,6 @@ function deactivate(){
   buildBadge(`BUILD ${VERSION} · CAM ✓`);
 }
 
-function viewMetrics(){
-  const vw=Math.max(1,window.innerWidth||document.documentElement.clientWidth||390);
-  const vh=Math.max(1,window.innerHeight||document.documentElement.clientHeight||844);
-  const portrait=vh>vw;
-  const viewH=960;
-  const scale=vh/viewH;
-  return {vw,vh,portrait,scale,viewW:vw/scale,viewH};
-}
-function updateLead(p,m){
-  if(state.prevPX==null){state.prevPX=p.x;state.prevPY=p.y;return}
-  const dx=p.x-state.prevPX,dy=p.y-state.prevPY;state.prevPX=p.x;state.prevPY=p.y;
-  const mag=Math.hypot(dx,dy);let tx=0,ty=0;
-  if(mag>.02){tx=dx/mag*m.viewW*0.08;ty=dy/mag*m.viewH*0.08}
-  state.leadX+=(tx-state.leadX)*.16;state.leadY+=(ty-state.leadY)*.16;
-  if(mag<.01){state.leadX*=.90;state.leadY*=.90}
-}
-function updateCamera(s){
-  const p=s.P||{x:W/2,y:H/2},m=viewMetrics();updateLead(p,m);
-  state.viewW=m.viewW;state.viewH=m.viewH;state.scale=m.scale;
-  const focusX=p.x+state.leadX,focusY=p.y+state.leadY;
-  if(!state.ready){state.camX=p.x;state.camY=p.y;state.ready=true;state.cameraStamp=performance.now()}
-  const deadX=m.viewW*0.08,deadY=m.viewH*0.06;
-  let tx=state.camX,ty=state.camY;
-  if(focusX<state.camX-deadX)tx=focusX+deadX;else if(focusX>state.camX+deadX)tx=focusX-deadX;
-  if(focusY<state.camY-deadY)ty=focusY+deadY;else if(focusY>state.camY+deadY)ty=focusY-deadY;
-  const halfW=m.viewW/2,halfH=m.viewH/2;
-  tx=clamp(tx,halfW,W-halfW);ty=clamp(ty,halfH,H-halfH);
-  const now=performance.now(),dt=Math.min(.08,Math.max(.001,(now-(state.cameraStamp||now))/1000));state.cameraStamp=now;
-  const alpha=1-Math.exp(-dt/0.14);
-  state.camX+=(tx-state.camX)*alpha;state.camY+=(ty-state.camY)*alpha;
-  state.camX=clamp(state.camX,halfW,W-halfW);state.camY=clamp(state.camY,halfH,H-halfH);
-  state.left=m.vw/2-state.camX*m.scale;state.top=m.vh/2-state.camY*m.scale;
-  for(const layer of layers()){
-    layer.style.position='absolute';layer.style.left=`${state.left}px`;layer.style.top=`${state.top}px`;
-    layer.style.right='auto';layer.style.bottom='auto';layer.style.width=`${W*m.scale}px`;layer.style.height=`${H*m.scale}px`;
-    layer.style.maxWidth='none';layer.style.maxHeight='none';layer.style.transform='none';layer.style.transformOrigin='0 0';
-  }
-  buildBadge(`BUILD ${window.__XIANXIA_BUILD__||VERSION} · CAM ${m.scale.toFixed(2)}× · 960H ✓`);
-}
 function worldToScreen(x,y){return{x:state.left+x*state.scale,y:state.top+y*state.scale}}
 
 function guidePosition(player,target,vw,vh){
@@ -256,7 +198,7 @@ function subscribeFrames(){
     hub.subscribe('exploration-lifecycle',lifecycleFrame,10);
     hub.subscribe('exploration-hud',hudFrame,30);
     state.frameOwner='shared-hub';
-    state.cameraOwner='world-wrapper';
+    state.cameraOwner='viewport-renderer';
     return;
   }
   function fallback(){

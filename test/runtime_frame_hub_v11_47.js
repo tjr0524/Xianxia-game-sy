@@ -1,8 +1,9 @@
 (()=>{
 'use strict';
-const VERSION='11.49.4';
+const VERSION='11.49.5';
 const ACTIVE_FPS=60;
-const IDLE_FPS=8;
+const IDLE_FPS=0;
+const FRAME_MS=1000/ACTIVE_FPS;
 if(window.__xianxiaFrameHub?.version===VERSION)return;
 
 const subscribers=new Map();
@@ -12,10 +13,10 @@ let rafId=0;
 let frames=0;
 let rafCallbacks=0;
 let snapshots=0;
+let skipped=0;
 let lastSnapshot=null;
 let orderSeq=0;
-let lastRaf=0;
-let accumulator=0;
+let lastDispatch=0;
 let forceNext=true;
 
 function rebuild(){
@@ -26,8 +27,7 @@ function subscribe(name,fn,priority=100){
   if(typeof fn!=='function')throw new TypeError('frame subscriber must be a function');
   const key=String(name||`subscriber-${++orderSeq}`);
   subscribers.set(key,{name:key,fn,priority:+priority||0,order:++orderSeq});
-  dirty=true;
-  wake();
+  dirty=true;wake();
   return ()=>{if(subscribers.delete(key)){dirty=true;wake()}};
 }
 function captureSnapshot(){
@@ -59,18 +59,15 @@ function frame(now){
   rafId=0;
   if(document.hidden)return;
   rafCallbacks++;
-  const delta=lastRaf?Math.min(250,Math.max(0,now-lastRaf)):1000/ACTIVE_FPS;
-  lastRaf=now;
-  accumulator+=delta;
 
   const wasActive=lastSnapshot?.phase==='run';
-  const interval=1000/(wasActive?ACTIVE_FPS:IDLE_FPS);
-  if(!forceNext&&accumulator+.01<interval){
+  if(wasActive&&!forceNext&&lastDispatch&&now-lastDispatch<FRAME_MS-.35){
+    skipped++;
     schedule();
     return;
   }
-  accumulator=accumulator>=interval?accumulator%interval:0;
   forceNext=false;
+  lastDispatch=now;
   frames++;
   if(dirty)rebuild();
 
@@ -81,41 +78,34 @@ function frame(now){
   const active=lastSnapshot?.phase==='run';
   const postMeta={now,frame:frames,stage:'post',targetFps:active?ACTIVE_FPS:IDLE_FPS};
   for(const sub of ordered)if(sub.priority>=0)invoke(sub,lastSnapshot,postMeta);
-  schedule();
+
+  if(active)schedule();
 }
 function stats(){
   if(dirty)rebuild();
   return {
-    version:VERSION,
-    frames,
-    rafCallbacks,
-    snapshots,
-    activeFps:ACTIVE_FPS,
-    idleFps:IDLE_FPS,
-    hidden:document.hidden,
+    version:VERSION,frames,rafCallbacks,snapshots,skipped,
+    activeFps:ACTIVE_FPS,idleFps:IDLE_FPS,hidden:document.hidden,
     subscribers:ordered.map(x=>({name:x.name,priority:x.priority})),
-    running:!!rafId
+    running:!!rafId,
+    idleEventDriven:IDLE_FPS===0
   };
 }
+for(const type of ['pointerdown','click','keydown']){
+  document.addEventListener(type,()=>{if(lastSnapshot?.phase!=='run')wake()},{capture:true,passive:true});
+}
+window.addEventListener('resize',wake,{passive:true});
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden){
     if(rafId)cancelAnimationFrame(rafId);
-    rafId=0;
-    lastRaf=0;
-    accumulator=0;
+    rafId=0;lastDispatch=0;
     return;
   }
-  lastRaf=0;
-  accumulator=0;
-  forceNext=true;
-  schedule();
+  lastDispatch=0;forceNext=true;schedule();
 });
 
 window.__xianxiaFrameHub={
-  version:VERSION,
-  subscribe,
-  wake,
-  stats,
+  version:VERSION,subscribe,wake,stats,
   get snapshot(){return lastSnapshot}
 };
 schedule();
