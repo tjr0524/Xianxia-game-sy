@@ -125,6 +125,32 @@ function visible(x,y,pad=120){
 function drawGatherRings(s,t){const c=S.ctx;for(const o of s.objects||[]){if(o.type!=='h'||!visible(o.x,o.y,40))continue;const g=Math.max(0,Math.min(2,o.grade||0)),r=[16,18,20][g],pulse=1+Math.sin(t*3+o.x*.04+o.y*.03)*.04;c.save();c.globalAlpha=[.65,.72,.82][g];c.strokeStyle=['#4e8068','#4f7899','#8a609f'][g];c.lineWidth=[1.6,1.9,2.2][g];c.beginPath();c.ellipse(o.x,o.y+17,r*pulse,r*.42*pulse,0,0,Math.PI*2);c.stroke();c.globalAlpha=[.10,.13,.17][g];c.fillStyle=c.strokeStyle;c.fill();c.restore()}}
 function drawPortal(t){if(!visible(EXIT.x,EXIT.y,90))return;shadow(EXIT.x,EXIT.y+2,32,6,.18);centered('objects',3,6,frame(t,7,6),EXIT.x,EXIT.y-12,74,false,.9)}
 function drawObjects(s,t){for(const o of s.objects||[]){if(!visible(o.x,o.y,70))continue;if(o.type==='h'){const row=Math.max(0,Math.min(2,o.grade||0)),ground=o.y+16;shadow(o.x,ground,9,2.5,.13);anchored('objects',row,4,frame(t,1.55,4,(o.x+o.y)*.0015),o.x,ground,40,false,.96,String(row))}else{const ground=o.y+14;shadow(o.x,ground,9,3,.15);anchored('objects',4,4,0,o.x,ground,34,false,1,'4')}}if(s.vein&&visible(s.vein.x,s.vein.y,90)){const ground=s.vein.y+22;shadow(s.vein.x,ground,18,5,.2);anchored('objects',4,4,3,s.vein.x,ground,58,false,1,'4')}}
+function drawVeinProgress(s,t){
+  const v=s.vein,p=s.P;
+  if(!v||!p||!visible(v.x,v.y,120))return;
+  const c=S.ctx,progress=Math.max(0,Math.min(1,(+v.progress||0)/3));
+  const active=dist(v,p)<((+v.r||26)+(+p.r||11)+10);
+  const w=84,barY=v.y-55,pulse=.86+Math.sin(t*6)*.12;
+  c.save();
+  c.globalAlpha=active?pulse:.55;
+  c.strokeStyle=active?'#8fe7ff':'#9fb9c4';
+  c.lineWidth=active?2.4:1.5;
+  c.setLineDash(active?[]:[5,4]);
+  c.beginPath();c.ellipse(v.x,v.y+21,active?34:29,active?11:8,0,0,Math.PI*2);c.stroke();
+  c.setLineDash([]);
+  c.globalAlpha=.94;c.fillStyle='rgba(7,18,25,.84)';c.fillRect(v.x-w/2,barY,w,10);
+  c.fillStyle=active?'#8fe7ff':'#6f9fb4';c.fillRect(v.x-w/2+1,barY+1,(w-2)*progress,8);
+  c.strokeStyle='rgba(225,247,255,.92)';c.lineWidth=1;c.strokeRect(v.x-w/2+.5,barY+.5,w-1,9);
+  c.font='800 11px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+  c.textAlign='center';c.textBaseline='middle';
+  c.strokeStyle='rgba(20,34,42,.9)';c.lineWidth=3.5;c.fillStyle='#effbff';
+  const label=active?'채굴 '+Math.round(progress*100)+'%':progress>0?'채굴 대기 '+Math.round(progress*100)+'%':'영맥 · 접근해 채굴';
+  c.strokeText(label,v.x,barY-9);c.fillText(label,v.x,barY-9);
+  c.font='700 9px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+  c.fillStyle='#cfe9f4';c.lineWidth=3;
+  c.strokeText('매장 영석 '+Math.max(0,+v.stock||0),v.x,barY+20);c.fillText('매장 영석 '+Math.max(0,+v.stock||0),v.x,barY+20);
+  c.restore();
+}
 function drawHazards(s){const c=S.ctx;for(const h of s.hazards||[]){if(!visible(h.x,h.y,(h.r||0)+80))continue;c.save();const p=h.struck?1:1-Math.max(0,h.t)/(h.ttl||1);c.globalAlpha=h.struck?.8:.25+p*.45;c.strokeStyle=h.struck?'#eaf4ff':'#495b82';c.lineWidth=h.struck?4:2;c.setLineDash(h.struck?[]:[6,6]);c.beginPath();c.arc(h.x,h.y,h.r*(.82+p*.18),0,Math.PI*2);c.stroke();if(h.struck){c.beginPath();c.moveTo(h.x-7,h.y-60);c.lineTo(h.x+5,h.y-24);c.lineTo(h.x-3,h.y-24);c.lineTo(h.x+9,h.y);c.stroke()}c.restore()}}
 const enemyAssets={
   qingyun:{basic:'qingyun_basic',guard:'qingyun_guard',chaser:'qingyun_chaser',attacker:'qingyun_chaser',elite:'qingyun_guard'},
@@ -249,6 +275,7 @@ function drawFrame(s,meta){
   drawHazards(s);
   drawGatherRings(s,t);
   drawObjects(s,t);
+  drawVeinProgress(s,t);
   drawVeinFx(now);
   detectCasts(s,now);
   drawEnemies(s,t,now);
