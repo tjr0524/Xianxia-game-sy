@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "1.1.1",
   "style": "expressive ink wash with pale mineral color",
   "arena_camera": "three-quarter top-down orthographic",
   "anchor_policy": "alpha-bounds with fixed bottom-center ground anchor",
@@ -397,6 +397,14 @@
       "file": "source/trait_fx_atlas_v1.png",
       "rows": [
         {
+          "name": "enhanced",
+          "frames": 4
+        },
+        {
+          "name": "rare",
+          "frames": 4
+        },
+        {
           "name": "frenzy",
           "frames": 4
         },
@@ -410,6 +418,10 @@
         },
         {
           "name": "devour",
+          "frames": 4
+        },
+        {
+          "name": "pack_leader",
           "frames": 4
         }
       ]
@@ -430,7 +442,7 @@
     "divider": "runtime/ui/divider.png"
   },
   "runtime_bindings": {
-    "version": "11.49.6",
+    "version": "11.49.10",
     "enemy_roles": {
       "qingyun": {
         "basic": "qingyun_basic",
@@ -467,10 +479,10 @@
       "rogue": "wandering_rival"
     },
     "rare_traits": {
-      "frenzy": 0,
-      "iron": 1,
-      "howl": 2,
-      "devour": 3
+      "frenzy": 2,
+      "iron": 3,
+      "howl": 4,
+      "devour": 5
     }
   }
 }
