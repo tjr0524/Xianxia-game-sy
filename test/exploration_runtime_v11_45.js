@@ -61,18 +61,20 @@ body.v1133-run #v1133Hud{display:block}
 #v1133Return.returning{background:rgba(186,211,195,.9);border-color:rgba(79,119,102,.48)}
 #v1133Return.urgent{border-color:rgba(180,76,57,.78);background:rgba(246,222,198,.94);color:#7e3029;animation:v1133ReturnUrgent .72s ease-in-out infinite}
 @keyframes v1133ReturnUrgent{0%,100%{transform:scale(1);box-shadow:0 5px 18px rgba(20,28,24,.2),0 0 0 0 rgba(189,70,51,0)}50%{transform:scale(1.07);box-shadow:0 7px 24px rgba(120,35,27,.30),0 0 0 7px rgba(189,70,51,.16)}}
-#v1133Guide{position:absolute;z-index:32;display:none;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(235,230,213,.9);border:1px solid rgba(74,98,86,.48);box-shadow:0 5px 17px rgba(20,28,24,.24);backdrop-filter:blur(5px);pointer-events:none}
-#v1133GuideArrow{position:absolute;inset:0;transform-origin:50% 50%}
-#v1133GuideArrow::before{content:"";position:absolute;left:15px;top:10px;width:0;height:0;border-top:11px solid transparent;border-bottom:11px solid transparent;border-left:18px solid #527a6d;filter:drop-shadow(0 1px 1px rgba(255,255,255,.55))}
-#v1133GuideLabel{position:absolute;left:50%;top:47px;transform:translateX(-50%);padding:2px 6px;border-radius:999px;background:rgba(235,230,213,.88);font-size:8px;font-weight:800;white-space:nowrap;color:#385448}
+#v1133Guide{position:absolute;z-index:32;display:none;width:52px;height:52px;margin:-26px 0 0 -26px;pointer-events:none}
+#v1133GuideArrow{position:absolute;left:50%;top:54%;width:31px;height:23px;margin:-11.5px 0 0 -15.5px;transform-origin:50% 50%}
+#v1133GuideArrow svg{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 2px 2px rgba(49,29,10,.28));animation:v1133GuidePulse .9s ease-in-out infinite}
+#v1133GuideArrow path{fill:rgba(255,222,164,.97);stroke:rgba(126,72,34,.95);stroke-width:2.2;stroke-linejoin:round}
+#v1133GuideLabel{position:absolute;left:50%;top:-2px;transform:translateX(-50%);padding:2px 6px;border-radius:999px;background:rgba(54,38,23,.72);font-size:8px;font-weight:800;white-space:nowrap;color:#ffe6b8;text-shadow:0 1px 2px rgba(0,0,0,.32)}
+@keyframes v1133GuidePulse{0%,100%{opacity:.84;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
 @media(max-width:560px){
  #v1133Loot{left:calc(env(safe-area-inset-left) + 9px);top:calc(env(safe-area-inset-top) + 9px);min-width:112px;padding:7px 9px;font-size:10px}
  #v1133Timer{right:calc(env(safe-area-inset-right) + 9px);top:calc(env(safe-area-inset-top) + 9px);font-size:11px}
  #v1133Objective{left:calc(env(safe-area-inset-left) + 9px);top:calc(env(safe-area-inset-top) + 79px);max-width:64vw}
  #v1133Hp{width:min(300px,62vw);bottom:calc(env(safe-area-inset-bottom) + 12px)}
  #v1133Return{right:calc(env(safe-area-inset-right) + 9px);bottom:calc(env(safe-area-inset-bottom) + 10px);min-width:66px;min-height:38px}
- #v1133Guide{width:40px;height:40px;margin:-20px 0 0 -20px}
- #v1133GuideArrow::before{left:14px;top:9px;border-top-width:10px;border-bottom-width:10px;border-left-width:16px}
+ #v1133Guide{width:48px;height:48px;margin:-24px 0 0 -24px}
+ #v1133GuideArrow{width:29px;height:21px;margin:-10.5px 0 0 -14.5px}
 }
 `;
   document.head.appendChild(style);
@@ -100,7 +102,7 @@ function makeHud(){
    <div id="v1133Objective"></div>
    <div id="v1133Hp"><div id="v1133HpText">36 / 36</div><div id="v1133HpTrack"><i id="v1133HpFill"></i></div></div>
    <button id="v1133Return" type="button">귀환</button>
-   <div id="v1133Guide"><div id="v1133GuideArrow"></div><span id="v1133GuideLabel">귀환진</span></div>`;
+   <div id="v1133Guide"><div id="v1133GuideArrow"><svg viewBox="-9 -11 27 22" aria-hidden="true"><path d="M16 0 L-7 -9 L-2 0 L-7 9 Z"/></svg></div><span id="v1133GuideLabel">귀환진</span></div>`;
   game.appendChild(hud);
   hud.querySelector('#v1133Return').addEventListener('pointerdown',e=>e.stopPropagation(),true);
   hud.querySelector('#v1133Return').onclick=e=>{e.preventDefault();e.stopPropagation();state.returning=true;ret?.click()};
