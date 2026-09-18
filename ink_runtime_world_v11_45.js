@@ -54,7 +54,7 @@ function envRandFactory(seed){let s=seed>>>0;return()=>{s=(s*1664525+1013904223)
 const envLayouts={};
 function buildEnvLayout(area){
   if(envLayouts[area])return envLayouts[area];
-  const defs=ENV_FILES[area]||[],rnd=envRandFactory(envSeed(area)),out=[],counts={prop:8,decal:5,fx:3};
+  const defs=ENV_FILES[area]||[],rnd=envRandFactory(envSeed(area)),out=[],counts={prop:24,decal:14,fx:6};
   for(const kind of ['decal','prop','fx']){
     const pool=defs.filter(x=>x.kind===kind),count=counts[kind]||0;
     if(!pool.length)continue;
