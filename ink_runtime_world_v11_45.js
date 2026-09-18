@@ -152,7 +152,7 @@ function drawEnemies(s,t,now){
     if(e.rare){
       const cc=S.ctx;cc.save();cc.globalAlpha=.24;cc.strokeStyle=area==='blood'?'#ba493b':'#ad8b43';cc.lineWidth=2;cc.beginPath();cc.arc(x,y,31,0,Math.PI*2);cc.stroke();cc.restore();
     }
-    drawEnemyMarker(x,y,h,e.type==='elite',e.rare);
+    if(e.type!=='spirit')drawEnemyMarker(x,y,h,e.type==='elite',e.rare);
     const ground=y+22;shadow(x,ground,e.type==='rat'?15:e.type==='spirit'?19:25,e.type==='rat'?3:5,.22);
     drawTraitFx(tr,t,x,y,h);
     const hit=now<tr.hitUntil,filter=hit?'brightness(2.15) saturate(.3)':'none';
