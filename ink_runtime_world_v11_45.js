@@ -205,7 +205,7 @@ function drawMortalHerbGuide(s,t){
   for(const h of herbs){const d=Math.hypot(h.x-p.x,h.y-p.y);if(d<best){best=d;target=h}}
   if(!target||best<34)return;
   const dx=target.x-p.x,dy=target.y-p.y,n=Math.hypot(dx,dy)||1,ux=dx/n,uy=dy/n;
-  const x=p.x+ux*62,y=p.y+uy*62,angle=Math.atan2(uy,ux),pulse=.84+.16*Math.sin(t*5.4);
+  const x=p.x+ux*108,y=p.y+uy*108,angle=Math.atan2(uy,ux),pulse=.84+.16*Math.sin(t*5.4);
   const c=S.ctx;c.save();c.translate(x,y);c.rotate(angle);c.globalAlpha=pulse;
   c.fillStyle='rgba(225,246,210,.96)';c.strokeStyle='rgba(38,91,60,.92)';c.lineWidth=2.2;
   c.beginPath();c.moveTo(16,0);c.lineTo(-7,-9);c.lineTo(-2,0);c.lineTo(-7,9);c.closePath();c.fill();c.stroke();c.restore();
