@@ -127,17 +127,14 @@ function rebuild(hud,skills){
   }
 }
 
-function update(){
-  const D=window.__xianxiaDebug;
-  let snap=null;
-  try{snap=D?.snapshot?.()}catch{}
+function update(snap){
   const hud=ensureHud();
-  if(!hud){requestAnimationFrame(update);return}
+  if(!hud)return;
 
   if(snap?.phase!=='run'||!snap.run){
     hud.style.display='none';
     signature='';observedMax={};previous={};
-    requestAnimationFrame(update);return;
+    return;
   }
   hud.style.display='';
 
@@ -171,10 +168,21 @@ function update(){
     }
     previous[id]=cd;
   }
-  requestAnimationFrame(update);
+}
+function subscribeFrame(){
+  const hub=window.__xianxiaFrameHub;
+  if(hub?.subscribe){
+    hub.subscribe('combat-cooldowns',update,50);
+    return;
+  }
+  function fallback(){
+    let snap=null;try{snap=window.__xianxiaDebug?.snapshot?.()||null}catch{}
+    update(snap);requestAnimationFrame(fallback);
+  }
+  requestAnimationFrame(fallback);
 }
 
 installStyle();
 ensureHud();
-requestAnimationFrame(update);
+subscribeFrame();
 })();

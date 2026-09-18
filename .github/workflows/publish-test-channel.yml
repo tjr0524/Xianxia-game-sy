@@ -1,0 +1,139 @@
+name: Publish test channel
+
+on:
+  push:
+    branches: [test]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-test-channel
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout stable main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: stable
+          fetch-depth: 1
+
+      - name: Checkout test source
+        uses: actions/checkout@v4
+        with:
+          ref: test
+          path: testsrc
+          fetch-depth: 1
+
+      - name: Validate flattened test runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check testsrc/game_runtime_v11_45.js
+          node --check testsrc/ink_runtime_world_v11_45.js
+          node --check testsrc/progression_runtime_v11_45.js
+          node --check testsrc/systems21_runtime_v11_45.js
+          node --check testsrc/progression_extras_runtime_v11_45.js
+          node --check testsrc/exploration_runtime_v11_45.js
+          node --check testsrc/runtime_preflight_v11_45_flat.js
+          node --check testsrc/runtime_postflight_v11_45_flat.js
+          node --check testsrc/runtime_frame_hub_v11_47.js
+          node --check testsrc/tree_camera_gesture_v11_44.js
+          node --check testsrc/tree_touch_fix_v11_37_4.js
+          node --check testsrc/tutorial_runtime_v11_49.js
+          node --check testsrc/exploration_world_v11_33_4.js
+          node --check testsrc/ui_runtime_v11_48.js
+          node --check testsrc/ui_polish_v11_38.js
+          node --check testsrc/map_v11_18.js
+          node --check testsrc/visual_v11_25.js
+          node --check testsrc/ui_feedback_v11_40.js
+          node --check testsrc/result_flow_v11_41.js
+          node --check testsrc/combat_cooldown_hud_v11_43.js
+          node testsrc/tools/validate_flat_runtime.js testsrc
+          node testsrc/tools/validate_frame_ownership.js testsrc
+          node testsrc/tools/validate_ui_ownership.js testsrc
+          node testsrc/tools/validate_tutorial.js testsrc
+          node testsrc/tools/validate_desktop_entry.js testsrc
+          node testsrc/tools/validate_tree_interaction.js testsrc
+          node testsrc/tools/validate_cache_versions.js testsrc
+
+      - name: Build /test channel
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf stable/test
+          mkdir -p stable/test
+          rsync -a --delete \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'test' \
+            testsrc/ stable/test/
+
+          python - <<'PY'
+          from pathlib import Path
+          import os, json
+
+          root = Path("stable/test")
+          index = root / "index.html"
+          text = index.read_text(encoding="utf-8")
+          version = json.loads((root / "version.json").read_text(encoding="utf-8"))
+          build = str(version.get("build") or "").strip()
+          if not build:
+              raise RuntimeError("test build is missing from version.json")
+
+          marker = """
+          <style id="test-channel-style">
+          #testChannelBadge{
+            position:fixed;z-index:2147483600;
+            top:calc(env(safe-area-inset-top) + 6px);right:8px;
+            padding:3px 7px;border:1px solid rgba(142,96,25,.42);
+            border-radius:999px;background:rgba(255,238,193,.92);
+            color:#79541c;font:700 9px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+            letter-spacing:.08em;pointer-events:auto;cursor:pointer;touch-action:manipulation;
+            box-shadow:0 2px 10px rgba(0,0,0,.12)
+          }
+          body.v22-combat-mode #testChannelBadge,
+          body.v1133-run #testChannelBadge,
+          body.v1141-result-mode #testChannelBadge{display:none}
+          </style>
+          """
+          if 'id="test-channel-style"' not in text:
+              text = text.replace("</head>", marker + "\n</head>")
+
+          badge = f'<div id="testChannelBadge">TEST {build}</div>'
+          if 'id="testChannelBadge"' not in text:
+              text = text.replace("<body", "<body", 1)
+              pos = text.find(">", text.find("<body"))
+              text = text[:pos+1] + "\n" + badge + text[pos+1:]
+
+          if "<title>" in text and f"[TEST {build}]" not in text:
+              text = text.replace("<title>", f"<title>[TEST {build}] ", 1)
+
+          index.write_text(text, encoding="utf-8")
+
+          (root / "test-channel.json").write_text(json.dumps({
+              "channel": "test",
+              "source_sha": os.environ.get("GITHUB_SHA", ""),
+              "build": build,
+          }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+          PY
+
+      - name: Publish test snapshot into main/test
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd stable
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add test
+          if git diff --cached --quiet; then
+            echo "Test channel already up to date."
+            exit 0
+          fi
+          git commit -m "Publish test channel from ${GITHUB_SHA::7}"
+          git push origin HEAD:main

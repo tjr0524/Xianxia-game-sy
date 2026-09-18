@@ -161,8 +161,7 @@ function onRunFinished(s){
     showResult();
   }
 }
-function frame(){
-  const s=snap();
+function frame(s){
   const phase=s?.phase||null;
   if(phase==='run'){
     captureView();
@@ -171,11 +170,22 @@ function frame(){
     onRunFinished(s);
   }
   priorPhase=phase;
-  requestAnimationFrame(frame);
+}
+function subscribeFrame(){
+  const hub=window.__xianxiaFrameHub;
+  if(hub?.subscribe){
+    hub.subscribe('result-flow',frame,60);
+    return;
+  }
+  function fallback(){
+    frame(snap());
+    requestAnimationFrame(fallback);
+  }
+  requestAnimationFrame(fallback);
 }
 function boot(){
   installStyles();badge();
-  requestAnimationFrame(frame);
+  subscribeFrame();
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
