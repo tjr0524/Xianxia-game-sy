@@ -382,7 +382,8 @@ function planCopy(plan){
 function objectiveData(){
   const index=areaIndex();
   if(M.settings.plan==='harvest'){
-    return {label:'영초 채집',value:totalHerbs(run),target:5+index*2,reward:`${HN[Math.min(2,index)]} 영초 +${2+index}`};
+    const target=index===2?6:5+index*2;
+    return {label:'영초 채집',value:totalHerbs(run),target,reward:`${HN[Math.min(2,index)]} 영초 +${2+index}`};
   }
   if(M.settings.plan==='hunt'){
     return {label:'요수 토벌',value:run?.beastKills||0,target:3+index,reward:`영석 +${Math.ceil(18*A().reward)}`};
