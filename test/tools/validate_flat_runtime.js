@@ -5,8 +5,12 @@ const root=process.argv[2]||'.';
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const index=read('index.html');
 const kernel=read('runtime_kernel_v11_45.js');
-if(!index.includes('BUILD 11.49.6'))throw new Error('test build label is not 11.49.6');
-if(!kernel.includes("const BUILD='11.49.6'"))throw new Error('canonical test build is not 11.49.6');
+const buildMatch=/const BUILD='([^']+)'/.exec(kernel);
+if(!buildMatch)throw new Error('canonical build marker missing');
+const build=buildMatch[1];
+if(!index.includes('BUILD '+build))throw new Error('index build label does not match canonical build '+build);
+const version=JSON.parse(read('version.json'));
+if(String(version.build||'')!==build)throw new Error('version.json build does not match canonical build '+build);
 const flat=[
   'runtime_frame_hub_v11_47.js',
   'game_runtime_v11_45.js',
