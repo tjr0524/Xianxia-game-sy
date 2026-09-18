@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.49.7-tutorial';
+const VERSION='11.49.8-tutorial';
 if(window.__xianxiaFirstRunTutorial?.version===VERSION)return;
 
 const D=window.__xianxiaDebug;
