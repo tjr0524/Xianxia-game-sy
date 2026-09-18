@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.49.8-tutorial';
+const VERSION='11.49.17-tutorial';
 if(window.__xianxiaFirstRunTutorial?.version===VERSION)return;
 
 const D=window.__xianxiaDebug;
@@ -283,6 +283,57 @@ function maybeGraduate(s){
     return true;
   }
   return false;
+}
+
+function markFeatureTutorialProgress(s){
+  if(!s)return;
+  if((+s.run?.mined||0)>0&&!meta.veinTutorialDone){
+    meta.veinTutorialDone=1;
+    if(closedKey==='feature-vein')closedKey='';
+    saveMeta();
+  }
+  if(lastSnap?.phase==='run'&&s.phase==='run'&&!meta.spiritTutorialDone){
+    const before=(lastSnap.enemies||[]).filter(e=>e.type==='spirit').length;
+    const now=(s.enemies||[]).filter(e=>e.type==='spirit').length;
+    if(before>now){
+      meta.spiritTutorialDone=1;
+      if(closedKey==='feature-spirit')closedKey='';
+      saveMeta();
+    }
+  }
+}
+
+function featureGuide(s){
+  if(s?.phase!=='run')return null;
+
+  if(!meta.spiritTutorialDone){
+    const spirit=(s.enemies||[]).find(e=>e.type==='spirit');
+    if(spirit){
+      const pct=Math.max(0,Math.min(100,Math.round((+spirit.bond||0)/1.3*100)));
+      return {
+        key:'feature-spirit',
+        kicker:'기능 튜토리얼 · 영수',
+        title:'영수는 쓰러뜨리는 적이 아니라 포획 대상입니다',
+        body:'영수 가까이 붙어 <strong>포획 게이지를 100%</strong>까지 채우세요. 일정 거리 밖으로 벗어나면 게이지가 천천히 줄고, 영수는 계속 달아나므로 따라붙어 거리를 유지해야 합니다.',
+        progress:'포획 진행도 '+pct+'% · 성공하면 해당 비경 등급 영초를 획득',
+        targets:[$('#game')]
+      };
+    }
+  }
+
+  if(!meta.veinTutorialDone&&s.vein){
+    const pct=Math.max(0,Math.min(100,Math.round((+s.vein.progress||0)/3*100)));
+    return {
+      key:'feature-vein',
+      kicker:'기능 튜토리얼 · 영맥',
+      title:'영맥 가까이에 머물러 자동 채굴하세요',
+      body:'영맥에 가까이 접근하면 채굴이 자동으로 진행됩니다. <strong>총 3초</strong> 동안 범위 안에 머물면 완료되며, 잠시 벗어나도 이미 채운 진행도는 유지됩니다.',
+      progress:'채굴 진행도 '+pct+'% · 매장 영석 '+Math.max(0,+s.vein.stock||0),
+      targets:[$('#game')]
+    };
+  }
+
+  return null;
 }
 
 function mandatoryGuide(s){
@@ -670,14 +721,19 @@ function softGuide(s){
 
 function guideFor(s){
   if(!s||!s.M)return null;
-  if(maybeGraduate(s))return {
-    key:'graduated',
-    kicker:'초행 가이드 완료',
-    title:'흑풍곡까지의 길을 익혔습니다',
-    body:'이제부터는 튜토리얼 없이 자유롭게 수련과 개척을 진행하세요.',
-    progress:'길잡이는 이 안내를 닫으면 더 이상 자동으로 나타나지 않습니다.',
-    targets:[]
-  };
+  const graduated=maybeGraduate(s);
+  if(graduated){
+    const feature=featureGuide(s);
+    if(feature)return feature;
+    return {
+      key:'graduated',
+      kicker:'초행 가이드 완료',
+      title:'흑풍곡까지의 길을 익혔습니다',
+      body:'이제부터는 자유롭게 진행합니다. 새 기능을 처음 만날 때만 짧은 기능 튜토리얼이 다시 나타납니다.',
+      progress:'영수 포획·영맥 채굴 같은 신규 상호작용은 최초 1회만 안내합니다.',
+      targets:[]
+    };
+  }
 
   const mandatory=mandatoryGuide(s);
   if(mandatory)return mandatory;
@@ -699,6 +755,7 @@ function frame(s){
   }
 
   markSwordRunSeen(s);
+  markFeatureTutorialProgress(s);
   const g=guideFor(s);
 
   if(g?.key==='graduated'&&meta.graduationShown){
