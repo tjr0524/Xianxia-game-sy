@@ -60,6 +60,7 @@ jobs:
           node testsrc/tools/validate_tutorial.js testsrc
           node testsrc/tools/validate_desktop_entry.js testsrc
           node testsrc/tools/validate_tree_interaction.js testsrc
+          node testsrc/tools/validate_cache_versions.js testsrc
 
       - name: Build /test channel
         shell: bash
@@ -100,21 +101,21 @@ jobs:
           if 'id="test-channel-style"' not in text:
               text = text.replace("</head>", marker + "\n</head>")
 
-          badge = '<div id="testChannelBadge">TEST 11.49.2</div>'
+          badge = '<div id="testChannelBadge">TEST 11.49.3</div>'
           if 'id="testChannelBadge"' not in text:
               text = text.replace("<body", "<body", 1)
               pos = text.find(">", text.find("<body"))
               text = text[:pos+1] + "\n" + badge + text[pos+1:]
 
-          if "<title>" in text and "[TEST 11.49.2]" not in text:
-              text = text.replace("<title>", "<title>[TEST 11.49.2] ", 1)
+          if "<title>" in text and "[TEST 11.49.3]" not in text:
+              text = text.replace("<title>", "<title>[TEST 11.49.3] ", 1)
 
           index.write_text(text, encoding="utf-8")
 
           (root / "test-channel.json").write_text(json.dumps({
               "channel": "test",
               "source_sha": os.environ.get("GITHUB_SHA", ""),
-              "build": "11.49.2",
+              "build": "11.49.3",
           }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
           PY
 
