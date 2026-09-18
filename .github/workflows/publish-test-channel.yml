@@ -55,6 +55,7 @@ jobs:
           node testsrc/tools/validate_flat_runtime.js testsrc
           node testsrc/tools/validate_frame_ownership.js testsrc
           node testsrc/tools/validate_ui_ownership.js testsrc
+          node testsrc/tools/validate_tutorial.js testsrc
 
       - name: Build /test channel
         shell: bash
