@@ -3,7 +3,9 @@
 'use strict';
 if(window.__xianxiaInkRuntime?.version==='11.31.2')return;
 const W=1800,H=2400,EXIT={x:900,y:1200},BASE='assets/ink_v1/';
-const CACHE=new URL(document.currentScript?.src||location.href).searchParams.get('v')||'dev';
+const SCRIPT_URL=new URL(document.currentScript?.src||location.href);
+const ENV_BASE=new URL(/\/test\//.test(SCRIPT_URL.pathname)?'../assets/region_env_v1/':'assets/region_env_v1/',SCRIPT_URL).href;
+const CACHE=SCRIPT_URL.searchParams.get('v')||'dev';
 const files={
  player:'source/player_core.png',objects:'source/world_objects.png',effects:'source/skill_effects.png',
  qingyun_guard:'source/qingyun_stone_boar.png',qingyun_chaser:'source/qingyun_wind_wolf.png',qingyun_basic:'source/qingyun_mist_goat_v1.png',
@@ -14,12 +16,83 @@ const files={
  bg_qingyun:'../ink_v2/runtime/backgrounds/qingyun.webp',bg_blackwind:'../ink_v2/runtime/backgrounds/blackwind.webp',
  bg_blood:'../ink_v2/runtime/backgrounds/blood.webp',bg_thunder:'../ink_v2/runtime/backgrounds/thunder.webp'
 };
-const S={version:'11.31.2',ready:false,error:null,images:{},layer:null,ctx:null,renderScale:1,bufferWidth:0,bufferHeight:0,dprCap:1.5,maxPixels:2600000,assetBindings:'11.49.10'};
+const ENV_FILES={
+ qingyun:[
+  {file:'qingyun/items/qingyun_01_r1c1_props.png',kind:'prop'},
+  {file:'qingyun/items/qingyun_11_r3c1_props.png',kind:'prop'},
+  {file:'qingyun/items/qingyun_15_r4c1_ground_decals.png',kind:'decal'},
+  {file:'qingyun/items/qingyun_21_r5c1_fx.png',kind:'fx'}
+ ],
+ blackwind:[
+  {file:'blackwind/items/blackwind_01_r1c1_props.png',kind:'prop'},
+  {file:'blackwind/items/blackwind_17_r5c1_props.png',kind:'prop'},
+  {file:'blackwind/items/blackwind_05_r2c1_ground_decals.png',kind:'decal'},
+  {file:'blackwind/items/blackwind_14_r4c2_fx.png',kind:'fx'}
+ ],
+ blood:[
+  {file:'blood/items/blood_01_r1c1_props.png',kind:'prop'},
+  {file:'blood/items/blood_18_r5c2_props.png',kind:'prop'},
+  {file:'blood/items/blood_10_r3c2_ground_decals.png',kind:'decal'},
+  {file:'blood/items/blood_17_r5c1_fx.png',kind:'fx'}
+ ],
+ thunder:[
+  {file:'thunder/items/thunder_01_r1c1_props.png',kind:'prop'},
+  {file:'thunder/items/thunder_14_r3c4_props.png',kind:'prop'},
+  {file:'thunder/items/thunder_16_r4c1_ground_decals.png',kind:'decal'},
+  {file:'thunder/items/thunder_22_r5c1_fx.png',kind:'fx'}
+ ]
+};
+const S={version:'11.31.2',ready:false,error:null,images:{},envImages:{},envState:{},layer:null,ctx:null,renderScale:1,bufferWidth:0,bufferHeight:0,dprCap:1.5,maxPixels:2600000,assetBindings:'11.49.10'};
 window.__xianxiaInkRuntime=S;
 const tracks=new Map(),deaths=[],casts=[],impacts=[],pickups=[],floaters=[],veinBursts=[];
 let nextId=1,prevP=null,pFacing=1,prevCooldowns={},lastArea=null,lastPhase=null,prevObjects=[],prevRun=null,prevVein=null,hitStopUntil=0,lastSnapshot=null,activeBounds={x:0,y:0,w:W,h:H};
 const bounds=new Map(),refs=new Map(),frameCanvases=new Map();
 function load(path){return new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('image failed: '+path));im.src=BASE+path+'?v='+encodeURIComponent(CACHE)})}
+function loadEnv(path){return new Promise((resolve,reject)=>{const im=new Image();im.decoding='async';im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('env image failed: '+path));im.src=ENV_BASE+path+'?v='+encodeURIComponent(CACHE)})}
+function envSeed(area){let h=2166136261;for(const ch of area)h=(h^ch.charCodeAt(0))*16777619>>>0;return h||1}
+function envRandFactory(seed){let s=seed>>>0;return()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296}}
+const envLayouts={};
+function buildEnvLayout(area){
+  if(envLayouts[area])return envLayouts[area];
+  const defs=ENV_FILES[area]||[],rnd=envRandFactory(envSeed(area)),out=[],counts={prop:48,decal:28,fx:12};
+  for(const kind of ['decal','prop','fx']){
+    const pool=defs.filter(x=>x.kind===kind),count=counts[kind]||0;
+    if(!pool.length)continue;
+    for(let n=0;n<count;n++){
+      let x=120+rnd()*(W-240),y=130+rnd()*(H-260),tries=0;
+      while(Math.hypot(x-EXIT.x,y-EXIT.y)<250&&tries++<12){x=120+rnd()*(W-240);y=130+rnd()*(H-260)}
+      const def=pool[n%pool.length],scale=kind==='prop'?.78+rnd()*.38:kind==='decal'?1.0+rnd()*.55:.85+rnd()*.45;
+      out.push({key:def.file,kind,x,y,scale,flip:rnd()<.5,phase:rnd()*6.28});
+    }
+  }
+  envLayouts[area]=out;
+  return out;
+}
+function ensureEnvArea(area){
+  if(S.envState[area]==='ready'||S.envState[area]==='loading')return;
+  const defs=ENV_FILES[area]||[];if(!defs.length)return;
+  S.envState[area]='loading';
+  Promise.all(defs.map(async d=>{if(S.envImages[d.file])return;try{S.envImages[d.file]=await loadEnv(d.file)}catch(e){console.warn('[xianxia] optional env asset skipped',d.file,e)}}))
+    .then(()=>{S.envState[area]='ready';window.__xianxiaFrameHub?.wake?.()})
+    .catch(()=>{S.envState[area]='ready'});
+}
+function drawEnvironment(area,t){
+  if(S.envState[area]!=='ready')return;
+  const c=S.ctx,layout=buildEnvLayout(area);
+  for(const d of layout){
+    if(!visible(d.x,d.y,d.kind==='decal'?150:120))continue;
+    const im=S.envImages[d.key];if(!im?.naturalWidth||!im?.naturalHeight)continue;
+    const ratio=im.naturalWidth/im.naturalHeight;
+    let w,h,alpha;
+    if(d.kind==='decal'){w=150*d.scale;h=w/ratio;alpha=.30}
+    else if(d.kind==='fx'){w=92*d.scale;h=w/ratio;alpha=.28+.12*(.5+.5*Math.sin(t*1.35+d.phase))}
+    else{h=92*d.scale;w=h*ratio;alpha=.72}
+    c.save();c.translate(d.x,d.y);if(d.flip)c.scale(-1,1);c.globalAlpha=alpha;
+    if(d.kind==='prop'){c.shadowColor='rgba(22,31,27,.16)';c.shadowBlur=3;c.drawImage(im,-w/2,-h,w,h)}
+    else c.drawImage(im,-w/2,-h/2,w,h);
+    c.restore();
+  }
+}
 function makeLayer(){const game=document.querySelector('#game'),base=document.querySelector('#cv');if(!game||!base)return false;let c=document.querySelector('#v1131InkLayer');if(!c){c=document.createElement('canvas');c.id='v1131InkLayer';c.width=1;c.height=1;c.setAttribute('aria-hidden','true');base.insertAdjacentElement('afterend',c)}S.layer=c;S.ctx=c.getContext('2d',{alpha:true});S.ctx.imageSmoothingEnabled=true;return true}
 function frame(t,fps,count,offset=0){return Math.floor((t+offset)*fps)%count}
 function progress(p,count){return Math.max(0,Math.min(count-1,Math.floor(Math.max(0,Math.min(.999,p))*count)))}
@@ -256,7 +329,7 @@ function drawFrame(s,meta){
   const m=viewportMetrics(s);
   ensureViewport(m);
   const changed=area!==lastArea||s.phase!==lastPhase;
-  if(changed)resetRunVisuals();
+  if(changed){resetRunVisuals();if(s.phase==='run')ensureEnvArea(area)}
   lastArea=area;lastPhase=s.phase;
   applyBackground(area,m);
   if(s.phase!=='run'){
@@ -271,6 +344,7 @@ function drawFrame(s,meta){
   }
   clearViewport();
   setWorldTransform(m);
+  drawEnvironment(area,t);
   drawPortal(t);
   drawHazards(s);
   drawGatherRings(s,t);
@@ -294,7 +368,7 @@ async function boot(){try{
   prepareMartenActions('thunder_attacker');
   prepare('objects',[4,4,4,6,4]);prepare('effects',[4,4,4,4,4]);prepareNew('trait_fx',[4,4,4,4,4,4,4]);
   S.ready=true;document.querySelector('#v1132GatherLayer')?.remove();document.documentElement.dataset.inkAssets='11.31.2-ready';
-  console.info('[xianxia] ink runtime 11.31.2 · 13 prepared assets bound');
+  console.info('[xianxia] ink runtime 11.31.2 · core assets bound · region_env_v1 decorative test enabled');
   const hub=window.__xianxiaFrameHub;if(!hub?.subscribe)throw new Error('shared frame hub unavailable');hub.subscribe('ink-render',drawFrame,25);hub.wake?.()
 }catch(e){S.error=String(e?.message||e);document.documentElement.dataset.inkAssets='11.31.2-error';console.warn('[xianxia] ink asset runtime failed',e)}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
