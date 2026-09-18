@@ -150,21 +150,14 @@ function guidePosition(player,target,vw,vh){
   return{x:clamp(player.x+dx*t,left,right),y:clamp(player.y+dy*t,top,bottom),angle:Math.atan2(dy,dx)*180/Math.PI};
 }
 function updateReturnGuide(s,remaining){
-  const guide=$('#v1133Guide'),arrow=$('#v1133GuideArrow'),button=$('#v1133Return');if(!guide)return;
-  const danger=remaining<=10||game.classList.contains('danger'),show=state.returning||danger;
+  const guide=$('#v1133Guide'),button=$('#v1133Return');
+  const danger=remaining<=10||game.classList.contains('danger');
   if(button){
     button.classList.toggle('returning',state.returning);
     button.classList.toggle('urgent',danger);
     button.textContent=state.returning?'귀환 중':'귀환';
   }
-  if(!show){guide.style.display='none';return}
-  const target=worldToScreen(EXIT_APPROACH.x,EXIT_APPROACH.y),p=s.P||{x:W/2,y:H/2},player=worldToScreen(p.x,p.y);
-  const vw=window.innerWidth||390,vh=window.innerHeight||844,dx=target.x-player.x,dy=target.y-player.y;
-  const angle=Math.atan2(dy,dx)*180/Math.PI;
-  const footOffset=Math.max(34,48*(state.scale||1));
-  const gx=clamp(player.x,28,vw-28),gy=clamp(player.y+footOffset,74,vh-72);
-  guide.style.display='block';guide.style.left=`${gx}px`;guide.style.top=`${gy}px`;
-  if(arrow)arrow.style.transform=`rotate(${angle}deg)`;
+  if(guide)guide.style.display='none';
 }
 
 function updateHud(s){

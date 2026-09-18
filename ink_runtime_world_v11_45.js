@@ -212,6 +212,19 @@ function drawMortalHerbGuide(s,t){
   c.save();c.globalAlpha=.94;c.font='800 10px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';c.textAlign='center';c.textBaseline='middle';
   c.strokeStyle='rgba(20,48,34,.88)';c.lineWidth=3.2;c.fillStyle='#efffe9';c.strokeText('영초',x,y-17);c.fillText('영초',x,y-17);c.restore();
 }
+function drawReturnGuide(s,t){
+  if(s.phase!=='run'||25-(+s.elapsed||0)>10)return;
+  const p=s.P;if(!p)return;
+  const target=EXIT,best=Math.hypot(target.x-p.x,target.y-p.y);
+  if(best<34)return;
+  const dx=target.x-p.x,dy=target.y-p.y,n=Math.hypot(dx,dy)||1,ux=dx/n,uy=dy/n;
+  const x=p.x+ux*62,y=p.y+uy*62,angle=Math.atan2(uy,ux),pulse=.84+.16*Math.sin(t*5.4);
+  const c=S.ctx;c.save();c.translate(x,y);c.rotate(angle);c.globalAlpha=pulse;
+  c.fillStyle='rgba(255,225,164,.97)';c.strokeStyle='rgba(126,72,34,.95)';c.lineWidth=2.2;
+  c.beginPath();c.moveTo(16,0);c.lineTo(-7,-9);c.lineTo(-2,0);c.lineTo(-7,9);c.closePath();c.fill();c.stroke();c.restore();
+  c.save();c.globalAlpha=.94;c.font='800 10px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';c.textAlign='center';c.textBaseline='middle';
+  c.strokeStyle='rgba(72,38,18,.9)';c.lineWidth=3.2;c.fillStyle='#fff1cf';c.strokeText('귀환',x,y-17);c.fillText('귀환',x,y-17);c.restore();
+}
 function drawObjects(s,t){for(const o of s.objects||[]){if(!visible(o.x,o.y,70))continue;if(o.type==='h'){const row=Math.max(0,Math.min(2,o.grade||0)),ground=o.y+16;shadow(o.x,ground,9,2.5,.13);anchored('objects',row,4,frame(t,1.55,4,(o.x+o.y)*.0015),o.x,ground,40,false,.96,String(row))}else{const ground=o.y+14;shadow(o.x,ground,9,3,.15);anchored('objects',4,4,0,o.x,ground,34,false,1,'4')}}if(s.vein&&visible(s.vein.x,s.vein.y,90)){const ground=s.vein.y+22;shadow(s.vein.x,ground,18,5,.2);anchored('objects',4,4,3,s.vein.x,ground,58,false,1,'4')}}
 function drawVeinProgress(s,t){
   const v=s.vein,p=s.P;
@@ -371,6 +384,7 @@ function drawFrame(s,meta){
   drawCasts(now);
   drawPlayer(s,t);
   drawMortalHerbGuide(s,t);
+  drawReturnGuide(s,t);
   drawImpacts(now);
   drawPickupFx(s,t,now);
   lastSnapshot=s;
