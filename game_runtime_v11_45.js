@@ -244,8 +244,6 @@ function takePlayerDamage(dmg,grantGrace=false){
 }
 function updateNonCombatRecovery(dt){
   if(!M.trainingNodes?.f1_harmony||P.hp<=0||P.hp>=P.max)return;
-  const threatened=enemies.some(e=>e.type!=='spirit'&&e.hp>0&&(e.aggressive||distance(P,e)<150));
-  if(threatened||elapsed-(run.lastDamageAt??-999)<3)return;
   const before=P.hp;
   P.hp=Math.min(P.max,P.hp+P.max*.025*dt);
   run.regenPulse=(run.regenPulse||0)+dt;
