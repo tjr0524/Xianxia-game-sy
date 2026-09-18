@@ -79,9 +79,9 @@ for(const asset of preparedAssets){
   if(!fs.existsSync(assetPath))throw new Error('prepared runtime asset missing: '+asset);
   if(!ink.includes(asset))throw new Error('prepared runtime asset is not bound: '+asset);
 }
-if(manifest.version!=='1.1.0'||manifest.runtime_bindings?.version!=='11.49.6')
+if(manifest.version!=='1.1.1'||manifest.runtime_bindings?.version!=='11.49.10')
   throw new Error('ink manifest/runtime binding version mismatch');
-for(const token of ["spirit:'spirit_deer'","rat:'treasure_rat'","rogue:'wandering_rival'","blood_elite:'source/blood_crystal_qilin_v1.png'","thunder_elite:'source/thunder_basalt_tortoise_v1.png'","prepare('trait_fx',[4,4,4,4])"]){
+for(const token of ["spirit:'spirit_deer'","rat:'treasure_rat'","rogue:'wandering_rival'","blood_elite:'source/blood_crystal_qilin_v1.png'","thunder_elite:'source/thunder_basalt_tortoise_v1.png'","prepareNew('trait_fx',[4,4,4,4,4,4,4])"]){
   if(!ink.includes(token))throw new Error('runtime asset binding token missing: '+token);
 }
 if(!game.includes('rareTrait:enemy.rareTrait'))throw new Error('rare trait metadata is not exposed to renderer');
