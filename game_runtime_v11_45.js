@@ -62,11 +62,11 @@ const TREE={
 
 const NODES=Object.values(TREE).flat();
 const SKILLS=[
-  {id:'sword',n:'어검술',req:{major:0,stage:1},grade:0,unlock:{s:80,h:3},cd:4.8,desc:'단일 대상 희귀·정예를 빠르게 베는 주력 검술'},
-  {id:'wave',n:'검풍',req:{major:0,stage:3},grade:0,unlock:{s:150,h:5},cd:5.5,desc:'가까이 모인 요수 무리를 쓸어내는 범위 검술'},
-  {id:'chain',n:'연환비검',req:{major:0,stage:5},grade:1,unlock:{s:180,h:5},cd:6.0,desc:'흩어진 다수의 적 사이를 연속 도약하는 비검'},
-  {id:'thunder',n:'낙뢰부',req:{major:0,stage:7},grade:2,unlock:{s:400,h:4},cd:7.0,desc:'정예와 주변 요수를 동시에 압박하는 고위 법술'},
-  {id:'array',n:'만검진',req:{major:1,stage:1},grade:2,unlock:{s:1200,h:12},cd:10.0,desc:'넓은 영역을 세 차례 휩쓰는 축기 검진'}
+  {id:'sword',n:'어검술',req:{major:0,stage:1},grade:0,unlock:{s:80,h:3},cd:4.8,desc:'가까운 적을 자동 추적해 베는 주력 검술'},
+  {id:'wave',n:'검풍',req:{major:0,stage:3},grade:0,unlock:{s:150,h:5},cd:5.5,desc:'밀집한 요수 무리를 자동 조준해 쓸어내는 범위 검술'},
+  {id:'chain',n:'연환비검',req:{major:0,stage:5},grade:1,unlock:{s:180,h:5},cd:6.0,desc:'먼 첫 대상을 포착한 뒤 적 사이를 연속 도약하는 비검'},
+  {id:'thunder',n:'낙뢰부',req:{major:0,stage:7},grade:2,unlock:{s:400,h:4},cd:7.0,desc:'가장 밀집한 적 무리를 자동 조준하는 고위 법술'},
+  {id:'array',n:'만검진',req:{major:1,stage:1},grade:2,unlock:{s:1200,h:12},cd:10.0,desc:'적이 밀집한 지점에 검진을 펼쳐 세 차례 휩쓴다'}
 ];
 
 const PLANS=[
@@ -97,11 +97,11 @@ const BAL={
     chainRadius:[0,0,0,720,900,1100]
   },
   skill:{
-    sword:{mult:[0,2.4,3.8,5.2,6.5,7.8],cd:[0,4.8,4.5,4.2,4.1,4.0],range:[0,93,104,115,126,138]},
-    wave:{mult:[0,1.2,1.6,2.1,2.7,3.8],cd:[0,5.5,5.2,5.0,4.8,4.6],range:[0,40,47,53,60,67]},
-    chain:{mult:[0,1.0,1.35,1.8,2.7,4.0],cd:[0,6.0,5.8,5.6,5.4,5.0],count:[0,3,3,4,5,6],jump:[0,40,44,49,53,58]},
-    thunder:{mult:[0,1.8,3.0,5.0,6.3,8.0],cd:[0,7.0,6.7,6.4,6.1,5.8],radius:[0,36,42,49,56,62]},
-    array:{mult:[0,3.0,4.4,6.0,8.0,10.5],cd:[0,10.0,9.6,9.2,8.8,8.4],radius:[0,84,93,102,111,122]}
+    sword:{mult:[0,2.4,3.8,5.2,6.5,7.8],cd:[4.8,4.5,4.2,3.9,3.6,3.4],range:[115,130,145,160,178,198]},
+    wave:{mult:[0,1.2,1.6,2.1,2.7,3.8],cd:[5.5,5.1,4.8,4.5,4.2,4.0],radius:[55,65,75,85,95,108],acquire:[145,165,185,205,225,248]},
+    chain:{mult:[0,1.0,1.35,1.8,2.7,4.0],cd:[6.0,5.6,5.3,5.0,4.7,4.4],count:[3,3,4,4,5,6],jump:[55,62,70,78,86,96],acquire:[150,170,190,210,230,255]},
+    thunder:{mult:[0,1.8,3.0,5.0,6.3,8.0],cd:[7.0,6.5,6.1,5.7,5.4,5.1],radius:[52,62,72,82,92,105],acquire:[210,230,250,270,295,320]},
+    array:{mult:[0,3.0,4.4,6.0,8.0,10.5],cd:[10.0,8.8,8.1,7.5,7.0,6.5],radius:[82,94,106,118,134,150],acquire:[170,195,220,245,275,305]}
   }
 };
 const KEY='xianxia_proto_v11';
@@ -219,8 +219,12 @@ function areaPickupScale(){
 function autoPickupRange(){return (20+Math.max(0,(M.cult.sen||1)-1)*12)*areaPickupScale()}
 function basicDamage(){return 4+12*(M.cult.atk||1)}
 function basicInterval(){let t=.65;if(M.trainingNodes?.q2_edge)t*=.92;if(M.trainingNodes?.q9_harmony)t*=.96;return t}
+function basicAttackRange(){return 64+Math.max(0,+M.cult.basicRange||0)}
+function basicAttackTargets(){return 1+clamp(Math.round(+M.cult.basicHits||0),0,3)}
 function skillRank(id){return clamp(Math.round(+M.skills?.[id]?.pow||0),0,5)}
-function skillCooldown(id){const r=skillRank(id),b=BAL.skill[id];return b&&r?b.cd[r]:99}
+function skillRangeRank(id){return clamp(Math.round(+M.skills?.[id]?.range||0),0,5)}
+function skillCycleRank(id){return clamp(Math.round(+M.skills?.[id]?.cycle||0),0,5)}
+function skillCooldown(id){const b=BAL.skill[id];return b?b.cd[skillCycleRank(id)]??99:99}
 function beastConfig(){return BAL.enemy[M.area]||BAL.enemy.qingyun}
 function playerProgressTier(){return M.realm.major>0?9+(M.realm.stage||1):(M.realm.stage||1)}
 function areaBaseTier(){return({qingyun:1,blackwind:3,blood:6,thunder:10}[M.area]||1)}
@@ -934,22 +938,32 @@ function reward(enemy){
   }
 }
 
+function bestClusterTarget(acquire,radius){
+  const candidates=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&distance(P,e)<acquire);
+  if(!candidates.length)return null;
+  let target=candidates[0],best=-1,nearest=Infinity;
+  for(const e of candidates){
+    const crowd=candidates.filter(o=>distance(e,o)<radius*1.35).length,d=distance(P,e);
+    if(crowd>best||(crowd===best&&d<nearest)){best=crowd;nearest=d;target=e}
+  }
+  return target;
+}
 function cast(skill){
-  const st=skillState(skill.id),r=skillRank(skill.id),b=BAL.skill[skill.id];if(!st.u||!r||!b)return false;const B=basicDamage(),damage=B*b.mult[r];
+  const st=skillState(skill.id),r=skillRank(skill.id),rr=skillRangeRank(skill.id),b=BAL.skill[skill.id];if(!st.u||!r||!b)return false;const B=basicDamage(),damage=B*b.mult[r];
   if(skill.id==='sword'){
-    const range=b.range[r];let target=null,nearest=Infinity;for(const e of enemies){if(e.type==='spirit')continue;const d=distance(P,e);if(d<range&&d<nearest){nearest=d;target=e}}if(!target)return false;target.hp-=damage;slash(P.x,P.y,target.x,target.y,'#eef6ff');pop(target.x,target.y,'어검 '+Math.round(damage),'#f4f6ff');return true;
+    const range=b.range[rr];let target=null,nearest=Infinity;for(const e of enemies){if(e.type==='spirit'||e.hp<=0)continue;const d=distance(P,e);if(d<range&&d<nearest){nearest=d;target=e}}if(!target)return false;target.hp-=damage;slash(P.x,P.y,target.x,target.y,'#eef6ff');pop(target.x,target.y,'어검 '+Math.round(damage),'#f4f6ff');return true;
   }
   if(skill.id==='wave'){
-    const range=b.range[r];let hits=0;for(const e of enemies){if(e.type==='spirit'||distance(P,e)>=range)continue;e.hp-=damage;hits++}if(!hits)return false;pop(P.x,P.y,'검풍 ×'+hits,'#9fdfff');ring(P.x,P.y,range,'#9fdfff');return true;
+    const radius=b.radius[rr],target=bestClusterTarget(b.acquire[rr],radius);if(!target)return false;let hits=0;for(const e of enemies){if(e.type==='spirit'||e.hp<=0||distance(target,e)>=radius)continue;e.hp-=damage;hits++}if(!hits)return false;pop(target.x,target.y,'검풍 ×'+hits,'#9fdfff');ring(target.x,target.y,radius,'#9fdfff');return true;
   }
   if(skill.id==='chain'){
-    const candidates=enemies.filter(e=>e.type!=='spirit'),max=b.count[r],jump=b.jump[r];let current=P,used=new Set(),hits=0;for(let i=0;i<max;i++){let target=null,near=Infinity;for(const e of candidates){if(used.has(e))continue;const d=distance(current,e);const allowed=i===0?Math.max(130,jump*2.5):jump;if(d<allowed&&d<near){near=d;target=e}}if(!target)break;target.hp-=damage;slash(current.x,current.y,target.x,target.y,'#c6d6ff');used.add(target);current=target;hits++}return hits>0;
+    const candidates=enemies.filter(e=>e.type!=='spirit'&&e.hp>0),max=b.count[rr],jump=b.jump[rr],acquire=b.acquire[rr];let current=P,used=new Set(),hits=0;for(let i=0;i<max;i++){let target=null,near=Infinity;for(const e of candidates){if(used.has(e))continue;const d=distance(current,e),allowed=i===0?acquire:jump;if(d<allowed&&d<near){near=d;target=e}}if(!target)break;target.hp-=damage;slash(current.x,current.y,target.x,target.y,'#c6d6ff');used.add(target);current=target;hits++}return hits>0;
   }
   if(skill.id==='thunder'){
-    const candidates=enemies.filter(e=>e.type!=='spirit'&&distance(P,e)<190);if(!candidates.length)return false;let target=candidates[0],best=-1;for(const e of candidates){const crowd=candidates.filter(o=>distance(e,o)<b.radius[r]*1.6).length;if(crowd>best){best=crowd;target=e}}let hits=0;for(const e of enemies){if(e.type!=='spirit'&&distance(target,e)<b.radius[r]){e.hp-=damage;hits++}}pop(target.x,target.y,'낙뢰 ×'+hits,'#d7c8ff');ring(target.x,target.y,b.radius[r],'#d7c8ff',.4);return true;
+    const radius=b.radius[rr],target=bestClusterTarget(b.acquire[rr],radius);if(!target)return false;let hits=0;for(const e of enemies){if(e.type!=='spirit'&&e.hp>0&&distance(target,e)<radius){e.hp-=damage;hits++}}if(!hits)return false;pop(target.x,target.y,'낙뢰 ×'+hits,'#d7c8ff');ring(target.x,target.y,radius,'#d7c8ff',.4);return true;
   }
   if(skill.id==='array'){
-    const radius=b.radius[r],pulse=damage/3;run.scheduledHits.push({kind:'array',t:0.02,x:P.x,y:P.y,r:radius,damage:pulse},{kind:'array',t:.36,x:P.x,y:P.y,r:radius,damage:pulse},{kind:'array',t:.70,x:P.x,y:P.y,r:radius,damage:pulse});pop(P.x,P.y,'만검진','#ffe9a8');return true;
+    const radius=b.radius[rr],target=bestClusterTarget(b.acquire[rr],radius);if(!target)return false;const pulse=damage/3;run.scheduledHits.push({kind:'array',t:0.02,x:target.x,y:target.y,r:radius,damage:pulse},{kind:'array',t:.36,x:target.x,y:target.y,r:radius,damage:pulse},{kind:'array',t:.70,x:target.x,y:target.y,r:radius,damage:pulse});pop(target.x,target.y,'만검진','#ffe9a8');ring(target.x,target.y,radius,'#ffe9a8',.24);return true;
   }
   return false;
 }
@@ -1010,7 +1024,7 @@ function update(dt){
     if(strikeSet.has(enemy)&&d<P.r+enemy.r+3&&enemy.cd<=0){if(enemy.type==='attacker'){enemy.windup=.55;enemy.pendingStrike=1;enemy.cd=period+.55;ring(enemy.x,enemy.y,enemy.r+18,'#c96893',.55)}else{let dmg=(enemy.attack||beastConfig().hit)*incomingDamageScale();if(enemies.some(o=>o!==enemy&&o.rareTrait==='howl'&&o.hp>0&&distance(o,enemy)<130))dmg*=1.15;if(P.hitGrace>0&&M.trainingNodes?.q6_spirit)dmg*=M.trainingNodes?.q9_harmony ? .90 : .92;dmg=Math.ceil(dmg);P.hp-=dmg;run.minHp=Math.min(run.minHp,P.hp);P.hitGrace=1.15;enemy.cd=period;ring(P.x,P.y,P.r+7,'#f47b6f',.16)}}
   }
   enemies=enemies.filter(e=>{if((e.type==='rogue'||e.type==='rat')&&(e.x<-10||e.x>W+10))return false;if(e.hp<=0){if(e.type!=='spirit')reward(e);return false}return true});
-  if(!isMortal()){let target=null,nearest=Infinity;for(const e of enemies){if(e.type==='spirit')continue;const d=distance(P,e);if(d<nearest){nearest=d;target=e}}if(target&&nearest<52&&P.cd<=0){const dmg=basicDamage()*combatPower();target.hp-=dmg;P.cd=basicInterval();slash(P.x,P.y,target.x,target.y,'#f7e5ad')}}
+  if(!isMortal()&&P.cd<=0){const range=basicAttackRange(),targets=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&distance(P,e)<range).sort((a,b)=>distance(P,a)-distance(P,b)).slice(0,basicAttackTargets());if(targets.length){const dmg=basicDamage()*combatPower(),scales=[1,.62,.48,.36];targets.forEach((target,i)=>{target.hp-=dmg*(scales[i]||.32);slash(P.x,P.y,target.x,target.y,i?'#e8d6a5':'#f7e5ad')});P.cd=basicInterval()}}
   for(const skill of SKILLS){const st=skillState(skill.id);if(!st.u)continue;if(run.skillCooldowns[skill.id]<=0&&cast(skill))run.skillCooldowns[skill.id]=skillCooldown(skill.id)}
   updateHazards(dt);if(P.hp<=0){P.hp=0;finish('dead');return}syncHud();
 }
