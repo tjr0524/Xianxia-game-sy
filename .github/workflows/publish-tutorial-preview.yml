@@ -1,5 +1,5 @@
 name: Publish tutorial preview
-# guided-onboarding validators synced
+# guided-onboarding validators synced; stale-save reset synced
 
 on:
   push:
