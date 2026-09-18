@@ -1,6 +1,6 @@
 {
   "channel": "tutorial-preview",
   "source_branch": "tutorial-guided-onboarding",
-  "source_sha": "d589e310a05be981ff3413ed80d82641f0ea9c50",
+  "source_sha": "34241f7693f65c9768215f46fb5d6b1b5b505726",
   "build": "11.49.8-tutorial"
 }
