@@ -1,0 +1,32 @@
+{
+  "id": "cracked_stone_beetle",
+  "name_ko": "균열석충",
+  "role": "explosion_normal_enemy",
+  "first_appearance": "축기 4층",
+  "sheet": {
+    "columns": 6,
+    "rows": 3,
+    "frame_width": 256,
+    "frame_height": 256,
+    "pivot": [
+      128,
+      224
+    ],
+    "uniform_source_scale": 0.809917
+  },
+  "rows": [
+    "move_01_to_06",
+    "mechanic_action_01_to_06",
+    "hit_stagger_collapse_defeat_then_2_blank"
+  ],
+  "layers": [
+    "body",
+    "fx",
+    "combined"
+  ],
+  "mechanic_assets": {
+    "burst": "circular_burst_sheet_6x1.png",
+    "telegraph": "explosion_telegraph_256.png",
+    "rule": "burst damages player and nearby monsters"
+  }
+}

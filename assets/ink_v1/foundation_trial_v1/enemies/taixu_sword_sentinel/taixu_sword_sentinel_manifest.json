@@ -1,0 +1,26 @@
+{
+  "id": "taixu_sword_sentinel",
+  "name_ko": "태허검위",
+  "role": "taixu_guardian_melee",
+  "first_appearance": "축기 7층",
+  "sheet": {
+    "columns": 6,
+    "rows": 3,
+    "frame_width": 256,
+    "frame_height": 256,
+    "pivot": [
+      128,
+      224
+    ],
+    "uniform_source_scale": 0.6
+  },
+  "layers": [
+    "body",
+    "fx",
+    "combined"
+  ],
+  "mechanic_assets": {
+    "telegraph": "sword_zone_telegraph_256.png",
+    "impact": "sword_ground_impact_sheet_6x1.png"
+  }
+}

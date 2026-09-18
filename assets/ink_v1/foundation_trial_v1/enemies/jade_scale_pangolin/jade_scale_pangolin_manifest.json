@@ -1,0 +1,32 @@
+{
+  "id": "jade_scale_pangolin",
+  "name_ko": "옥린천산갑",
+  "role": "shield_normal_enemy",
+  "first_appearance": "축기 6층",
+  "sheet": {
+    "columns": 6,
+    "rows": 3,
+    "frame_width": 256,
+    "frame_height": 256,
+    "pivot": [
+      128,
+      224
+    ],
+    "uniform_source_scale": 0.768627
+  },
+  "rows": [
+    "move_01_to_06",
+    "mechanic_action_01_to_06",
+    "hit_stagger_collapse_defeat_then_2_blank"
+  ],
+  "layers": [
+    "body",
+    "fx",
+    "combined"
+  ],
+  "mechanic_assets": {
+    "affected_overlay": "ally_shield_overlay_sheet_4x1.png",
+    "range": "shield_range_256.png",
+    "rule": "shield overlay follows every protected monster; source is prioritized"
+  }
+}

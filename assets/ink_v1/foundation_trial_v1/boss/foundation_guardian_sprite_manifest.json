@@ -1,0 +1,45 @@
+{
+  "protocol_version": 1,
+  "character": "foundation_guardian",
+  "grid": {
+    "columns": 6,
+    "rows": 4,
+    "cell_width": 256,
+    "cell_height": 256
+  },
+  "pivot": {
+    "x": 128,
+    "ground_y": 224,
+    "ground_tolerance_px": 2
+  },
+  "scale_policy": {
+    "runtime_scale": 1.0,
+    "per_frame_scale_allowed": false,
+    "uniform_source_scale": 0.54,
+    "body_metric": "torso_and_head",
+    "torso_tolerance_pct": 5,
+    "head_tolerance_pct": 7
+  },
+  "layers": {
+    "combined_sheet": "foundation_guardian_sheet_6x4.png",
+    "body_sheet": "foundation_guardian_body_sheet_6x4.png",
+    "fx_sheet": "foundation_guardian_fx_sheet_6x4.png"
+  },
+  "frame_directories": {
+    "combined": "frames",
+    "body": "body_frames",
+    "fx": "fx_frames"
+  },
+  "grounded_frames": [
+    "row1_01", "row1_02", "row1_03", "row1_04", "row1_05", "row1_06",
+    "row2_01", "row2_02", "row2_05", "row2_06",
+    "row3_01", "row3_02", "row3_03", "row3_04", "row3_05", "row3_06",
+    "row4_01", "row4_02", "row4_03", "row4_04", "row4_05", "row4_06"
+  ],
+  "actions": [
+    "idle_move_01_to_06",
+    "basic_attack_01_to_06",
+    "charge_windup_01_to_03_then_dash_01_to_03",
+    "roar_01_to_02_then_stagger_01_to_02_then_death_01_to_02"
+  ]
+}

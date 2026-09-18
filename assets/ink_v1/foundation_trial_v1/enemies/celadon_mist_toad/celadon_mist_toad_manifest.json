@@ -1,0 +1,42 @@
+{
+  "id": "celadon_mist_toad",
+  "name_ko": "벽연섬",
+  "role": "ranged_normal_enemy",
+  "first_appearance": "축기 2층",
+  "sheet": {
+    "columns": 6,
+    "rows": 3,
+    "frame_width": 256,
+    "frame_height": 256,
+    "pivot": [
+      128,
+      224
+    ],
+    "uniform_source_scale": 0.7
+  },
+  "rows": [
+    "idle_hop_01_to_06",
+    "windup_01_to_03_release_01_to_02_recovery_01",
+    "hit_stagger_collapse_defeat_then_2_blank"
+  ],
+  "layers": [
+    "body",
+    "fx",
+    "combined"
+  ],
+  "projectile": {
+    "file": "celadon_qi_projectile_sheet_8x1.png",
+    "columns": 8,
+    "cell": [
+      128,
+      128
+    ],
+    "frames": "flight_01_to_04_then_impact_01_to_04"
+  },
+  "telegraph": {
+    "shape": "circle",
+    "file": "ranged_impact_telegraph_256.png",
+    "runtime_rule": "lock target position at release; place indicator and projectile impact at the identical point; no homing after release"
+  },
+  "combat_read": "throat sac inflation is the wind-up; mouth flash marks release"
+}
