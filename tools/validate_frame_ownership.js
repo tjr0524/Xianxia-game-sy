@@ -85,7 +85,7 @@ for(const [name,src,loop,legacy] of checks){
 }
 
 const joined=game+ink+explore+world+feedback+cooldown+resultFlow+visual+tutorial;
-for(const name of ['game-simulation','exploration-lifecycle','world-camera','ink-render','exploration-hud','player-feedback','combat-cooldowns','result-flow','visual-state','first-run-tutorial']){
+for(const name of ['game-simulation','exploration-lifecycle','world-camera','ink-render','exploration-hud','player-feedback','combat-cooldowns','result-flow','visual-state','guided-onboarding-tutorial']){
   if(!joined.includes("'"+name+"'"))throw new Error('missing frame subscriber '+name);
 }
 if(!world.includes("hub.subscribe('world-camera',cameraFrame,20)"))throw new Error('world camera priority changed');
@@ -94,6 +94,6 @@ if(!feedback.includes("hub.subscribe('player-feedback',frame,40)"))throw new Err
 if(!cooldown.includes("hub.subscribe('combat-cooldowns',update,50)"))throw new Error('cooldown priority changed');
 if(!resultFlow.includes("hub.subscribe('result-flow',frame,60)"))throw new Error('result-flow priority changed');
 if(!visual.includes("hub.subscribe('visual-state',visualFrame,70)"))throw new Error('visual-state priority changed');
-if(!tutorial.includes("hub.subscribe('first-run-tutorial',frame,80)"))throw new Error('tutorial priority changed');
+if(!tutorial.includes("hub.subscribe('guided-onboarding-tutorial',frame,95)"))throw new Error('guided tutorial priority changed');
 
 console.log('frame ownership + viewport renderer validation: OK');
