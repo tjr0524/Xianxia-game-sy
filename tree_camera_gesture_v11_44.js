@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.45.0';
+const VERSION='11.49.3';
 if(window.__xianxiaTreeCameraGesture?.version===VERSION)return;
 window.__xianxiaTreeCameraGesture={version:VERSION};
 
