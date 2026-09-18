@@ -17,7 +17,6 @@ document.addEventListener('pointerdown',event=>{
   const node=closest(event.target,NODE_SELECTOR);
   if(node){
     pointers.set(event.pointerId,{kind:'node',node,x:event.clientX,y:event.clientY,moved:false});
-    event.stopPropagation();
     return;
   }
   const view=closest(event.target,VIEW_SELECTOR);
@@ -27,7 +26,6 @@ document.addEventListener('pointerdown',event=>{
 document.addEventListener('pointermove',event=>{
   const p=pointers.get(event.pointerId);if(!p)return;
   if(!p.moved&&dist(p,event.clientX,event.clientY)>=DRAG_THRESHOLD)p.moved=true;
-  if(p.kind==='node')event.stopPropagation();
 },true);
 
 function flushOldCameraSuppress(view,x,y){
@@ -43,7 +41,6 @@ document.addEventListener('pointerup',event=>{
   pointers.delete(event.pointerId);
   if(p.kind==='node'){
     if(p.moved){cancelledClicks.set(p.node,performance.now()+500);event.preventDefault()}
-    event.stopPropagation();
     return;
   }
   if(p.kind==='view'&&p.moved)flushOldCameraSuppress(p.view,event.clientX,event.clientY);
