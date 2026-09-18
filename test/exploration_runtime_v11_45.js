@@ -59,6 +59,8 @@ body.v1133-run #v1133Hud{display:block}
 #v1133HpFill{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#8b3e36,#bd6957);transition:width .12s linear}
 #v1133Return{position:absolute;right:calc(env(safe-area-inset-right) + 14px);bottom:calc(env(safe-area-inset-bottom) + 18px);pointer-events:auto;min-width:74px;min-height:42px;padding:7px 12px;border:1px solid rgba(238,232,214,.62);border-radius:12px;background:rgba(238,231,212,.82);color:#2b3b35;font-weight:800;font-size:11px;box-shadow:0 5px 18px rgba(20,28,24,.2);backdrop-filter:blur(5px)}
 #v1133Return.returning{background:rgba(186,211,195,.9);border-color:rgba(79,119,102,.48)}
+#v1133Return.urgent{border-color:rgba(180,76,57,.78);background:rgba(246,222,198,.94);color:#7e3029;animation:v1133ReturnUrgent .72s ease-in-out infinite}
+@keyframes v1133ReturnUrgent{0%,100%{transform:scale(1);box-shadow:0 5px 18px rgba(20,28,24,.2),0 0 0 0 rgba(189,70,51,0)}50%{transform:scale(1.07);box-shadow:0 7px 24px rgba(120,35,27,.30),0 0 0 7px rgba(189,70,51,.16)}}
 #v1133Guide{position:absolute;z-index:32;display:none;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(235,230,213,.9);border:1px solid rgba(74,98,86,.48);box-shadow:0 5px 17px rgba(20,28,24,.24);backdrop-filter:blur(5px);pointer-events:none}
 #v1133GuideArrow{position:absolute;inset:0;transform-origin:50% 50%}
 #v1133GuideArrow::before{content:"";position:absolute;left:15px;top:10px;width:0;height:0;border-top:11px solid transparent;border-bottom:11px solid transparent;border-left:18px solid #527a6d;filter:drop-shadow(0 1px 1px rgba(255,255,255,.55))}
@@ -131,6 +133,7 @@ function deactivate(){
   state.prevPX=state.prevPY=null;state.leadX=state.leadY=0;
   document.body.classList.remove('v1133-run');clearLayerStyles();
   const guide=$('#v1133Guide');if(guide)guide.style.display='none';
+  $('#v1133Return')?.classList.remove('urgent','returning');
   buildBadge(`BUILD ${VERSION} · CAM ✓`);
 }
 
@@ -147,13 +150,19 @@ function guidePosition(player,target,vw,vh){
 function updateReturnGuide(s,remaining){
   const guide=$('#v1133Guide'),arrow=$('#v1133GuideArrow'),button=$('#v1133Return');if(!guide)return;
   const danger=remaining<=10||game.classList.contains('danger'),show=state.returning||danger;
-  if(button){button.classList.toggle('returning',state.returning);button.textContent=state.returning?'귀환 중':'귀환'}
+  if(button){
+    button.classList.toggle('returning',state.returning);
+    button.classList.toggle('urgent',danger);
+    button.textContent=state.returning?'귀환 중':'귀환';
+  }
   if(!show){guide.style.display='none';return}
   const target=worldToScreen(EXIT_APPROACH.x,EXIT_APPROACH.y),p=s.P||{x:W/2,y:H/2},player=worldToScreen(p.x,p.y);
-  const vw=window.innerWidth||390,vh=window.innerHeight||844;
-  if(target.x>42&&target.x<vw-42&&target.y>58&&target.y<vh-78){guide.style.display='none';return}
-  const q=guidePosition(player,target,vw,vh);guide.style.display='block';guide.style.left=`${q.x}px`;guide.style.top=`${q.y}px`;
-  if(arrow)arrow.style.transform=`rotate(${q.angle}deg)`;
+  const vw=window.innerWidth||390,vh=window.innerHeight||844,dx=target.x-player.x,dy=target.y-player.y;
+  const angle=Math.atan2(dy,dx)*180/Math.PI;
+  const footOffset=Math.max(34,48*(state.scale||1));
+  const gx=clamp(player.x,28,vw-28),gy=clamp(player.y+footOffset,74,vh-72);
+  guide.style.display='block';guide.style.left=`${gx}px`;guide.style.top=`${gy}px`;
+  if(arrow)arrow.style.transform=`rotate(${angle}deg)`;
 }
 
 function updateHud(s){
