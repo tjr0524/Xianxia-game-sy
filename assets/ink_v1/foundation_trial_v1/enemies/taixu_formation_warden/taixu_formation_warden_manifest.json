@@ -1,0 +1,26 @@
+{
+  "id": "taixu_formation_warden",
+  "name_ko": "태허법위",
+  "role": "taixu_guardian_ranged",
+  "first_appearance": "축기 8층",
+  "sheet": {
+    "columns": 6,
+    "rows": 3,
+    "frame_width": 256,
+    "frame_height": 256,
+    "pivot": [
+      128,
+      224
+    ],
+    "uniform_source_scale": 0.683274
+  },
+  "layers": [
+    "body",
+    "fx",
+    "combined"
+  ],
+  "mechanic_assets": {
+    "telegraph": "formation_target_telegraph_256.png",
+    "projectile": "formation_bolt_sheet_6x1.png"
+  }
+}

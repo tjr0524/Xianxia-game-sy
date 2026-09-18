@@ -1,0 +1,1143 @@
+{
+  "checks": [
+    {
+      "path": "ui/node_icons/training_core/sword_formula_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        50,
+        35,
+        385,
+        429
+      ],
+      "normalized_bbox": [
+        36,
+        20,
+        220,
+        236
+      ],
+      "scale": 0.54822
+    },
+    {
+      "path": "ui/node_icons/training_core/body_training_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        30,
+        50,
+        387,
+        429
+      ],
+      "normalized_bbox": [
+        26,
+        20,
+        229,
+        236
+      ],
+      "scale": 0.56992
+    },
+    {
+      "path": "ui/node_icons/training_core/movement_art_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        21,
+        83,
+        377,
+        406
+      ],
+      "normalized_bbox": [
+        20,
+        30,
+        236,
+        226
+      ],
+      "scale": 0.60674
+    },
+    {
+      "path": "ui/node_icons/training_core/spirit_sense_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        26,
+        0,
+        407,
+        350
+      ],
+      "normalized_bbox": [
+        20,
+        29,
+        236,
+        227
+      ],
+      "scale": 0.56693
+    },
+    {
+      "path": "ui/node_icons/training_core/body_guard_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        0,
+        0,
+        394,
+        410
+      ],
+      "normalized_bbox": [
+        24,
+        20,
+        232,
+        236
+      ],
+      "scale": 0.52683
+    },
+    {
+      "path": "ui/node_icons/training_core/rapid_sword_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        9,
+        37,
+        376,
+        429
+      ],
+      "normalized_bbox": [
+        27,
+        20,
+        229,
+        236
+      ],
+      "scale": 0.55102
+    },
+    {
+      "path": "ui/node_icons/training_core/wind_adaptation_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        31,
+        15,
+        407,
+        384
+      ],
+      "normalized_bbox": [
+        20,
+        22,
+        236,
+        234
+      ],
+      "scale": 0.57447
+    },
+    {
+      "path": "ui/node_icons/training_core/afterimage_step_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        0,
+        37,
+        366,
+        373
+      ],
+      "normalized_bbox": [
+        20,
+        29,
+        236,
+        227
+      ],
+      "scale": 0.59016
+    },
+    {
+      "path": "ui/node_icons/training_core/spirit_tracking_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        23,
+        0,
+        380,
+        381
+      ],
+      "normalized_bbox": [
+        27,
+        20,
+        229,
+        236
+      ],
+      "scale": 0.56693
+    },
+    {
+      "path": "ui/node_icons/training_advanced/qi_cycle_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        44,
+        50,
+        391,
+        416
+      ],
+      "normalized_bbox": [
+        25,
+        20,
+        230,
+        236
+      ],
+      "scale": 0.59016
+    },
+    {
+      "path": "ui/node_icons/training_advanced/threat_sense_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        29,
+        43,
+        376,
+        409
+      ],
+      "normalized_bbox": [
+        25,
+        20,
+        230,
+        236
+      ],
+      "scale": 0.59016
+    },
+    {
+      "path": "ui/node_icons/training_advanced/shadowless_step_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        42,
+        68,
+        367,
+        405
+      ],
+      "normalized_bbox": [
+        24,
+        20,
+        232,
+        236
+      ],
+      "scale": 0.64095
+    },
+    {
+      "path": "ui/node_icons/training_advanced/sword_heart_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        72,
+        19,
+        362,
+        395
+      ],
+      "normalized_bbox": [
+        44,
+        20,
+        211,
+        236
+      ],
+      "scale": 0.57447
+    },
+    {
+      "path": "ui/node_icons/training_advanced/art_harmony_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        30,
+        29,
+        383,
+        425
+      ],
+      "normalized_bbox": [
+        31,
+        20,
+        224,
+        236
+      ],
+      "scale": 0.54545
+    },
+    {
+      "path": "ui/node_icons/training_advanced/true_essence_core_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        42,
+        37,
+        372,
+        377
+      ],
+      "normalized_bbox": [
+        23,
+        20,
+        233,
+        236
+      ],
+      "scale": 0.63529
+    },
+    {
+      "path": "ui/node_icons/training_advanced/true_essence_cycle_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        53,
+        12,
+        395,
+        376
+      ],
+      "normalized_bbox": [
+        26,
+        20,
+        229,
+        236
+      ],
+      "scale": 0.59341
+    },
+    {
+      "path": "ui/node_icons/training_advanced/recovery_start_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        59,
+        0,
+        360,
+        378
+      ],
+      "normalized_bbox": [
+        42,
+        20,
+        214,
+        236
+      ],
+      "scale": 0.57143
+    },
+    {
+      "path": "ui/node_icons/training_advanced/slow_resistance_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        29,
+        1,
+        379,
+        377
+      ],
+      "normalized_bbox": [
+        27,
+        20,
+        228,
+        236
+      ],
+      "scale": 0.57447
+    },
+    {
+      "path": "ui/node_icons/combat_abilities/basic_sword_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        83,
+        44,
+        437,
+        374
+      ],
+      "normalized_bbox": [
+        20,
+        27,
+        236,
+        228
+      ],
+      "scale": 0.61017
+    },
+    {
+      "path": "ui/node_icons/combat_abilities/sword_control_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        100,
+        39,
+        387,
+        374
+      ],
+      "normalized_bbox": [
+        35,
+        20,
+        220,
+        236
+      ],
+      "scale": 0.64478
+    },
+    {
+      "path": "ui/node_icons/combat_abilities/sword_wind_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        25,
+        62,
+        423,
+        374
+      ],
+      "normalized_bbox": [
+        20,
+        43,
+        236,
+        212
+      ],
+      "scale": 0.54271
+    },
+    {
+      "path": "ui/node_icons/combat_abilities/chain_flying_sword_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        42,
+        0,
+        459,
+        331
+      ],
+      "normalized_bbox": [
+        20,
+        42,
+        236,
+        213
+      ],
+      "scale": 0.51799
+    },
+    {
+      "path": "ui/node_icons/combat_abilities/thunder_talisman_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        85,
+        0,
+        393,
+        374
+      ],
+      "normalized_bbox": [
+        39,
+        20,
+        217,
+        236
+      ],
+      "scale": 0.57754
+    },
+    {
+      "path": "ui/node_icons/combat_abilities/myriad_sword_formation_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        14,
+        0,
+        424,
+        365
+      ],
+      "normalized_bbox": [
+        20,
+        32,
+        236,
+        224
+      ],
+      "scale": 0.52683
+    },
+    {
+      "path": "ui/node_icons/combat_abilities/evasive_step_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        38,
+        35,
+        450,
+        320
+      ],
+      "normalized_bbox": [
+        20,
+        53,
+        236,
+        202
+      ],
+      "scale": 0.52427
+    },
+    {
+      "path": "ui/node_icons/combat_abilities/temporary_overdrive_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        70,
+        0,
+        468,
+        347
+      ],
+      "normalized_bbox": [
+        20,
+        34,
+        236,
+        222
+      ],
+      "scale": 0.54271
+    },
+    {
+      "path": "ui/node_icons/combat_abilities/perfect_dodge_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        0,
+        7,
+        431,
+        337
+      ],
+      "normalized_bbox": [
+        20,
+        45,
+        236,
+        210
+      ],
+      "scale": 0.50116
+    },
+    {
+      "path": "ui/node_icons/combat_modifiers/power_up_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        41,
+        47,
+        380,
+        413
+      ],
+      "normalized_bbox": [
+        28,
+        20,
+        228,
+        236
+      ],
+      "scale": 0.59016
+    },
+    {
+      "path": "ui/node_icons/combat_modifiers/cooldown_down_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        37,
+        63,
+        371,
+        412
+      ],
+      "normalized_bbox": [
+        24,
+        20,
+        231,
+        236
+      ],
+      "scale": 0.61891
+    },
+    {
+      "path": "ui/node_icons/combat_modifiers/range_up_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        13,
+        81,
+        382,
+        410
+      ],
+      "normalized_bbox": [
+        20,
+        31,
+        236,
+        224
+      ],
+      "scale": 0.58537
+    },
+    {
+      "path": "ui/node_icons/combat_modifiers/extra_projectile_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        34,
+        38,
+        388,
+        428
+      ],
+      "normalized_bbox": [
+        30,
+        20,
+        226,
+        236
+      ],
+      "scale": 0.55385
+    },
+    {
+      "path": "ui/node_icons/combat_modifiers/pierce_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        9,
+        72,
+        409,
+        428
+      ],
+      "normalized_bbox": [
+        20,
+        32,
+        236,
+        224
+      ],
+      "scale": 0.54
+    },
+    {
+      "path": "ui/node_icons/combat_modifiers/chain_effect_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        0,
+        25,
+        380,
+        428
+      ],
+      "normalized_bbox": [
+        26,
+        20,
+        230,
+        236
+      ],
+      "scale": 0.53598
+    },
+    {
+      "path": "ui/node_icons/combat_modifiers/area_expand_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        33,
+        0,
+        400,
+        365
+      ],
+      "normalized_bbox": [
+        20,
+        20,
+        236,
+        235
+      ],
+      "scale": 0.58856
+    },
+    {
+      "path": "ui/node_icons/combat_modifiers/duration_up_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        60,
+        0,
+        409,
+        361
+      ],
+      "normalized_bbox": [
+        23,
+        20,
+        232,
+        236
+      ],
+      "scale": 0.59834
+    },
+    {
+      "path": "ui/node_icons/combat_modifiers/elite_focus_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        0,
+        0,
+        387,
+        370
+      ],
+      "normalized_bbox": [
+        20,
+        24,
+        236,
+        231
+      ],
+      "scale": 0.55814
+    },
+    {
+      "path": "ui/node_icons/combat_mechanics/dodge_spell_link_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        52,
+        90,
+        465,
+        324
+      ],
+      "normalized_bbox": [
+        20,
+        67,
+        236,
+        189
+      ],
+      "scale": 0.523
+    },
+    {
+      "path": "ui/node_icons/combat_mechanics/extra_dodge_charge_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        49,
+        91,
+        446,
+        329
+      ],
+      "normalized_bbox": [
+        20,
+        63,
+        236,
+        192
+      ],
+      "scale": 0.54408
+    },
+    {
+      "path": "ui/node_icons/combat_mechanics/afterimage_branch_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        8,
+        82,
+        481,
+        336
+      ],
+      "normalized_bbox": [
+        20,
+        70,
+        236,
+        186
+      ],
+      "scale": 0.45666
+    },
+    {
+      "path": "ui/node_icons/combat_mechanics/charging_enemy_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        81,
+        37,
+        481,
+        342
+      ],
+      "normalized_bbox": [
+        20,
+        45,
+        236,
+        210
+      ],
+      "scale": 0.54
+    },
+    {
+      "path": "ui/node_icons/combat_mechanics/ranged_enemy_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        51,
+        48,
+        472,
+        342
+      ],
+      "normalized_bbox": [
+        20,
+        52,
+        236,
+        203
+      ],
+      "scale": 0.51306
+    },
+    {
+      "path": "ui/node_icons/combat_mechanics/environment_lightning_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        67,
+        14,
+        428,
+        342
+      ],
+      "normalized_bbox": [
+        20,
+        30,
+        236,
+        226
+      ],
+      "scale": 0.59834
+    },
+    {
+      "path": "ui/node_icons/combat_mechanics/exploding_enemy_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        70,
+        0,
+        458,
+        296
+      ],
+      "normalized_bbox": [
+        20,
+        45,
+        236,
+        210
+      ],
+      "scale": 0.5567
+    },
+    {
+      "path": "ui/node_icons/combat_mechanics/commanding_enemy_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        25,
+        0,
+        472,
+        275
+      ],
+      "normalized_bbox": [
+        20,
+        61,
+        236,
+        194
+      ],
+      "scale": 0.48322
+    },
+    {
+      "path": "ui/node_icons/combat_mechanics/shielded_enemy_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        32,
+        0,
+        456,
+        284
+      ],
+      "normalized_bbox": [
+        20,
+        55,
+        236,
+        200
+      ],
+      "scale": 0.50943
+    },
+    {
+      "path": "ui/node_icons/expedition/beast_tracks_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        56,
+        75,
+        457,
+        365
+      ],
+      "normalized_bbox": [
+        20,
+        50,
+        236,
+        206
+      ],
+      "scale": 0.53865
+    },
+    {
+      "path": "ui/node_icons/expedition/monster_pack_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        29,
+        35,
+        433,
+        368
+      ],
+      "normalized_bbox": [
+        20,
+        39,
+        236,
+        217
+      ],
+      "scale": 0.53465
+    },
+    {
+      "path": "ui/node_icons/expedition/rare_beast_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        18,
+        18,
+        400,
+        374
+      ],
+      "normalized_bbox": [
+        20,
+        27,
+        236,
+        228
+      ],
+      "scale": 0.56545
+    },
+    {
+      "path": "ui/node_icons/expedition/wandering_cultivator_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        86,
+        25,
+        439,
+        367
+      ],
+      "normalized_bbox": [
+        20,
+        23,
+        236,
+        232
+      ],
+      "scale": 0.6119
+    },
+    {
+      "path": "ui/node_icons/expedition/treasure_contest_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        42,
+        30,
+        427,
+        354
+      ],
+      "normalized_bbox": [
+        20,
+        37,
+        236,
+        219
+      ],
+      "scale": 0.56104
+    },
+    {
+      "path": "ui/node_icons/expedition/spirit_beast_trail_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        20,
+        0,
+        413,
+        374
+      ],
+      "normalized_bbox": [
+        20,
+        25,
+        236,
+        231
+      ],
+      "scale": 0.54962
+    },
+    {
+      "path": "ui/node_icons/expedition/spirit_vein_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        56,
+        5,
+        455,
+        357
+      ],
+      "normalized_bbox": [
+        20,
+        32,
+        236,
+        223
+      ],
+      "scale": 0.54135
+    },
+    {
+      "path": "ui/node_icons/expedition/guarded_spirit_vein_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        42,
+        5,
+        436,
+        343
+      ],
+      "normalized_bbox": [
+        20,
+        35,
+        236,
+        220
+      ],
+      "scale": 0.54822
+    },
+    {
+      "path": "ui/node_icons/expedition/grand_spirit_vein_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        34,
+        0,
+        412,
+        357
+      ],
+      "normalized_bbox": [
+        20,
+        26,
+        236,
+        230
+      ],
+      "scale": 0.57143
+    },
+    {
+      "path": "ui/node_icons/battlefield/thunder_trace_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        89,
+        23,
+        422,
+        374
+      ],
+      "normalized_bbox": [
+        25,
+        20,
+        230,
+        236
+      ],
+      "scale": 0.61538
+    },
+    {
+      "path": "ui/node_icons/battlefield/hazardous_ground_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        33,
+        55,
+        427,
+        358
+      ],
+      "normalized_bbox": [
+        20,
+        45,
+        236,
+        211
+      ],
+      "scale": 0.54822
+    },
+    {
+      "path": "ui/node_icons/battlefield/formation_node_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        20,
+        17,
+        405,
+        374
+      ],
+      "normalized_bbox": [
+        20,
+        28,
+        236,
+        228
+      ],
+      "scale": 0.56104
+    },
+    {
+      "path": "ui/node_icons/battlefield/moving_formation_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        35,
+        0,
+        455,
+        374
+      ],
+      "normalized_bbox": [
+        20,
+        32,
+        236,
+        224
+      ],
+      "scale": 0.51429
+    },
+    {
+      "path": "ui/node_icons/battlefield/boss_gate_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        39,
+        3,
+        431,
+        354
+      ],
+      "normalized_bbox": [
+        20,
+        31,
+        236,
+        224
+      ],
+      "scale": 0.55102
+    },
+    {
+      "path": "ui/node_icons/battlefield/return_gate_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        27,
+        0,
+        397,
+        374
+      ],
+      "normalized_bbox": [
+        21,
+        20,
+        235,
+        236
+      ],
+      "scale": 0.57754
+    },
+    {
+      "path": "ui/node_icons/battlefield/reward_node_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        84,
+        0,
+        438,
+        335
+      ],
+      "normalized_bbox": [
+        20,
+        26,
+        236,
+        230
+      ],
+      "scale": 0.61017
+    },
+    {
+      "path": "ui/node_icons/battlefield/locked_node_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        54,
+        24,
+        438,
+        332
+      ],
+      "normalized_bbox": [
+        20,
+        41,
+        236,
+        214
+      ],
+      "scale": 0.5625
+    },
+    {
+      "path": "ui/node_icons/battlefield/active_node_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        17,
+        0,
+        404,
+        350
+      ],
+      "normalized_bbox": [
+        20,
+        30,
+        236,
+        225
+      ],
+      "scale": 0.55814
+    },
+    {
+      "path": "ui/node_icons/node_frames/frame_locked_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        45,
+        18,
+        591,
+        602
+      ],
+      "normalized_bbox": [
+        16,
+        8,
+        240,
+        248
+      ],
+      "scale": 0.41096
+    },
+    {
+      "path": "ui/node_icons/node_frames/frame_available_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        32,
+        36,
+        592,
+        600
+      ],
+      "normalized_bbox": [
+        9,
+        8,
+        247,
+        248
+      ],
+      "scale": 0.42553
+    },
+    {
+      "path": "ui/node_icons/node_frames/frame_selected_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        25,
+        1,
+        620,
+        593
+      ],
+      "normalized_bbox": [
+        8,
+        8,
+        248,
+        247
+      ],
+      "scale": 0.40336
+    },
+    {
+      "path": "ui/node_icons/node_frames/frame_mastered_256.png",
+      "border_alpha_max": 0,
+      "source_bbox": [
+        0,
+        15,
+        593,
+        575
+      ],
+      "normalized_bbox": [
+        8,
+        14,
+        248,
+        241
+      ],
+      "scale": 0.40472
+    }
+  ]
+}

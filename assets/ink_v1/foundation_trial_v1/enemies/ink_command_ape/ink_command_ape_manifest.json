@@ -1,0 +1,32 @@
+{
+  "id": "ink_command_ape",
+  "name_ko": "묵령후원",
+  "role": "command_normal_enemy",
+  "first_appearance": "축기 5층",
+  "sheet": {
+    "columns": 6,
+    "rows": 3,
+    "frame_width": 256,
+    "frame_height": 256,
+    "pivot": [
+      128,
+      224
+    ],
+    "uniform_source_scale": 0.671233
+  },
+  "rows": [
+    "move_01_to_06",
+    "mechanic_action_01_to_06",
+    "hit_stagger_collapse_defeat_then_2_blank"
+  ],
+  "layers": [
+    "body",
+    "fx",
+    "combined"
+  ],
+  "mechanic_assets": {
+    "affected_marker": "command_buff_marker_sheet_4x1.png",
+    "range": "command_range_256.png",
+    "rule": "marker and celadon outline must appear on every affected monster"
+  }
+}

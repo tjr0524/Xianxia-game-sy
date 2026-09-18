@@ -1,0 +1,34 @@
+{
+  "id": "ink_armored_charging_boar",
+  "name_ko": "묵갑돌저",
+  "role": "charge_normal_enemy",
+  "first_appearance": "축기 1층",
+  "sheet": {
+    "columns": 6,
+    "rows": 3,
+    "frame_width": 256,
+    "frame_height": 256,
+    "pivot": [
+      128,
+      224
+    ],
+    "uniform_source_scale": 0.68
+  },
+  "rows": [
+    "idle_walk_01_to_06",
+    "windup_01_to_03_then_charge_01_to_03",
+    "hit_stagger_collapse_defeat_then_2_blank"
+  ],
+  "layers": [
+    "body",
+    "fx",
+    "combined"
+  ],
+  "telegraph": {
+    "shape": "oriented_rectangle",
+    "asset": "charge_lane_telegraph_512x128.png",
+    "impact_asset": "charge_lane_impact_512x128.png",
+    "runtime_rule": "stretch from monster front to charge endpoint; collision uses identical rectangle"
+  },
+  "gait_rule": "walk frames alternate left/right foreleg contact; rear legs use opposing phase; no per-frame scale"
+}
