@@ -1,4 +1,5 @@
 name: Publish tutorial preview
+# guided-onboarding validators synced
 
 on:
   push:
