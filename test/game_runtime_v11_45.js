@@ -244,8 +244,6 @@ function takePlayerDamage(dmg,grantGrace=false){
 }
 function updateNonCombatRecovery(dt){
   if(!M.trainingNodes?.f1_harmony||P.hp<=0||P.hp>=P.max)return;
-  const threatened=enemies.some(e=>e.type!=='spirit'&&e.hp>0&&(e.aggressive||distance(P,e)<150));
-  if(threatened||elapsed-(run.lastDamageAt??-999)<3)return;
   const before=P.hp;
   P.hp=Math.min(P.max,P.hp+P.max*.025*dt);
   run.regenPulse=(run.regenPulse||0)+dt;
@@ -1588,7 +1586,7 @@ function frameSnapshot(){
     elapsed,
     run:run?{...run}:null,
     P:{...P},
-    enemies:enemies.map(enemy=>({id:enemy.id,type:enemy.type,x:enemy.x,y:enemy.y,hp:enemy.hp,max:enemy.max,rare:enemy.rare,rareTrait:enemy.rareTrait,treasure:enemy.treasure,carryCount:enemy.carry?.length||0})),
+    enemies:enemies.map(enemy=>({id:enemy.id,type:enemy.type,x:enemy.x,y:enemy.y,hp:enemy.hp,max:enemy.max,rare:enemy.rare,rareTrait:enemy.rareTrait,treasure:enemy.treasure,carryCount:enemy.carry?.length||0,bond:enemy.bond||0,captureRange:enemy.type==='spirit'?40:0})),
     objects:objects.map(object=>({type:object.type,x:object.x,y:object.y,value:object.value,grade:object.grade})),
     vein:vein?{...vein}:null,
     hazards:hazards.map(hazard=>({...hazard}))
