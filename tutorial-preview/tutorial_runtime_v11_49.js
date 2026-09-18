@@ -28,6 +28,30 @@ function saveMeta(){
   try{localStorage.setItem(META_KEY,JSON.stringify(meta))}catch{}
 }
 
+function freshSave(M){
+  if(!M)return false;
+  const mortal=(M.realm?.major??-1)<0;
+  const noRuns=(+M.stats?.totalRuns||0)===0;
+  const noSafe=(+M.stats?.totalSafe||0)===0;
+  const noTraining=Object.keys(M.trainingNodes||{}).every(k=>!M.trainingNodes[k]);
+  const noSkills=!M.skillUnlocks?.sword;
+  const noClaims=Object.keys(M.daohang?.claimed||{}).length===0;
+  return mortal&&noRuns&&noSafe&&noTraining&&noSkills&&noClaims;
+}
+
+function reconcileMetaWithSave(M){
+  // test / tutorial-preview share one GitHub Pages origin, so localStorage is shared
+  // across both paths. A game reset can therefore leave tutorial-only metadata stale.
+  if(!freshSave(M))return;
+  if(Object.keys(meta).length===0)return;
+  meta={};
+  lastKey='';
+  closedKey='';
+  lastRunStartedAt=0;
+  runStartPos=null;
+  saveMeta();
+}
+
 function snap(){
   try{return D.snapshot()}catch{return null}
 }
@@ -662,6 +686,8 @@ function guideFor(s){
 
 function frame(s){
   if(!s||!s.M)return;
+
+  reconcileMetaWithSave(s.M);
 
   if(s.phase==='run'&&lastSnap?.phase!=='run'){
     lastRunStartedAt=Date.now();
