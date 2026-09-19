@@ -168,7 +168,7 @@ const OLD=['xianxia_proto_v10','xianxia_proto_v9','xianxia_proto_v8','xianxia_pr
 const zoneBlank=()=>({tree:{},runs:0,safe:0,eliteWins:0,bestStone:0,bestHerb:0,bestKills:0});
 const skillBlank=()=>Object.fromEntries(SKILLS.map(skill=>[skill.id,{u:0,pow:0,range:0,cycle:0}]));
 const fresh=()=>({
-  stone:0,herb:0,herb2:0,herb3:0,thunderMark:0,purpleEssence:0,
+  stone:0,herb:0,herb2:0,herb3:0,thunderMark:0,purpleEssence:0,taixuSigil:0,
   realm:{major:-1,stage:0},
   cult:{atk:1,mov:150,sen:1,hp:90},
   skills:skillBlank(),
@@ -244,6 +244,7 @@ function loadState(){
   state.herb3=Number(state.herb3)||0;
   state.thunderMark=Math.max(0,Math.floor(Number(state.thunderMark)||0));
   state.purpleEssence=Math.max(0,Math.floor(Number(state.purpleEssence)||0));
+  state.taixuSigil=Math.max(0,Math.floor(Number(state.taixuSigil)||0));
   if(!AREAS.some(area=>area.id===state.area))state.area='qingyun';
   if(!PLANS.some(plan=>plan.id===state.settings.plan))state.settings.plan='harvest';
   if(state.realm.major>=0&&!Object.values(state.skills).some(skill=>skill.u))state.skills.sword.u=1;
@@ -841,7 +842,7 @@ function foundationMaterial(){
   const stage=M.realm.stage||1;
   if(stage<=3)return {key:'thunderMark',name:'뢰흔'};
   if(stage<=6)return {key:'purpleEssence',name:'자운정수'};
-  return null;
+  return {key:'taixuSigil',name:'태허진문'};
 }
 function secondaryCost(price,gradeOverride=null){
   const amount=Math.max(0,Number(price?.h)||0);
@@ -870,7 +871,7 @@ function resourceSummary(){
   if(M.realm.major===1){
     if((M.realm.stage||1)<=3)return `뢰흔 ${M.thunderMark||0}`;
     if((M.realm.stage||1)<=6)return `자운정수 ${M.purpleEssence||0}`;
-    return `후기 재료 미정 · 上${M.herb3||0}`;
+    return `태허진문 ${M.taixuSigil||0}`;
   }
   return `下${M.herb} · 中${M.herb2} · 上${M.herb3}`;
 }
@@ -974,8 +975,8 @@ function breakthroughCost(){
     '1:4':{s:11000,h:8,hg:2},
     '1:5':{s:13400,h:12,hg:2},
     '1:6':{s:16300,h:16,hg:2},
-    '1:7':{s:21100,h:190,hg:2},
-    '1:8':{s:27200,h:240,hg:2}
+    '1:7':{s:21100,h:8,hg:2},
+    '1:8':{s:27200,h:12,hg:2}
   };
   return costs[`${M.realm.major}:${M.realm.stage}`]||{s:999999999,h:999999,hg:2};
 }
@@ -999,6 +1000,7 @@ function ventureCopy(){
   if(M.area==='blood')return ['영맥 잠행','영맥에서 영석 10개 채굴 · 혼합 보상'];
   if(M.area==='thunder')return ['천뢰 수행','낙뢰에 2회 직격 · 뢰흔 확보'];
   if(M.area==='marsh')return ['자운 사냥','특수 요수 2마리 격파 · 자운정수 확보'];
+  if(M.area==='taixu')return ['진안 파훼','진안 수성 1회 완수 · 태허진문 확보'];
   return ['기믹 수행','비경 고유 기믹을 수행'];
 }
 function planCopy(plan){
@@ -1026,6 +1028,7 @@ function objectiveData(){
   }
   if(M.area==='thunder')return {label:'천뢰 수행',value:run?.lightningHits||0,target:2,reward:'뢰흔'};
   if(M.area==='marsh')return {label:'자운 사냥',value:run?.purpleEssence||0,target:2,reward:'자운정수'};
+  if(M.area==='taixu')return {label:'진안 파훼',value:run?.taixuTrials||0,target:1,reward:'태허진문'};
   return {label:'기믹 수행',value:run?.kills||0,target:4,reward:'영석'};
 }
 function objectiveMet(){
@@ -1048,6 +1051,7 @@ function objectiveReward(){
   M.stone+=stone;
   if(M.area==='thunder'){M.thunderMark=(M.thunderMark||0)+1;return `영석 +${stone} · 뢰흔 +1`}
   if(M.area==='marsh'){M.purpleEssence=(M.purpleEssence||0)+1;return `영석 +${stone} · 자운정수 +1`}
+  if(M.area==='taixu'){M.taixuSigil=(M.taixuSigil||0)+1;return `영석 +${stone} · 태허진문 +1`}
   if(M.realm.major>=1)return `영석 +${stone}`;
   const herbs=1+Math.floor(index/2);
   herbAdd(Math.min(2,index),herbs);
@@ -1638,7 +1642,7 @@ function begin(){
   const herbInitial=foundationEra?0:Math.ceil(herbTotal*.72);
   const beastTotal=0,beastInitial=0;
   run={
-    s:0,h0:0,h1:0,h2:0,thunderMarks:0,purpleEssence:0,left:0,minHp:1,kills:0,beastKills:0,elite:0,
+    s:0,h0:0,h1:0,h2:0,thunderMarks:0,purpleEssence:0,taixuSigils:0,taixuTrials:0,left:0,minHp:1,kills:0,beastKills:0,elite:0,
     thieves:0,treasures:0,mined:0,dodges:0,lightningHits:0,combo:0,comboTime:0,bestCombo:0,
     herbLeft:herbTotal-herbInitial,beastLeft:beastTotal-beastInitial,
     herbTimer:7+Math.random()*3,beastTimer:4.2+Math.random()*1.8,rogueTimer:6,
@@ -2135,12 +2139,14 @@ function finish(reason){
   const h2=Math.floor(run.h2*ratio);
   const thunderMarks=Math.floor((run.thunderMarks||0)*ratio);
   const purpleEssence=Math.floor((run.purpleEssence||0)*ratio);
+  const taixuSigils=Math.floor((run.taixuSigils||0)*ratio);
   M.stone+=stone;
   M.herb+=h0;
   M.herb2+=h1;
   M.herb3+=h2;
   M.thunderMark=(M.thunderMark||0)+thunderMarks;
   M.purpleEssence=(M.purpleEssence||0)+purpleEssence;
+  M.taixuSigil=(M.taixuSigil||0)+taixuSigils;
 
   const zone=Z();
   zone.runs++;
@@ -2166,7 +2172,7 @@ function finish(reason){
   UI.ret.disabled=true;
   UI.ot.textContent=safe?'무사 귀환':reason==='dead'?'육신 중상':'비경 붕괴 · 강제 이탈';
   const resultLead=safe?'전리품 전량 확보':reason==='dead'?'전투 불능 · 전리품 40% 회수':'비경이 무너지며 강제로 튕겨났습니다.<br><b>전리품 60% 소실</b> · 40%만 회수';
-  const specialLoot=[thunderMarks?`뢰흔 ${thunderMarks}`:'',purpleEssence?`자운정수 ${purpleEssence}`:''].filter(Boolean).join(' · ');
+  const specialLoot=[thunderMarks?`뢰흔 ${thunderMarks}`:'',purpleEssence?`자운정수 ${purpleEssence}`:'',taixuSigils?`태허진문 ${taixuSigils}`:''].filter(Boolean).join(' · ');
   UI.ox.innerHTML=`${resultLead}<br><b>영석 ${stone}${h0+h1+h2?` · 영초 下${h0} 中${h1} 上${h2}`:''}${specialLoot?` · ${specialLoot}`:''}</b>${objective}${event}`;
   render();
   draw();
@@ -2176,7 +2182,7 @@ function finish(reason){
 function syncHud(){
   UI.hp.textContent=`${Math.ceil(P.hp)} / ${P.max}`;
   UI.hpFill.style.width=`${Math.max(0,P.hp/P.max)*100}%`;
-  UI.loot.textContent=M.realm.major>=1?`영석 ${run?.s||0}${run?.thunderMarks?` · 뢰흔 ${run.thunderMarks}`:''}${run?.purpleEssence?` · 자운정수 ${run.purpleEssence}`:''}`:`영석 ${run?.s||0} · 영초 ${totalHerbs(run)}`;
+  UI.loot.textContent=M.realm.major>=1?`영석 ${run?.s||0}${run?.thunderMarks?` · 뢰흔 ${run.thunderMarks}`:''}${run?.purpleEssence?` · 자운정수 ${run.purpleEssence}`:''}${run?.taixuSigils?` · 태허진문 ${run.taixuSigils}`:''}`:`영석 ${run?.s||0} · 영초 ${totalHerbs(run)}`;
   const remaining=Math.max(0,(run?.limit||RUN_TIME)-elapsed);
   UI.time.textContent=`${remaining.toFixed(1)}초`;
   UI.time.style.color=phase==='run'&&remaining<=5?'#ff776c':phase==='run'&&remaining<=10?'#e8a06f':'';
