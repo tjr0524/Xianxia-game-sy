@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.50.10';
+const VERSION='11.50.18';;
 if(window.__xianxiaFormationSkillsVersion===VERSION)return;
 window.__xianxiaFormationSkillsVersion=VERSION;
 
@@ -34,7 +34,7 @@ const SPELL_COST={
   wave:[null,{s:150,h:5,hg:0},{s:180,h:7,hg:0},{s:210,h:9,hg:0},{s:240,h:12,hg:0},{s:280,h:15,hg:0}],
   chain:[null,{s:180,h:5,hg:1},{s:220,h:7,hg:1},{s:260,h:9,hg:1},{s:320,h:12,hg:1},{s:380,h:15,hg:1}],
   thunder:[null,{s:400,h:4,hg:2},{s:500,h:5,hg:2},{s:650,h:7,hg:2},{s:800,h:10,hg:2},{s:950,h:15,hg:2}],
-  array:[null,{s:1200,h:12,hg:2},null,null,null,null]
+  array:[null,{s:1200,h:12,hg:2},{s:0,h:0,hg:2},{s:0,h:0,hg:2},{s:0,h:0,hg:2},{s:0,h:0,hg:2}]
 };
 
 const ART_RANKS={
@@ -230,7 +230,6 @@ function known(M,id){return !!M.skillUnlocks?.[id]||!!M.skills?.[id]?.u}
 function spellRank(M,id){return known(M,id)?Math.max(1,Math.min(5,+M.skills?.[id]?.pow||1)):0}
 function spellCap(M,s){
   if(!s||!reached(M,s.req))return 0;
-  if(s.id==='array')return 1;
   if(s.id==='thunder'&&(M.realm?.major??-1)>0)return 5;
   if((M.realm?.major??-1)>s.req.major)return 5;
   return Math.max(1,Math.min(5,(M.realm?.stage||0)-s.req.stage+1));
@@ -321,7 +320,7 @@ function upgradeMain(id){
         return true;
       }
       const rank=spellRank(M,id),cap=spellCap(M,def);
-      if(rank>=cap){notice(id==='array'?'만검진 Rank 2~5 비용은 아직 밸런스 미정입니다.':'현재 경지의 숙련 상한입니다.');return false}
+      if(rank>=cap){notice('현재 경지의 숙련 상한입니다.');return false}
       const c=SPELL_COST[id]?.[rank+1];
       if(!c){notice('다음 Rank 비용이 아직 확정되지 않았습니다.');return false}
       if(!pay(M,c)){notice('숙련 강화 재료가 부족합니다.');return false}
@@ -382,10 +381,14 @@ function linePath(){
   }
   return h;
 }
-function rankPips(rank,cap){
-  let h='';
-  for(let i=1;i<=5;i++)h+=`<i class="${i<=rank?'on':i>cap?'cap':''}"></i>`;
-  return h;
+function rankRing(rank,cap){
+  const r=Math.max(0,Math.min(5,+rank||0)),c=Math.max(0,Math.min(5,+cap||0));
+  let h='<svg class="fs49-rankring" viewBox="0 0 60 60" aria-hidden="true">';
+  for(let i=0;i<5;i++){
+    const cls=i<r?'on':i>=c?'cap':'';
+    h+=`<circle class="${cls}" cx="30" cy="30" r="26" pathLength="100" stroke-dasharray="16 84" transform="rotate(${i*72-90} 30 30)"></circle>`;
+  }
+  return h+'</svg>';
 }
 function nodeClass(M,s){
   if(mainUnlocked(M,s))return'mastered';
@@ -403,10 +406,10 @@ function mainNode(M,s,index){
   const r=mainRank(M,s),cap=mainCap(M,s);
   return `<button type="button" class="fs49-main ${nodeClass(M,s)} ${active.type==='main'&&active.id===s.id?'active':''}"
       style="left:${p.x/10}%;top:${p.y/10}%" data-act="main" data-id="${s.id}" aria-label="${s.name} Rank ${r}">
+    ${rankRing(r,cap)}
     <img src="${s.icon}" alt="">
     <b>${s.short}</b>
     <em>R${r}</em>
-    <span class="fs49-rankpips">${rankPips(r,cap)}</span>
   </button>`;
 }
 function summaryPanel(M){
@@ -445,7 +448,7 @@ function mainPanel(M,s,phase){
       costText=formatCost(c);actionText='Rank 강화';
       if(phase==='run'||!c||!canPay(M,c))disabled='disabled';
     }else{
-      nextText=s.id==='array'?'현재 데이터는 Rank 1까지만 확정':'현재 경지 Rank 상한';
+      nextText='현재 경지 Rank 상한';
       actionText='강화 완료';disabled='disabled';
     }
   }else{
