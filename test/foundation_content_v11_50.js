@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.50.1';
+const VERSION='11.50.2';
 if(window.__xianxiaFoundationContent?.version===VERSION)return;
 
 const TYPES=new Set(['charging_boar','ranged_toad','exploding_beetle','command_ape','shield_pangolin','sword_sentinel','formation_warden','foundation_guardian','taixu_boss']);
@@ -31,7 +31,7 @@ const ART={
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const rank=(api,id)=>clamp(Math.round(+api.state.formationSkills?.ranks?.[id]||0),0,5);
-const trait=(api,system,id)=>Object.values(api.state.formationSkills?.traits||{}).includes?.(`${system}:${id}`)||Object.values(api.state.formationSkills?.traits||{}).includes?.(id);
+const trait=(api,system,id)=>{const tiers=api.state.formationSkills?.traits?.[system];return !!tiers&&Object.values(tiers).some(row=>row?.selected===id)};
 const now=api=>api.elapsed||0;
 let controls=null;
 
@@ -45,7 +45,7 @@ function ensureControls(){
   document.head.appendChild(style);
   controls=document.createElement('div');
   controls.className='foundation-arts';
-  controls.innerHTML=['shield','dash','burst'].map(id=>`<button class="foundation-art" data-art="${id}" aria-label="${id}"><img alt="" data-src="${ICON[id]}"><b>${{shield:'호체',dash:'축지',burst:'폭주'}[id]}</b><i></i></button>`).join('');
+  controls.innerHTML=['dash','burst'].map(id=>`<button class="foundation-art" data-art="${id}" aria-label="${id}"><img alt="" data-src="${ICON[id]}"><b>${{dash:'축지',burst:'폭주'}[id]}</b><i></i></button>`).join('');
   controls.addEventListener('pointerdown',event=>event.stopPropagation());
   controls.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();const id=event.target.closest('[data-art]')?.dataset.art;if(id)activateArt(id)});
   game.appendChild(controls);
@@ -58,12 +58,6 @@ function activateArt(id){
   if(!api||api.phase!=='run')return;
   const arts=artState(api),r=rank(api,id);
   if(!arts||!r)return;
-  if(id==='shield'&&arts.shieldCd<=0){
-    let hp=api.player.max*ART.shield.hp[r];
-    if(trait(api,'shield','unyield'))hp*=1.25;
-    arts.shieldHp=hp;arts.shieldMax=hp;arts.shieldCd=ART.shield.cd[r];
-    api.ring(api.player.x,api.player.y,38,'#8cd6c2',.45);api.pop(api.player.x,api.player.y-30,'호체막','#c8fff0',.8);
-  }
   if(id==='dash'&&arts.dashCharges>=1){
     let distance=ART.dash.distance[r];
     if(trait(api,'dash','flow'))distance*=1.25;if(trait(api,'dash','long'))distance*=1.35;
@@ -80,7 +74,7 @@ function activateArt(id){
     let duration=ART.burst.duration[r],cooldown=ART.burst.cd[r];
     if(trait(api,'burst','peak'))duration*=.75;
     if(trait(api,'burst','cycle')){duration*=1.4;cooldown*=.85}
-    arts.burstTime=duration;arts.burstCd=cooldown;
+    arts.burstTime=duration;arts.burstCd=cooldown;arts.burstKillExtend=0;
     api.ring(api.player.x,api.player.y,64,'#ffe09a',.6);api.pop(api.player.x,api.player.y-34,'진기폭주','#fff0b8',1);
   }
   updateControls(api);
@@ -112,10 +106,13 @@ function configureEnemy(enemy,type,options,api){
 
 function spawnType(area,realm,fallback){
   const stage=realm?.major>=1?(realm.stage||1):0,u=Math.random();
-  if(area==='thunder')return u<.62?'charging_boar':fallback;
-  if(area==='marsh'){
-    const pool=['ranged_toad'];if(stage>=4)pool.push('exploding_beetle');if(stage>=5)pool.push('command_ape');if(stage>=6)pool.push('shield_pangolin');
+  if(area==='thunder'){
+    const pool=['charging_boar'];if(stage>=2)pool.push('ranged_toad');
     return u<.82?pool[Math.floor(Math.random()*pool.length)]:fallback;
+  }
+  if(area==='marsh'){
+    const pool=[];if(stage>=4)pool.push('exploding_beetle');if(stage>=5)pool.push('command_ape');if(stage>=6)pool.push('shield_pangolin');
+    return pool.length&&u<.86?pool[Math.floor(Math.random()*pool.length)]:fallback;
   }
   if(area==='taixu')return u<.82?(stage>=8&&Math.random()<.48?'formation_warden':'sword_sentinel'):fallback;
   return fallback;
@@ -123,7 +120,8 @@ function spawnType(area,realm,fallback){
 
 function spawnAt(api,type,x,y){return api.spawn(type,{p:{x:clamp(x,70,api.W-70),y:clamp(y,70,api.H-70)},homeX:x,homeY:y,packLeader:true,grade:'normal'})}
 function onBegin(api){
-  api.run.foundation={bossKilled:0,arts:{shieldHp:0,shieldMax:0,shieldCd:0,dashCharges:ART.dash.charges[rank(api,'dash')]||0,dashRecharge:0,burstCd:0,burstTime:0,dashSpellBoost:0},bossSpawned:0};
+  const sr=rank(api,'shield');let shieldMax=sr?api.player.max*ART.shield.hp[sr]:0;if(sr&&trait(api,'shield','unyield'))shieldMax*=1.25;
+  api.run.foundation={bossKilled:0,arts:{shieldHp:shieldMax,shieldMax,shieldCd:0,dashCharges:ART.dash.charges[rank(api,'dash')]||0,dashRecharge:0,burstCd:0,burstTime:0,burstKillExtend:0,dashSpellBoost:0},bossSpawned:0};
   if(api.state.area==='foundation_trial')spawnAt(api,'foundation_guardian',api.W*.5,api.H*.34);
   if(api.state.area==='taixu'&&api.state.realm?.major===1&&api.state.realm.stage>=9)spawnAt(api,'taixu_boss',api.W*.5,api.H*.32);
   updateControls(api);
@@ -132,8 +130,9 @@ function onBegin(api){
 function updateRun(dt,api){
   const arts=artState(api);if(!arts)return;
   arts.shieldCd=Math.max(0,arts.shieldCd-dt);arts.burstCd=Math.max(0,arts.burstCd-dt);arts.burstTime=Math.max(0,arts.burstTime-dt);arts.dashSpellBoost=Math.max(0,arts.dashSpellBoost-dt);
+  const sr=rank(api,'shield');if(sr&&arts.shieldHp<=0&&arts.shieldCd<=0){let hp=api.player.max*ART.shield.hp[sr];if(trait(api,'shield','unyield'))hp*=1.25;arts.shieldHp=arts.shieldMax=hp;api.ring(api.player.x,api.player.y,38,'#8cd6c2',.35);api.pop(api.player.x,api.player.y-28,'호체 재생','#c8fff0',.65)}
   const dr=rank(api,'dash'),maxCharges=(ART.dash.charges[dr]||0)+(trait(api,'dash','step')?1:0);
-  let recharge=ART.dash.recharge[dr]||99;if(trait(api,'dash','flow'))recharge*=1.10;if(trait(api,'dash','long'))recharge*=.85;if(arts.burstTime>0&&trait(api,'burst','heaven'))recharge/=2.5;
+  let recharge=ART.dash.recharge[dr]||99;if(trait(api,'dash','flow'))recharge/=1.10;if(trait(api,'dash','step'))recharge*=1.25;if(trait(api,'dash','long'))recharge*=.85;if(arts.burstTime>0&&trait(api,'burst','heaven'))recharge/=2.5;
   if(arts.dashCharges<maxCharges){arts.dashRecharge+=dt;if(arts.dashRecharge>=recharge){arts.dashRecharge=0;arts.dashCharges++}}else arts.dashRecharge=0;
   let rate=1;if(arts.burstTime>0){rate=ART.burst.rate[rank(api,'burst')]||1;if(trait(api,'burst','peak'))rate*=1.4;if(trait(api,'burst','cycle'))rate*=.8}
   if(arts.dashSpellBoost>0)rate*=1.35;
@@ -210,7 +209,7 @@ function modifyEnemyDamage(enemy,amount){
 function modifyPlayerDamage(amount,source,api){
   const arts=artState(api);if(!arts?.shieldHp)return amount;
   const blocked=Math.min(arts.shieldHp,amount);arts.shieldHp-=blocked;
-  if(arts.shieldHp<=0){arts.shieldHp=0;api.pop(api.player.x,api.player.y-28,'호체 파괴','#a5e6d7',.8);if(trait(api,'shield','reflux'))for(const id of Object.keys(api.run.skillCooldowns||{}))api.run.skillCooldowns[id]*=.92;if(trait(api,'shield','reverse'))for(const id of Object.keys(api.run.skillCooldowns||{}))api.run.skillCooldowns[id]*=.88}
+  if(arts.shieldHp<=0){arts.shieldHp=0;let regen=ART.shield.cd[rank(api,'shield')]||0;if(trait(api,'shield','unyield'))regen*=1.10;if(trait(api,'shield','reverse'))regen*=1.15;arts.shieldCd=regen;api.pop(api.player.x,api.player.y-28,'호체 파괴','#a5e6d7',.8);if(trait(api,'shield','reflux'))for(const id of Object.keys(api.run.skillCooldowns||{}))api.run.skillCooldowns[id]*=.92;if(trait(api,'shield','reverse'))for(const id of Object.keys(api.run.skillCooldowns||{}))api.run.skillCooldowns[id]*=.88}
   return amount-blocked;
 }
 function beforeEnemyDeath(enemy,api){if(enemy.boss)api.run.foundation.bossKilled=1}
@@ -218,7 +217,7 @@ function rewardEnemy(enemy,api){
   if(!TYPES.has(enemy.type))return false;
   const amount=Math.ceil(90*(enemy.rewardMult||1));api.gainStone(amount,enemy.x,enemy.y);
   if(enemy.boss){api.run.elite=1;api.gainHerb(enemy.type==='taixu_boss'?5:3,2,enemy.x+12,enemy.y);api.pop(enemy.x,enemy.y-42,`${enemy.name} 격파`,'#ffe4a0',1.25)}
-  const arts=artState(api);if(arts&&trait(api,'burst','kill')&&enemy.boss)arts.burstCd=Math.max(0,arts.burstCd-2);
+  const arts=artState(api),special=TYPES.has(enemy.type);if(arts&&special){if(trait(api,'dash','reflux')&&arts.dashCharges<(ART.dash.charges[rank(api,'dash')]||0)+(trait(api,'dash','step')?1:0))arts.dashRecharge+=1.5;if(trait(api,'burst','kill')){arts.burstCd=Math.max(0,arts.burstCd-2);if(arts.burstTime>0&&arts.burstKillExtend<1.2){const add=Math.min(.3,1.2-arts.burstKillExtend);arts.burstTime+=add;arts.burstKillExtend+=add}}}
   return true;
 }
 function onFinish(reason,api){
