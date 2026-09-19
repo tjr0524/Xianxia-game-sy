@@ -259,7 +259,49 @@ function drawVeinProgress(s,t){
   c.strokeText('매장 영석 '+Math.max(0,+v.stock||0),v.x,barY+20);c.fillText('매장 영석 '+Math.max(0,+v.stock||0),v.x,barY+20);
   c.restore();
 }
-function drawHazards(s){const c=S.ctx;for(const h of s.hazards||[]){if(h.visualOwner==='foundation')continue;if(!visible(h.x,h.y,(h.r||0)+80))continue;c.save();const p=h.struck?1:1-Math.max(0,h.t)/(h.ttl||1);c.globalAlpha=h.struck?.8:.25+p*.45;c.strokeStyle=h.struck?'#eaf4ff':'#495b82';c.lineWidth=h.struck?4:2;c.setLineDash(h.struck?[]:[6,6]);c.beginPath();c.arc(h.x,h.y,h.r*(.82+p*.18),0,Math.PI*2);c.stroke();if(h.struck){c.beginPath();c.moveTo(h.x-7,h.y-60);c.lineTo(h.x+5,h.y-24);c.lineTo(h.x-3,h.y-24);c.lineTo(h.x+9,h.y);c.stroke()}c.restore()}}
+function drawLightningTraces(s){
+  const c=S.ctx,traces=s.run?.lightningTraces||[];
+  for(const q of traces){
+    if(!visible(q.x,q.y,95))continue;
+    c.save();c.translate(q.x,q.y);
+    c.globalAlpha=q.hit?.54:.38;c.strokeStyle=q.hit?'#d9c8ff':'#9ea9c9';c.lineCap='round';
+    c.fillStyle='rgba(56,48,76,.22)';c.beginPath();c.ellipse(0,3,q.hit?19:15,q.hit?7:5,0,0,Math.PI*2);c.fill();
+    for(let i=0;i<7;i++){
+      const seed=(q.seq||1)*1.913+i*2.117,a=i/7*Math.PI*2+Math.sin(seed)*.28,len=24+(Math.abs(Math.sin(seed*2.41))*28);
+      const x1=Math.cos(a)*len*.42,y1=Math.sin(a)*len*.42,x2=Math.cos(a+.18*Math.sin(seed))*len,y2=Math.sin(a+.18*Math.sin(seed))*len;
+      c.lineWidth=i<3?2.2:1.35;c.beginPath();c.moveTo(0,0);c.lineTo(x1,y1);c.lineTo(x2,y2);c.stroke();
+      if(i<4){c.lineWidth=1;c.beginPath();c.moveTo(x1,y1);c.lineTo(x1+Math.cos(a+.75)*len*.32,y1+Math.sin(a+.75)*len*.32);c.stroke()}
+    }
+    c.restore();
+  }
+}
+function drawHazards(s){const c=S.ctx;for(const h of s.hazards||[]){if(h.visualOwner==='foundation')continue;if(!visible(h.x,h.y,(h.r||0)+100))continue;
+  if(h.kind==='lightning'){
+    c.save();const r=h.r||32;
+    if(!h.struck){
+      const p=1-Math.max(0,h.t)/(h.ttl||1),pulse=.5+.5*Math.sin(p*Math.PI*8);
+      c.globalAlpha=.12+.08*pulse;c.fillStyle='#c9c8ff';c.beginPath();c.arc(h.x,h.y,r,0,Math.PI*2);c.fill();
+      c.globalAlpha=.92;c.strokeStyle='#e5e2ff';c.lineWidth=4;c.setLineDash([]);c.beginPath();c.arc(h.x,h.y,r,0,Math.PI*2);c.stroke();
+      c.globalAlpha=.58+.20*pulse;c.strokeStyle='#aeb6ff';c.lineWidth=2.2;c.setLineDash([7,5]);c.beginPath();c.arc(h.x,h.y,r+20+6*pulse,0,Math.PI*2);c.stroke();c.setLineDash([]);
+      c.globalAlpha=.72;c.lineWidth=1.8;for(let i=0;i<4;i++){const a=i*Math.PI/2;c.beginPath();c.moveTo(h.x+Math.cos(a)*(r+7),h.y+Math.sin(a)*(r+7));c.lineTo(h.x+Math.cos(a)*(r+32),h.y+Math.sin(a)*(r+32));c.stroke()}
+      c.font='900 12px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';c.textAlign='center';c.fillStyle='#f1efff';c.strokeStyle='rgba(28,31,50,.9)';c.lineWidth=3;c.strokeText('천뢰',h.x,h.y-r-34);c.fillText('천뢰',h.x,h.y-r-34);
+    }else{
+      const fade=Math.max(0,Math.min(1,h.t/(h.ttl||.68)));
+      c.globalAlpha=.35+.55*fade;c.strokeStyle='#f5f1ff';c.shadowColor='#c9c2ff';c.shadowBlur=18;c.lineCap='round';
+      c.lineWidth=7;c.beginPath();c.moveTo(h.x-10,h.y-190);c.lineTo(h.x+11,h.y-142);c.lineTo(h.x-5,h.y-105);c.lineTo(h.x+13,h.y-62);c.lineTo(h.x,h.y);c.stroke();
+      c.lineWidth=2.2;c.shadowBlur=8;c.beginPath();c.moveTo(h.x+7,h.y-128);c.lineTo(h.x+34,h.y-93);c.lineTo(h.x+19,h.y-55);c.moveTo(h.x-4,h.y-91);c.lineTo(h.x-31,h.y-63);c.lineTo(h.x-17,h.y-34);c.stroke();
+      c.shadowBlur=0;c.globalAlpha=.55*fade;c.strokeStyle='#e4dbff';c.lineWidth=3;c.beginPath();c.arc(h.x,h.y,r+10*(1-fade),0,Math.PI*2);c.stroke();
+    }
+    c.restore();continue;
+  }
+  c.save();const p=h.struck?1:1-Math.max(0,h.t)/(h.ttl||1);c.globalAlpha=h.struck?.8:.25+p*.45;c.strokeStyle=h.struck?'#eaf4ff':'#495b82';c.lineWidth=h.struck?4:2;c.setLineDash(h.struck?[]:[6,6]);c.beginPath();c.arc(h.x,h.y,h.r*(.82+p*.18),0,Math.PI*2);c.stroke();if(h.struck){c.beginPath();c.moveTo(h.x-7,h.y-60);c.lineTo(h.x+5,h.y-24);c.lineTo(h.x-3,h.y-24);c.lineTo(h.x+9,h.y);c.stroke()}c.restore()
+}}
+function drawLightningScreenFlash(s){
+  let strength=0;
+  for(const h of s.hazards||[])if(h.kind==='lightning'&&h.struck&&h.ttl){const q=h.t/h.ttl;if(q>.70)strength=Math.max(strength,(q-.70)/.30)}
+  if(strength<=0)return;
+  const c=S.ctx;c.save();c.setTransform(1,0,0,1,0,0);c.globalAlpha=.16*strength;c.fillStyle='#f3efff';c.fillRect(0,0,S.layer.width,S.layer.height);c.restore();
+}
 const enemyAssets={
   qingyun:{basic:'qingyun_basic',guard:'qingyun_guard',chaser:'qingyun_chaser',attacker:'qingyun_chaser',elite:'qingyun_guard'},
   blackwind:{basic:'blackwind_basic',guard:'blackwind_guard',chaser:'blackwind_chaser',attacker:'blackwind_attacker',elite:'blackwind_guard'},
@@ -440,6 +482,7 @@ function drawFrame(s,meta){
   setWorldTransform(m);
   drawEnvironment(area,t);
   drawPortal(t);
+  drawLightningTraces(s);
   drawHazards(s);
   drawGatherRings(s,t);
   drawObjects(s,t);
@@ -454,6 +497,7 @@ function drawFrame(s,meta){
   drawReturnGuide(s,t);
   drawImpacts(now);
   drawPickupFx(s,t,now);
+  drawLightningScreenFlash(s);
   lastSnapshot=s;
 }
 async function boot(){try{
