@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.51.11-boss-scale';
+const VERSION='11.51.15-boss-ground-anchor';
 if(window.__xianxiaFoundationRenderer?.version===VERSION)return;
 const W=1800,H=2400,BASE='assets/ink_v1/foundation_trial_v1/';
 const areaAssets={
@@ -36,6 +36,14 @@ function drawEnvironment(area,t){
   if(node?.naturalWidth){for(const[x,y]of[[330,720],[1470,760],[380,1800],[1420,1760]]){c.save();c.globalAlpha=.55;c.drawImage(node,x-52,y-72,104,104);c.restore()}}
 }
 function enemyHeight(e){return e.boss?(e.type==='taixu_boss'?310:270):92}
+function enemySpriteBottom(e,height=enemyHeight(e)){
+  if(!e?.boss)return e.y+24;
+  // Boss sheets contain transparent padding below the visible feet. Scaling the
+  // whole frame magnifies that padding, so compensate to keep the feet planted
+  // on the logical ground/shadow instead of making the boss appear to float.
+  const base=e.type==='taixu_boss'?190:176;
+  return e.y+24+Math.max(0,height-base)*.15;
+}
 function syncFoundationDeaths(snapshot,area,now){
   const current=(snapshot.enemies||[]).filter(e=>e.visualOwner==='foundation');
   if(state.lastArea!==area){
@@ -62,17 +70,17 @@ function drawFoundationDeaths(area,now){
     if(age>=duration){state.deaths.splice(i,1);continue}
     const im=image(area,d.type);if(!im?.naturalWidth)continue;
     const rows=d.boss?4:3,row=d.boss?3:2,steps=4,step=Math.min(steps-1,Math.floor(age/duration*steps));
-    const index=d.boss?2+step:step,height=enemyHeight(d),fade=age>duration*.68?1-(age-duration*.68)/(duration*.32):1;
+    const index=d.boss?2+step:step,height=enemyHeight(d),bottom=enemySpriteBottom(d,height),fade=age>duration*.68?1-(age-duration*.68)/(duration*.32):1;
     c.save();c.globalAlpha=.18*fade;c.fillStyle='#111';c.beginPath();c.ellipse(d.x,d.y+20,d.boss?76:27,d.boss?19:7,0,0,Math.PI*2);c.fill();c.restore();
-    frame(im,row,6,index,rows,d.x,d.y+24,height,d.facing<0,Math.max(0,fade));
+    frame(im,row,6,index,rows,d.x,bottom,height,d.facing<0,Math.max(0,fade));
   }
 }
-function drawEnemy(area,e,t,elapsed){const im=image(area,e.type);if(!im?.naturalWidth)return;const boss=e.boss,rows=boss?4:3,row=e.action==='attack'?1:e.action==='special'?(boss?2:1):0,index=Math.floor((t*(e.action==='move'?9:6)+e.id*.7))%6,height=enemyHeight(e),c=state.ctx;
+function drawEnemy(area,e,t,elapsed){const im=image(area,e.type);if(!im?.naturalWidth)return;const boss=e.boss,rows=boss?4:3,row=e.action==='attack'?1:e.action==='special'?(boss?2:1):0,index=Math.floor((t*(e.action==='move'?9:6)+e.id*.7))%6,height=enemyHeight(e),bottom=enemySpriteBottom(e,height),top=bottom-height,c=state.ctx;
   c.save();c.globalAlpha=.25;c.fillStyle='#111';c.beginPath();c.ellipse(e.x,e.y+20,boss?76:27,boss?19:7,0,0,Math.PI*2);c.fill();c.restore();
-  if(e.commandedUntil>elapsed){const marker=image('marsh','command');centered(marker,4,Math.floor(t*7)%4,e.x,e.y-height-20,42,.95)}
-  if(e.shield>0){const shield=image('marsh','shield');centered(shield,4,Math.floor(t*6)%4,e.x,e.y-height*.48,boss?150:105,.76)}
-  frame(im,row,6,index,rows,e.x,e.y+24,height,e.facing<0,1);
-  const hp=Math.max(0,e.hp/Math.max(1,e.max)),w=boss?138:54,barH=boss?9:7;c.save();c.fillStyle='#071014cc';c.fillRect(e.x-w/2,e.y-height-14,w,barH);c.fillStyle=boss?'#c7825a':'#aabf9a';c.fillRect(e.x-w/2+1,e.y-height-13,(w-2)*hp,barH-2);if(e.shield>0){c.strokeStyle='#8ed7d1';c.strokeRect(e.x-w/2,e.y-height-14,w,barH)}if(boss){c.font='800 15px serif';c.textAlign='center';c.fillStyle='#f4e6c2';c.fillText(e.name,e.x,e.y-height-25)}c.restore();
+  if(e.commandedUntil>elapsed){const marker=image('marsh','command');centered(marker,4,Math.floor(t*7)%4,e.x,top-20,42,.95)}
+  if(e.shield>0){const shield=image('marsh','shield');centered(shield,4,Math.floor(t*6)%4,e.x,top+height*.52,boss?150:105,.76)}
+  frame(im,row,6,index,rows,e.x,bottom,height,e.facing<0,1);
+  const hp=Math.max(0,e.hp/Math.max(1,e.max)),w=boss?138:54,barH=boss?9:7,barY=top-38;c.save();c.fillStyle='#071014cc';c.fillRect(e.x-w/2,barY,w,barH);c.fillStyle=boss?'#c7825a':'#aabf9a';c.fillRect(e.x-w/2+1,barY+1,(w-2)*hp,barH-2);if(e.shield>0){c.strokeStyle='#8ed7d1';c.strokeRect(e.x-w/2,barY,w,barH)}if(boss){c.font='800 15px serif';c.textAlign='center';c.fillStyle='#f4e6c2';c.fillText(e.name,e.x,barY-11)}c.restore();
 }
 function drawFoundationDamage(now){
   const c=state.ctx;
