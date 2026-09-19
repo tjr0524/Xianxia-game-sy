@@ -286,6 +286,29 @@ function basicAttackTargets(){return 1+clamp(Math.round(+M.cult.basicHits||0),0,
 function skillRank(id){return clamp(Math.round(+M.skills?.[id]?.pow||0),0,5)}
 function skillRangeRank(id){return clamp(Math.round(+M.skills?.[id]?.range||0),0,5)}
 function skillCycleRank(id){return clamp(Math.round(+M.skills?.[id]?.cycle||0),0,5)}
+const SKILL_RANGE_SCALE=[1,1.08,1.16,1.24,1.32,1.40];
+const CHAIN_COUNT_BONUS=[0,0,1,1,2,2];
+function skillRangeScale(id){return SKILL_RANGE_SCALE[skillRangeRank(id)]||1}
+function skillRadiusValue(id){
+  const b=BAL.skill[id],r=skillRank(id);
+  return (b?.radius?.[r]||0)*skillRangeScale(id);
+}
+function skillAcquireValue(id){
+  const b=BAL.skill[id],r=skillRank(id);
+  return (b?.acquire?.[r]||0)*skillRangeScale(id);
+}
+function skillLinearRangeValue(id){
+  const b=BAL.skill[id],r=skillRank(id);
+  return (b?.range?.[r]||0)*skillRangeScale(id);
+}
+function skillChainJumpValue(){
+  const b=BAL.skill.chain,r=skillRank('chain');
+  return (b.jump[r]||0)*skillRangeScale('chain');
+}
+function skillChainCountValue(){
+  const b=BAL.skill.chain,r=skillRank('chain'),rr=skillRangeRank('chain');
+  return (b.count[r]||0)+(CHAIN_COUNT_BONUS[rr]||0);
+}
 function skillCooldown(id){const b=BAL.skill[id];return b?b.cd[skillRank(id)]??99:99}
 const TRIGGER_MAX_DEPTH=2;
 const SCHEDULED_HIT_CAP=64;
@@ -518,7 +541,7 @@ function thunderDamage(enemy,amount,source,meta,center=null){
     enemy._thunderChargeCount=(enemy._thunderChargeCount||0)+1;
     if(enemy._thunderChargeCount>=3&&(enemy._thunderChargeIcd||0)<=elapsed){
       enemy._thunderChargeCount=0;enemy._thunderChargeIcd=elapsed+2;
-      const cmeta=systemTraitMeta(meta,'thunder','charge','thunder:charge'),radius=(BAL.skill.thunder.radius[skillRank('thunder')]||70)*.75,boom=currentThunderBaseDamage()*.40;
+      const cmeta=systemTraitMeta(meta,'thunder','charge','thunder:charge'),radius=skillRadiusValue('thunder')*.75,boom=currentThunderBaseDamage()*.40;
       for(const other of enemies)if(other.type!=='spirit'&&other.hp>0&&distance(enemy,other)<radius)dealEnemyDamage(other,boom,'thunder:charge',cmeta);
       ring(enemy.x,enemy.y,radius,'#d8ccff',.28);
     }
@@ -569,11 +592,11 @@ function processScheduledTraitHit(h){
 function spawnSmallWave(origin,scale,source,meta){
   const tr=traitRuntime();tr.waveAfter=tr.waveAfter.filter(t=>t>elapsed);if(tr.waveAfter.length>=3)return false;
   tr.waveAfter.push(elapsed+.7);
-  scheduleAreaHit({t:.06,x:origin.x,y:origin.y,r:(BAL.skill.wave.radius[skillRank('wave')]||70)*.68,damage:currentWaveBaseDamage()*scale,source,family:'wave',meta,color:'#9fdfff'});
+  scheduleAreaHit({t:.06,x:origin.x,y:origin.y,r:skillRadiusValue('wave')*.68,damage:currentWaveBaseDamage()*scale,source,family:'wave',meta,color:'#9fdfff'});
   return true;
 }
 function spawnMiniArray(origin,totalScale,duration,source,meta,radiusScale=.62){
-  const r=(BAL.skill.array.radius[skillRank('array')]||130)*radiusScale,base=currentArrayBaseDamage()*totalScale/3;
+  const r=skillRadiusValue('array')*radiusScale,base=currentArrayBaseDamage()*totalScale/3;
   for(let i=0;i<3;i++)scheduleAreaHit({t:.04+i*(duration/3),x:origin.x,y:origin.y,r,damage:base,source,family:'array',meta,color:'#ffe9a8'});
 }
 function handleWaveTraits(payload,ctx){
@@ -584,7 +607,7 @@ function handleWaveTraits(payload,ctx){
     spawnSmallWave({x:payload.enemy.x,y:payload.enemy.y},.25,'wave:resonate',systemTraitMeta(ctx,'wave','resonate','wave:resonate'));
   }
   if(ctx.event==='onDash'&&hasFormationTrait('wave','dashtrail')){
-    const from=payload.from||P,to=payload.to||P,meta=systemTraitMeta(ctx,'wave','dashtrail','wave:dashtrail'),base=currentWaveBaseDamage()*.15*(payload?.derivedScale||1),r=(BAL.skill.wave.radius[skillRank('wave')]||70)*.55;
+    const from=payload.from||P,to=payload.to||P,meta=systemTraitMeta(ctx,'wave','dashtrail','wave:dashtrail'),base=currentWaveBaseDamage()*.15*(payload?.derivedScale||1),r=skillRadiusValue('wave')*.55;
     for(let i=1;i<=4;i++){const q=i/5;scheduleAreaHit({t:.08+(i-1)*.30,x:from.x+(to.x-from.x)*q,y:from.y+(to.y-from.y)*q,r,damage:base,source:'wave:dashtrail',family:'wave',meta,color:'#9fdfff'})}
   }
 }
@@ -602,7 +625,7 @@ function handleChainTraits(payload,ctx,api){
   }
 }
 function thunderAt(origin,scale,source,meta,radiusScale=1){
-  const r=(BAL.skill.thunder.radius[skillRank('thunder')]||70)*radiusScale,d=currentThunderBaseDamage()*scale;
+  const r=skillRadiusValue('thunder')*radiusScale,d=currentThunderBaseDamage()*scale;
   let hits=0;for(const e of enemies)if(e.type!=='spirit'&&e.hp>0&&distance(origin,e)<r){thunderDamage(e,d,source,meta,origin);hits++}
   if(hits)ring(origin.x,origin.y,r,'#d7c8ff',.34);return hits;
 }
@@ -1324,7 +1347,7 @@ function upgradeSkill(skill,key){
   M.stone-=price.s;
   if(price.h)secondarySpend(price);
   state[key]++;
-  UI.notice.textContent=`${skill.n} ${key==='pow'?'위력':key==='range'?'범위/타수':'순환'} 강화.`;
+  UI.notice.textContent=`${skill.n} ${key==='pow'?'위력':key==='range'?'범위/타수 · 실제 판정/이펙트 확대':'순환'} 강화.`;
   render();
 }
 
@@ -1711,7 +1734,7 @@ function cast(skill,options={}){
   if(!meta.source)meta.source=source;
   const done=extra=>{if(options.triggered){run.triggeredCasts[skill.id]=(run.triggeredCasts[skill.id]||0)+1}emitTrigger('onCast',{skillId:skill.id,rank:r,powerScale,triggered:!!options.triggered,...(extra||{})},meta);return true};
   if(skill.id==='sword'){
-    const range=b.range[sr],targets=swordCandidates(range,P);if(!targets.length)return false;
+    const range=skillLinearRangeValue('sword'),targets=swordCandidates(range,P);if(!targets.length)return false;
     const t1=selectedFormationTrait('sword',1),primary=targets[0];let hits=0;
     if(t1==='split'){
       const used=new Map();
@@ -1741,7 +1764,7 @@ function cast(skill,options={}){
     return done({target:primary,hits});
   }
   if(skill.id==='wave'){
-    let radius=b.radius[sr],target=bestClusterTarget(b.acquire[sr],radius);if(!target)return false;
+    let radius=skillRadiusValue('wave'),target=bestClusterTarget(skillAcquireValue('wave'),radius);if(!target)return false;
     const t1=selectedFormationTrait('wave',1),base=currentWaveBaseDamage()*powerScale;let hits=0;
     if(t1==='wide')radius*=1.45;
     if(t1==='vortex'){
@@ -1759,8 +1782,8 @@ function cast(skill,options={}){
     if(!hits)return false;pop(target.x,target.y,'검풍 ×'+hits,'#9fdfff');return done({target,hits});
   }
   if(skill.id==='chain'){
-    const candidates=enemies.filter(e=>e.type!=='spirit'&&e.hp>0),jump=b.jump[sr],acquire=b.acquire[sr],t1=selectedFormationTrait('chain',1);
-    let limit=b.count[sr]+(t1==='spread'?2:0),current=P,used=new Set(),hits=0,first=null,last=null,killExtra=0,step=0;
+    const candidates=enemies.filter(e=>e.type!=='spirit'&&e.hp>0),jump=skillChainJumpValue(),acquire=skillAcquireValue('chain'),t1=selectedFormationTrait('chain',1);
+    let limit=skillChainCountValue()+(t1==='spread'?2:0),current=P,used=new Set(),hits=0,first=null,last=null,killExtra=0,step=0;
     const scale=t1==='spread'?.75:1,linkDelay=.14,flight=.10;
     const queue=(target,hitScale,hitSource=source,hitMeta=meta,color='#c6d6ff')=>{
       const hitAt=.08+step*linkDelay,from={x:current.x,y:current.y};
@@ -1795,7 +1818,7 @@ function cast(skill,options={}){
     return result;
   }
   if(skill.id==='thunder'){
-    let radius=b.radius[sr],t1=selectedFormationTrait('thunder',1),target=t1==='bolt'?strongestLivingEnemy(P,b.acquire[sr]):bestClusterTarget(b.acquire[sr],radius);if(!target)return false;
+    let radius=skillRadiusValue('thunder'),t1=selectedFormationTrait('thunder',1),acquire=skillAcquireValue('thunder'),target=t1==='bolt'?strongestLivingEnemy(P,acquire):bestClusterTarget(acquire,radius);if(!target)return false;
     const base=currentThunderBaseDamage()*powerScale;let hits=0;
     if(t1==='bolt')radius*=.65;
     if(t1==='field'){
@@ -1820,7 +1843,7 @@ function cast(skill,options={}){
     if(!hits)return false;pop(target.x,target.y,'낙뢰 ×'+hits,'#d7c8ff');ring(target.x,target.y,radius,'#d7c8ff',.4);emitSkillVisual('thunder',target.x,target.y,{r:radius,duration:.64});return done({target,hits});
   }
   if(skill.id==='array'){
-    let radius=b.radius[sr],t1=selectedFormationTrait('array',1),target=t1==='focus'?strongestLivingEnemy(P,b.acquire[sr]):bestClusterTarget(b.acquire[sr],radius);if(!target)return false;
+    let radius=skillRadiusValue('array'),t1=selectedFormationTrait('array',1),acquire=skillAcquireValue('array'),target=t1==='focus'?strongestLivingEnemy(P,acquire):bestClusterTarget(acquire,radius);if(!target)return false;
     if(t1==='focus')radius*=.65;if(t1==='wide')radius*=1.50;
     const follow=t1==='follow',center=follow?{x:P.x,y:P.y}:{x:target.x,y:target.y},base=currentArrayBaseDamage()*powerScale,pulse=base/3,pull=hasFormationTrait('array','pull')?100/3:0;
     for(const t of [0.02,.36,follow ? .84 : .70])scheduleAreaHit({t,x:center.x,y:center.y,r:radius,damage:pulse,source,family:'array',meta,pull,followPlayer:follow,color:'#ffe9a8'});
