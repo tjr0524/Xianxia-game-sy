@@ -561,8 +561,8 @@ function render(){
         <button type="button" data-act="zoom-reset" class="fit"><span data-zoom-label>100%</span><small>맞춤</small></button>
         <button type="button" data-act="zoom-in" aria-label="확대">＋</button>
       </div>
+      <div id="fs49Detail" class="fs49-detail"></div>
     </div>
-    <div id="fs49Detail" class="fs49-detail"></div>
   </div>`;
   renderDetail(M,sh.phase);
   applyView();
