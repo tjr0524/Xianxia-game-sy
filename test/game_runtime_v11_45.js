@@ -1538,7 +1538,7 @@ function begin(){
     lastDamageAt:-999,regenPulse:0,damageTaken:0,lastDamageSource:'',damageBySource:{},
     skillDamage:{basic:0,sword:0,wave:0,chain:0,thunder:0,array:0},
     skillCasts:{basic:0,sword:0,wave:0,chain:0,thunder:0,array:0},
-    skillCooldowns:Object.fromEntries(SKILLS.map(skill=>[skill.id,0])),scheduledHits:[],
+    skillCooldowns:Object.fromEntries(SKILLS.map(skill=>[skill.id,0])),scheduledHits:[],visualCastSeq:0,visualCasts:[],
     triggers:{counts:{},blocked:{depth:0,recursion:0},icd:{},last:null},triggeredCasts:{},traitRuntime:{waveAfter:[],arrayMini:[],arrayDashUntil:0,arrayZone:null,cloudTimer:4,swordLineHits:0},performanceDrops:{scheduledHits:0,fx:0}
   };
   run.limit=foundationContent()?.runLimit?.(M.area,M.realm)||RUN_TIME;
@@ -1628,6 +1628,13 @@ function bestClusterTarget(acquire,radius){
   }
   return target;
 }
+function emitSkillVisual(id,x,y,{r=0,duration=.64,kind='burst'}={}){
+  if(!run||!Number.isFinite(x)||!Number.isFinite(y))return;
+  run.visualCastSeq=(run.visualCastSeq||0)+1;
+  run.visualCasts??=[];
+  run.visualCasts.push({seq:run.visualCastSeq,id,x,y,r,duration,kind,at:elapsed});
+  if(run.visualCasts.length>32)run.visualCasts.splice(0,run.visualCasts.length-32);
+}
 function cast(skill,options={}){
   const st=skillState(skill.id),r=skillRank(skill.id),rr=skillRangeRank(skill.id),b=BAL.skill[skill.id];if(!st.u||!r||!b)return false;
   const sr=r,B=basicDamage(),powerScale=options.powerScale===undefined?1:Math.max(0,+options.powerScale||0),source=options.source||skill.id,meta=copyTriggerMeta(options.triggerMeta||{}),damage=B*b.mult[r]*powerScale;
@@ -1660,6 +1667,7 @@ function cast(skill,options={}){
       swordHit(primary,damage,.60,'sword:return',rmeta,P);hits++;
     }
     pop(primary.x,primary.y,`어검 ×${hits}`,'#f4f6ff');
+    emitSkillVisual('sword',primary.x,primary.y,{r:18,duration:.58});
     return done({target:primary,hits});
   }
   if(skill.id==='wave'){
@@ -1669,14 +1677,14 @@ function cast(skill,options={}){
     if(t1==='vortex'){
       const vmeta=copyTriggerMeta(meta),duration=2.5,pulses=5,interval=duration/(pulses-1);
       for(let i=0;i<pulses;i++)scheduleAreaHit({t:.05+i*interval,x:target.x,y:target.y,r:radius,damage:base*.22,source:'wave:vortex',family:'wave',meta:vmeta,color:'#9fdfff'});
-      fieldFx(target.x,target.y,radius,'#9fdfff',duration+.08);return done({target,hits:1});
+      fieldFx(target.x,target.y,radius,'#9fdfff',duration+.08);emitSkillVisual('wave',target.x,target.y,{r:radius,duration,kind:'field'});return done({target,hits:1});
     }
     if(t1==='double'){
       const dx=target.x-P.x,dy=target.y-P.y,n=Math.hypot(dx,dy)||1,px=-dy/n,py=dx/n,offset=radius*.55,centers=[{x:target.x+px*offset,y:target.y+py*offset},{x:target.x-px*offset,y:target.y-py*offset}],seen=new Set();
-      for(const center of centers){for(const e of enemies){if(e.type==='spirit'||e.hp<=0||distance(center,e)>=radius*.82)continue;const scale=seen.has(e.id)?.30:.60;if(waveDamage(e,base*scale,source,meta,center)>0){hits++;seen.add(e.id)}}ring(center.x,center.y,radius*.82,'#9fdfff',.24)}
+      for(const center of centers){for(const e of enemies){if(e.type==='spirit'||e.hp<=0||distance(center,e)>=radius*.82)continue;const scale=seen.has(e.id)?.30:.60;if(waveDamage(e,base*scale,source,meta,center)>0){hits++;seen.add(e.id)}}ring(center.x,center.y,radius*.82,'#9fdfff',.24);emitSkillVisual('wave',center.x,center.y,{r:radius*.82,duration:.60})}
     }else{
       for(const e of enemies){if(e.type==='spirit'||e.hp<=0||distance(target,e)>=radius)continue;if(waveDamage(e,base,source,meta,target)>0)hits++}
-      ring(target.x,target.y,radius,'#9fdfff');
+      ring(target.x,target.y,radius,'#9fdfff');emitSkillVisual('wave',target.x,target.y,{r:radius,duration:.64});
     }
     if(!hits)return false;pop(target.x,target.y,'검풍 ×'+hits,'#9fdfff');return done({target,hits});
   }
@@ -1701,6 +1709,7 @@ function cast(skill,options={}){
     if(t1==='back'&&first&&first.hp>0){dealEnemyDamage(first,damage*.50,source,meta);slash(current.x,current.y,first.x,first.y,'#dce5ff');last=first;hits++}
     if(last&&hasFormationTrait('chain','seal'))last._chainSealUntil=elapsed+5;
     if(!hits)return false;
+    if(last)emitSkillVisual('chain',last.x,last.y,{r:24,duration:.62});
     const result=done({target:last,hits});
     if(!options.triggered&&hasFormationTrait('chain','burst')&&(run.foundation?.arts?.burstTime||0)>0){
       for(let i=0;i<2;i++)cast(skill,{powerScale:.55,triggered:true,source:'chain:burst',triggerMeta:systemTraitMeta(meta,'chain','burst','chain:burst')});
@@ -1714,7 +1723,7 @@ function cast(skill,options={}){
     if(t1==='field'){
       const duration=3,pulses=6,interval=duration/(pulses-1);
       radius*=1.20;for(let i=0;i<pulses;i++)scheduleAreaHit({t:.05+i*interval,x:target.x,y:target.y,r:radius,damage:base*.20,source:'thunder:field',family:'thunder',meta,color:'#d7c8ff'});
-      fieldFx(target.x,target.y,radius,'#d7c8ff',duration+.08);return done({target,hits:1});
+      fieldFx(target.x,target.y,radius,'#d7c8ff',duration+.08);emitSkillVisual('thunder',target.x,target.y,{r:radius,duration,kind:'field'});return done({target,hits:1});
     }
     const initialScale=t1==='chain'?.80:1;
     for(const e of enemies){if(e.type!=='spirit'&&e.hp>0&&distance(target,e)<radius){if(thunderDamage(e,base*initialScale,source,meta,target)>0)hits++}}
@@ -1722,7 +1731,7 @@ function cast(skill,options={}){
       let current=target,used=new Set([target.id]);
       for(let i=0;i<3;i++){const next=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&!used.has(e.id)).sort((a,b)=>distance(current,a)-distance(current,b))[0];if(!next)break;thunderDamage(next,base*.70,'thunder:chain',meta,current);slash(current.x,current.y,next.x,next.y,'#d7c8ff');used.add(next.id);current=next;hits++}
     }
-    if(!hits)return false;pop(target.x,target.y,'낙뢰 ×'+hits,'#d7c8ff');ring(target.x,target.y,radius,'#d7c8ff',.4);return done({target,hits});
+    if(!hits)return false;pop(target.x,target.y,'낙뢰 ×'+hits,'#d7c8ff');ring(target.x,target.y,radius,'#d7c8ff',.4);emitSkillVisual('thunder',target.x,target.y,{r:radius,duration:.64});return done({target,hits});
   }
   if(skill.id==='array'){
     let radius=b.radius[sr],t1=selectedFormationTrait('array',1),target=t1==='focus'?strongestLivingEnemy(P,b.acquire[sr]):bestClusterTarget(b.acquire[sr],radius);if(!target)return false;
@@ -1730,7 +1739,7 @@ function cast(skill,options={}){
     const follow=t1==='follow',center=follow?{x:P.x,y:P.y}:{x:target.x,y:target.y},base=currentArrayBaseDamage()*powerScale,pulse=base/3,pull=hasFormationTrait('array','pull')?100/3:0;
     for(const t of [0.02,.36,follow ? .84 : .70])scheduleAreaHit({t,x:center.x,y:center.y,r:radius,damage:pulse,source,family:'array',meta,pull,followPlayer:follow,color:'#ffe9a8'});
     const tr=traitRuntime();tr.arrayZone={x:center.x,y:center.y,r:radius,follow,until:elapsed+effectiveSkillCooldown('array'),nextReturn:elapsed+3};
-    pop(center.x,center.y,'만검진','#ffe9a8');ring(center.x,center.y,radius,'#ffe9a8',.24);return done({target,hits:1});
+    pop(center.x,center.y,'만검진','#ffe9a8');ring(center.x,center.y,radius,'#ffe9a8',.24);emitSkillVisual('array',center.x,center.y,{r:radius,duration:.90});return done({target,hits:1});
   }
   return false;
 }
