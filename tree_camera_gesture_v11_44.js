@@ -1,11 +1,11 @@
 (()=>{
 'use strict';
-const VERSION='11.50.15-node-native-click';
+const VERSION='11.50.16-train-height';
 if(window.__xianxiaTreeCameraGesture?.version===VERSION)return;
 window.__xianxiaTreeCameraGesture={version:VERSION};
 
 const CONFIG={
-  asc:{view:'#ascViewport',world:'#ascWorld',w:1200,h:1780,min:.28,max:1.7,focusScale:.96},
+  asc:{view:'#ascViewport',world:'#ascWorld',w:1200,h:2800,min:.28,max:1.7,focusScale:.96},
   map:{view:'#mapViewport',world:'#mapWorld',w:1520,h:820,min:.28,max:1.7,focusScale:.78}
 };
 const cams={};
