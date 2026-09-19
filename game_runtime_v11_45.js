@@ -400,10 +400,10 @@ function handleSwordTraitTrigger(payload,ctx){
       swordVolleyFrom(origin,1,.50,'sword:kill',meta);
     }
   }
-  if(ctx.event==='onDash'&&hasFormationTrait('sword','dash')&&triggerIcd('sword:dash',1.0)){
+  if(ctx.event==='onDash'&&hasFormationTrait('sword','dash')&&triggerIcd('sword:dash',1.0*(payload?.icdScale||1))){
     const from=payload?.from||P,to=payload?.to||P,dir={x:to.x-from.x,y:to.y-from.y};
     const meta=swordTraitMeta(ctx,'dash','sword:dash');
-    swordVolleyFrom(to,3,.40,'sword:dash',meta,null,dir);
+    swordVolleyFrom(to,3,.40*(payload?.derivedScale||1),'sword:dash',meta,null,dir);
   }
 }
 registerTriggerHandler('sword-traits',handleSwordTraitTrigger,['onKill','onDash']);
@@ -546,13 +546,13 @@ function handleWaveTraits(payload,ctx){
     spawnSmallWave({x:payload.enemy.x,y:payload.enemy.y},.25,'wave:resonate',systemTraitMeta(ctx,'wave','resonate','wave:resonate'));
   }
   if(ctx.event==='onDash'&&hasFormationTrait('wave','dashtrail')){
-    const from=payload.from||P,to=payload.to||P,meta=systemTraitMeta(ctx,'wave','dashtrail','wave:dashtrail'),base=currentWaveBaseDamage()*.15,r=(BAL.skill.wave.radius[skillRank('wave')]||70)*.55;
+    const from=payload.from||P,to=payload.to||P,meta=systemTraitMeta(ctx,'wave','dashtrail','wave:dashtrail'),base=currentWaveBaseDamage()*.15*(payload?.derivedScale||1),r=(BAL.skill.wave.radius[skillRank('wave')]||70)*.55;
     for(let i=1;i<=4;i++){const q=i/5;scheduleAreaHit({t:.08+(i-1)*.30,x:from.x+(to.x-from.x)*q,y:from.y+(to.y-from.y)*q,r,damage:base,source:'wave:dashtrail',family:'wave',meta,color:'#9fdfff'})}
   }
 }
 function handleChainTraits(payload,ctx,api){
-  if(ctx.event==='onDash'&&hasFormationTrait('chain','dash')&&triggerIcd('chain:dash',1.0)){
-    api.castSpell('chain',{powerScale:.65,triggered:true,source:'chain:dash',triggerMeta:systemTraitMeta(ctx,'chain','dash','chain:dash')});
+  if(ctx.event==='onDash'&&hasFormationTrait('chain','dash')&&triggerIcd('chain:dash',1.0*(payload?.icdScale||1))){
+    api.castSpell('chain',{powerScale:.65*(payload?.derivedScale||1),triggered:true,source:'chain:dash',triggerMeta:systemTraitMeta(ctx,'chain','dash','chain:dash')});
   }
   if(ctx.event==='onChainSealConsume'){
     const enemy=payload.enemy;if(!enemy||enemy.hp<=0)return;
@@ -570,8 +570,8 @@ function thunderAt(origin,scale,source,meta,radiusScale=1){
 }
 function handleThunderTraits(payload,ctx){
   const tr=traitRuntime();
-  if(ctx.event==='onDash'&&hasFormationTrait('thunder','dash')&&triggerIcd('thunder:dash',1.5)){
-    thunderAt(payload.to||P,.50,'thunder:dash',systemTraitMeta(ctx,'thunder','dash','thunder:dash'));
+  if(ctx.event==='onDash'&&hasFormationTrait('thunder','dash')&&triggerIcd('thunder:dash',1.5*(payload?.icdScale||1))){
+    thunderAt(payload.to||P,.50*(payload?.derivedScale||1),'thunder:dash',systemTraitMeta(ctx,'thunder','dash','thunder:dash'));
   }
   if(ctx.event==='onHit'&&hasFormationTrait('thunder','resonate')&&SWORD_LINE_SPELLS.has(familyOf(payload.source))){
     tr.swordLineHits=(tr.swordLineHits||0)+1;
@@ -589,7 +589,7 @@ function handleArrayTraits(payload,ctx){
   if(ctx.event==='onDash'&&hasFormationTrait('array','dash')){
     if((tr.arrayDashUntil||0)>elapsed)run.scheduledHits=run.scheduledHits.filter(h=>h.source!=='array:dash');
     tr.arrayDashUntil=elapsed+2;
-    spawnMiniArray(payload.to||P,.40,2,'array:dash',systemTraitMeta(ctx,'array','dash','array:dash'),.55);
+    spawnMiniArray(payload.to||P,.40*(payload?.derivedScale||1),2,'array:dash',systemTraitMeta(ctx,'array','dash','array:dash'),.55);
   }
   if(ctx.event==='onKill'&&payload?.source==='array'&&hasFormationTrait('array','multiply')&&Math.random()<.25){
     tr.arrayMini=tr.arrayMini.filter(t=>t>elapsed);if(tr.arrayMini.length<2){tr.arrayMini.push(elapsed+2);spawnMiniArray(payload.enemy,.30,2,'array:multiply',systemTraitMeta(ctx,'array','multiply','array:multiply'),.50)}
@@ -1609,7 +1609,7 @@ function update(dt){
   const activeTargets=[...enemies,...objects,...(vein?[vein]:[])];if(P.target&&!activeTargets.includes(P.target))P.target=null;if(P.target){P.tx=P.target.x;P.ty=P.target.y}
   foundationContent()?.updateRun?.(dt,foundationApi());
   updateFormationTraitRuntime(dt);
-  const speed=(isMortal()?150:(M.cult.mov||150))*areaMoveScale()*(1+run.combo*.005);
+  const artSpeed=foundationContent()?.playerSpeedMultiplier?.(foundationApi())??1;const speed=(isMortal()?150:(M.cult.mov||150))*areaMoveScale()*(1+run.combo*.005)*artSpeed;
   const horizontal=(keys.has('arrowright')||keys.has('d')?1:0)-(keys.has('arrowleft')||keys.has('a')?1:0),vertical=(keys.has('arrowdown')||keys.has('s')?1:0)-(keys.has('arrowup')||keys.has('w')?1:0);
   if(horizontal||vertical){P.target=null;const norm=Math.hypot(horizontal,vertical)||1;P.x+=horizontal/norm*speed*dt;P.y+=vertical/norm*speed*dt;P.tx=P.x;P.ty=P.y}else moveToward(P,P.tx,P.ty,speed,dt);P.x=clamp(P.x,11,W-11);P.y=clamp(P.y,11,H-11);
   const exitDistance=Math.hypot(P.x-EXIT.x,P.y+PLAYER_GROUND_OFFSET-EXIT.y);if(exitDistance>68)run.left=1;if(run.left&&exitDistance<EXIT.r+9){finish('return');return}
