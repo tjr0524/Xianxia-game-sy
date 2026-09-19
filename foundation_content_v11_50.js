@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.50.9';
+const VERSION='11.50.12';
 if(window.__xianxiaFoundationContent?.version===VERSION)return;
 
 const TYPES=new Set(['charging_boar','ranged_toad','exploding_beetle','command_ape','shield_pangolin','sword_sentinel','formation_warden','foundation_guardian','taixu_boss']);
@@ -44,12 +44,12 @@ function ensureControls(){
   if(!game)return null;
   const style=document.createElement('style');
   style.id='foundation-content-style';
-  style.textContent=`.foundation-arts{position:absolute;z-index:7;left:10px;right:auto;bottom:10px;display:none;gap:7px;pointer-events:auto}.foundation-arts.on{display:flex}.foundation-art{position:relative;width:58px;height:58px;margin:0;padding:0;border:1px solid #8aa79a;border-radius:50%;overflow:hidden;background:#10211fd9;box-shadow:0 3px 14px #0009}.foundation-art img{width:100%;height:100%;object-fit:cover;opacity:.86}.foundation-art b{position:absolute;inset:auto 0 2px;text-align:center;font-size:8px;text-shadow:0 1px 3px #000;color:#f1f8e9}.foundation-art i{position:absolute;inset:0;display:grid;place-items:center;background:#0710149c;color:#fff;font:800 13px sans-serif;font-style:normal}.foundation-art.ready{border-color:#e6cd78;box-shadow:0 0 13px #d5b95a66}.foundation-art:disabled{opacity:.38}@media(max-width:560px){.foundation-arts{left:7px;right:auto;bottom:7px;gap:5px}.foundation-art{width:52px;height:52px}}`;
+  style.textContent=`.foundation-arts{position:absolute;z-index:7;left:10px;right:auto;bottom:10px;display:none;gap:7px;pointer-events:auto;touch-action:none}.foundation-arts.on{display:flex}.foundation-art{position:relative;width:58px;height:58px;margin:0;padding:0;border:1px solid #8aa79a;border-radius:50%;overflow:hidden;background:#10211fd9;box-shadow:0 3px 14px #0009}.foundation-art img{width:100%;height:100%;object-fit:cover;opacity:.86}.foundation-art b{position:absolute;inset:auto 0 2px;text-align:center;font-size:8px;text-shadow:0 1px 3px #000;color:#f1f8e9}.foundation-art i{position:absolute;inset:0;display:grid;place-items:center;background:#0710149c;color:#fff;font:800 13px sans-serif;font-style:normal}.foundation-art.ready{border-color:#e6cd78;box-shadow:0 0 13px #d5b95a66}.foundation-art:disabled{opacity:.38}@media(max-width:560px){.foundation-arts{left:7px;right:auto;bottom:7px;gap:5px}.foundation-art{width:52px;height:52px}}`;
   document.head.appendChild(style);
   controls=document.createElement('div');
   controls.className='foundation-arts';
   controls.innerHTML=['dash','burst'].map(id=>`<button class="foundation-art" data-art="${id}" aria-label="${id}"><img alt="" data-src="${ICON[id]}"><b>${{dash:'축지',burst:'폭주'}[id]}</b><i></i></button>`).join('');
-  controls.addEventListener('pointerdown',event=>event.stopPropagation());
+  for(const type of ['pointerdown','pointerup','pointercancel','touchstart','touchend'])controls.addEventListener(type,event=>event.stopPropagation(),{passive:true});
   controls.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();const id=event.target.closest('[data-art]')?.dataset.art;if(id)activateArt(id)});
   game.appendChild(controls);
   return controls;
@@ -119,11 +119,15 @@ function activateArt(id){
     let distance=ART.dash.distance[r];
     if(trait(api,'dash','flow'))distance*=1.25;
     if(trait(api,'dash','long'))distance*=1.35;
-    let dx=api.player.tx-api.player.x,dy=api.player.ty-api.player.y,n=Math.hypot(dx,dy);
-    if(n<2){dx=1;dy=0;n=1}
+    const keepTarget=!!api.player.target||Math.hypot(api.player.tx-api.player.x,api.player.ty-api.player.y)>3;
+    const oldTx=api.player.tx,oldTy=api.player.ty;
+    let dx=Number.isFinite(api.player.dirX)?api.player.dirX:api.player.tx-api.player.x;
+    let dy=Number.isFinite(api.player.dirY)?api.player.dirY:api.player.ty-api.player.y;
+    let n=Math.hypot(dx,dy);if(n<.01){dx=1;dy=0;n=1}
     const from={x:api.player.x,y:api.player.y},wasDanger=dangerAt(api,from);
     const x=clamp(api.player.x+dx/n*distance,11,api.W-11),y=clamp(api.player.y+dy/n*distance,11,api.H-11),to={x,y};
-    api.slash(api.player.x,api.player.y,x,y,'#a7efe0');api.player.x=api.player.tx=x;api.player.y=api.player.ty=y;
+    api.slash(api.player.x,api.player.y,x,y,'#a7efe0');api.player.x=x;api.player.y=y;
+    if(keepTarget){api.player.tx=oldTx;api.player.ty=oldTy}else{api.player.tx=x;api.player.ty=y}
     arts.dashCharges--;arts.dashRecharge=Math.max(arts.dashRecharge,.01);
     if(trait(api,'dash','guard'))advanceOldestShieldRegen(api,2);
     if(trait(api,'dash','kill'))arts.dashSpellBoost=1.5;
