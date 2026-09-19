@@ -406,7 +406,7 @@ function enemyStrengthScore(enemy){
 }
 function swordCandidateScore(enemy,origin=P){
   let score=-distance(origin,enemy);
-  if(hasFormationTrait('sword','break')&&(enemy.shield>0||isSpecialEnemy(enemy)))score+=250000;
+  if(hasFormationTrait('sword','break')&&(enemy.shield>0||enemy.type==='formation_node'||isSpecialEnemy(enemy)))score+=250000;
   if(hasFormationTrait('sword','heavy'))score+=enemyStrengthScore(enemy);
   return score;
 }
@@ -420,7 +420,7 @@ function swordHit(enemy,baseDamage,scale=1,source='sword',meta={},from=P){
     enemy._swordMarkCount=Math.max(0,Math.floor(enemy._swordMarkCount||0));
     if(enemy._swordMarkPrimed){damage*=1.35;enemy._swordMarkPrimed=0;pop(enemy.x,enemy.y-20,'검흔 폭발','#d8f2ff',.55)}
   }
-  if(hasFormationTrait('sword','break')&&(enemy.shield>0||isSpecialEnemy(enemy)))damage*=1.5;
+  if(hasFormationTrait('sword','break')&&(enemy.shield>0||enemy.type==='formation_node'||isSpecialEnemy(enemy)))damage*=1.5;
   const dealt=dealEnemyDamage(enemy,damage,source,meta);
   if(dealt>0&&hasFormationTrait('sword','mark')){
     enemy._swordMarkCount=(enemy._swordMarkCount||0)+1;
@@ -563,7 +563,7 @@ function currentArrayBaseDamage(){
   return d;
 }
 function arrayDamage(enemy,amount,source,meta){
-  if(hasFormationTrait('array','break')&&(enemy?.shield>0||enemy?.type==='formation_warden'||enemy?.type==='shield_pangolin'))amount*=1.60;
+  if(hasFormationTrait('array','break')&&(enemy?.shield>0||enemy?.type==='formation_node'||enemy?.type==='formation_warden'||enemy?.type==='shield_pangolin'))amount*=1.60;
   return dealEnemyDamage(enemy,amount,source,meta);
 }
 function enqueueScheduledHit(hit){
