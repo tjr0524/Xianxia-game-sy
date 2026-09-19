@@ -275,19 +275,31 @@
 
 /* 비경 선택: 한 글자씩 꺾이는 문제 제거, 후산은 좁은 버튼에서 생략 */
 .v25-theme .expedition-area-grid{
-  grid-template-columns:repeat(auto-fit,minmax(86px,1fr))!important;
-  gap:5px!important;
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  gap:7px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  padding:2px 1px 5px!important;
+  scroll-snap-type:x proximity;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-x:contain;
+  scrollbar-width:none;
 }
-.v25-theme .expedition-area-btn{
-  width:100%!important;
-  min-width:0!important;
-  min-height:40px!important;
+.v25-theme .expedition-area-grid::-webkit-scrollbar{display:none}
+.v25-theme .expedition-area-grid>.expedition-area-btn{
+  flex:0 0 124px!important;
+  width:124px!important;
+  min-width:124px!important;
+  max-width:124px!important;
+  min-height:42px!important;
   display:flex!important;
   align-items:center!important;
   justify-content:center!important;
   gap:6px!important;
-  padding:5px 8px!important;
-  overflow:hidden!important;
+  padding:6px 8px!important;
+  overflow:visible!important;
+  scroll-snap-align:start;
   font:700 10px/1.15 var(--v25-serif)!important;
   white-space:nowrap!important;
   word-break:keep-all!important;
@@ -306,8 +318,8 @@
 }
 .v25-theme .expedition-area-btn .area-label38{
   min-width:0;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  overflow:visible;
+  text-overflow:clip;
   white-space:nowrap;
   word-break:keep-all;
 }
@@ -491,9 +503,11 @@
   .v25-theme .spell-desc38{margin:6px 0 7px;font-size:9.5px}
   .v25-theme .spell-action38{min-width:84px;min-height:32px;padding:5px 7px;font-size:8.5px!important}
   .v25-theme .spell-cost38 span{padding:3px 5px;font-size:7.5px}
-  .v25-theme .expedition-area-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
-  .v25-theme .expedition-area-grid>.expedition-area-btn:only-child{grid-column:1/-1}
-  .v25-theme .dialog.v17expedition .expedition-area-btn{min-height:38px!important;padding:5px 7px!important;font-size:9.5px!important}
+  .v25-theme .expedition-area-grid{display:flex!important;grid-template-columns:none!important;gap:7px!important}
+  .v25-theme .expedition-area-grid>.expedition-area-btn{
+    flex:0 0 116px!important;width:116px!important;min-width:116px!important;max-width:116px!important;
+  }
+  .v25-theme .dialog.v17expedition .expedition-area-btn{min-height:40px!important;padding:5px 7px!important;font-size:9.5px!important}
   .v25-theme .expedition-records38{padding:6px!important}
   .v25-theme .detail-popover38.v17float{max-height:190px!important}
 }
