@@ -249,6 +249,68 @@ function skillRank(id){return clamp(Math.round(+M.skills?.[id]?.pow||0),0,5)}
 function skillRangeRank(id){return clamp(Math.round(+M.skills?.[id]?.range||0),0,5)}
 function skillCycleRank(id){return clamp(Math.round(+M.skills?.[id]?.cycle||0),0,5)}
 function skillCooldown(id){const b=BAL.skill[id];return b?b.cd[skillRank(id)]??99:99}
+const TRIGGER_MAX_DEPTH=2;
+const KILL_TRIGGER_EVENTS=new Set(['onKill','onSpecialKill']);
+const triggerHandlers=new Map();
+function copyTriggerMeta(meta={}){
+  return {
+    depth:Math.max(0,Math.floor(+meta.depth||0)),
+    originTrait:meta.originTrait?String(meta.originTrait):'',
+    source:meta.source?String(meta.source):'',
+    chain:Array.isArray(meta.chain)?meta.chain.slice(0,16).map(String):[]
+  };
+}
+function childTriggerMeta(parent={},extra={}){
+  const p=copyTriggerMeta(parent);
+  return {
+    depth:p.depth+1,
+    originTrait:extra.originTrait!==undefined?String(extra.originTrait||''):p.originTrait,
+    source:extra.source!==undefined?String(extra.source||''):p.source,
+    chain:Array.isArray(extra.chain)?extra.chain.slice(0,16).map(String):p.chain.slice()
+  };
+}
+function triggerState(){
+  if(!run)return null;
+  run.triggers??={counts:{},blocked:{depth:0,recursion:0},icd:{},last:null};
+  run.triggers.counts??={};run.triggers.blocked??={depth:0,recursion:0};run.triggers.icd??={};
+  return run.triggers;
+}
+function triggerIcd(key,seconds){
+  const state=triggerState();if(!state)return false;
+  key=String(key||'');if(!key)return true;
+  const until=+state.icd[key]||0;if(elapsed<until)return false;
+  state.icd[key]=elapsed+Math.max(0,+seconds||0);return true;
+}
+function registerTriggerHandler(name,handler){
+  if(typeof handler!=='function')return ()=>{};
+  const key=String(name||`handler-${triggerHandlers.size+1}`);
+  triggerHandlers.set(key,handler);
+  return ()=>triggerHandlers.delete(key);
+}
+function emitTrigger(event,payload={},meta={}){
+  if(phase!=='run'||!run)return false;
+  event=String(event||'');if(!event)return false;
+  const state=triggerState(),m=copyTriggerMeta(meta);
+  if(m.depth>TRIGGER_MAX_DEPTH){state.blocked.depth=(state.blocked.depth||0)+1;return false}
+  const killKey=m.originTrait&&KILL_TRIGGER_EVENTS.has(event)?`kill:${m.originTrait}`:'';
+  if(killKey&&m.chain.includes(killKey)){state.blocked.recursion=(state.blocked.recursion||0)+1;return false}
+  if(killKey)m.chain.push(killKey);
+  state.counts[event]=(state.counts[event]||0)+1;
+  state.last={event,depth:m.depth,originTrait:m.originTrait,source:m.source,time:elapsed};
+  const ctx={
+    event,depth:m.depth,originTrait:m.originTrait,source:m.source,chain:m.chain.slice(),
+    child:extra=>childTriggerMeta(m,extra||{}),
+    icd:(key,seconds)=>triggerIcd(`${m.originTrait||m.source||'core'}:${key}`,seconds)
+  };
+  for(const [name,handler] of triggerHandlers){
+    try{handler(payload,ctx,foundationApi())}catch(error){console.warn('[trigger]',name,error)}
+  }
+  try{foundationContent()?.onTrigger?.(event,payload,ctx,foundationApi())}catch(error){console.warn('[trigger] foundation',event,error)}
+  return true;
+}
+function isSpecialEnemy(enemy){
+  return !!enemy&&(!!enemy.boss||!!enemy.rare||enemy.grade==='elite'||!!foundationContent()?.isCombatType?.(enemy.type));
+}
 function beastConfig(){return BAL.enemy[M.area]||BAL.enemy.qingyun}
 function playerProgressTier(){return M.realm.major>0?9+(M.realm.stage||1):(M.realm.stage||1)}
 function areaBaseTier(){return({qingyun:1,blackwind:3,blood:6,foundation_trial:9,thunder:10,marsh:11,taixu:16}[M.area]||1)}
@@ -271,16 +333,19 @@ function takePlayerDamage(dmg,grantGrace=false,source='enemy'){
   }
   if(grantGrace)P.hitGrace=1.15;
 }
-function dealEnemyDamage(enemy,amount,source='unknown'){
+function dealEnemyDamage(enemy,amount,source='unknown',triggerMeta=null){
   amount=Math.max(0,+amount||0);
   amount=foundationContent()?.modifyEnemyDamage?.(enemy,amount,source,foundationApi())??amount;
   if(!enemy||enemy.hp<=0||!amount)return 0;
-  const effective=Math.min(enemy.hp,amount);
+  const effective=Math.min(enemy.hp,amount),meta=copyTriggerMeta(triggerMeta||{});
+  if(!meta.source)meta.source=source;
   enemy.hp-=amount;
+  enemy._lastHit={source,meta:copyTriggerMeta(meta)};
   if(run){
     run.skillDamage=run.skillDamage||{};
     run.skillDamage[source]=(run.skillDamage[source]||0)+effective;
   }
+  emitTrigger('onHit',{enemy,amount:effective,source,lethal:enemy.hp<=0},meta);
   return effective;
 }
 function updateNonCombatRecovery(dt){
@@ -933,7 +998,11 @@ function foundationApi(){
     spawn:(type,options={})=>actor(type,options),
     addHazard:hazard=>hazards.push(hazard),
     damagePlayer:(amount,source='foundation')=>takePlayerDamage(amount,true,source),
-    damageEnemy:(enemy,amount,source='foundation')=>dealEnemyDamage(enemy,amount,source),
+    damageEnemy:(enemy,amount,source='foundation',triggerMeta=null)=>dealEnemyDamage(enemy,amount,source,triggerMeta),
+    trigger:(event,payload={},meta={})=>emitTrigger(event,payload,meta),
+    childTriggerMeta,
+    triggerIcd,
+    castSpell:(id,options={})=>{const skill=SKILLS.find(item=>item.id===id);return skill?cast(skill,options):false},
     gainStone,gainHerb,drop,pop,ring,slash,
     finish,
     save
@@ -963,7 +1032,8 @@ function begin(){
     lastDamageAt:-999,regenPulse:0,damageTaken:0,lastDamageSource:'',damageBySource:{},
     skillDamage:{basic:0,sword:0,wave:0,chain:0,thunder:0,array:0},
     skillCasts:{basic:0,sword:0,wave:0,chain:0,thunder:0,array:0},
-    skillCooldowns:Object.fromEntries(SKILLS.map(skill=>[skill.id,0])),scheduledHits:[]
+    skillCooldowns:Object.fromEntries(SKILLS.map(skill=>[skill.id,0])),scheduledHits:[],
+    triggers:{counts:{},blocked:{depth:0,recursion:0},icd:{},last:null},triggeredCasts:{}
   };
   run.limit=foundationContent()?.runLimit?.(M.area,M.realm)||RUN_TIME;
   P.x=P.tx=EXIT_APPROACH.x;
@@ -1047,22 +1117,25 @@ function bestClusterTarget(acquire,radius){
   }
   return target;
 }
-function cast(skill){
-  const st=skillState(skill.id),r=skillRank(skill.id),rr=skillRangeRank(skill.id),b=BAL.skill[skill.id];if(!st.u||!r||!b)return false;const sr=r,B=basicDamage(),damage=B*b.mult[r];
+function cast(skill,options={}){
+  const st=skillState(skill.id),r=skillRank(skill.id),rr=skillRangeRank(skill.id),b=BAL.skill[skill.id];if(!st.u||!r||!b)return false;
+  const sr=r,B=basicDamage(),powerScale=options.powerScale===undefined?1:Math.max(0,+options.powerScale||0),source=options.source||skill.id,meta=copyTriggerMeta(options.triggerMeta||{}),damage=B*b.mult[r]*powerScale;
+  if(!meta.source)meta.source=source;
+  const done=extra=>{if(options.triggered){run.triggeredCasts[skill.id]=(run.triggeredCasts[skill.id]||0)+1}emitTrigger('onCast',{skillId:skill.id,rank:r,powerScale,triggered:!!options.triggered,...(extra||{})},meta);return true};
   if(skill.id==='sword'){
-    const range=b.range[sr];let target=null,nearest=Infinity;for(const e of enemies){if(e.type==='spirit'||e.hp<=0)continue;const d=distance(P,e);if(d<range&&d<nearest){nearest=d;target=e}}if(!target)return false;dealEnemyDamage(target,damage,'sword');slash(P.x,P.y,target.x,target.y,'#eef6ff');pop(target.x,target.y,'어검 '+Math.round(damage),'#f4f6ff');return true;
+    const range=b.range[sr];let target=null,nearest=Infinity;for(const e of enemies){if(e.type==='spirit'||e.hp<=0)continue;const d=distance(P,e);if(d<range&&d<nearest){nearest=d;target=e}}if(!target)return false;dealEnemyDamage(target,damage,source,meta);slash(P.x,P.y,target.x,target.y,'#eef6ff');pop(target.x,target.y,'어검 '+Math.round(damage),'#f4f6ff');return done({target});
   }
   if(skill.id==='wave'){
-    const radius=b.radius[sr],target=bestClusterTarget(b.acquire[sr],radius);if(!target)return false;let hits=0;for(const e of enemies){if(e.type==='spirit'||e.hp<=0||distance(target,e)>=radius)continue;dealEnemyDamage(e,damage,'wave');hits++}if(!hits)return false;pop(target.x,target.y,'검풍 ×'+hits,'#9fdfff');ring(target.x,target.y,radius,'#9fdfff');return true;
+    const radius=b.radius[sr],target=bestClusterTarget(b.acquire[sr],radius);if(!target)return false;let hits=0;for(const e of enemies){if(e.type==='spirit'||e.hp<=0||distance(target,e)>=radius)continue;dealEnemyDamage(e,damage,source,meta);hits++}if(!hits)return false;pop(target.x,target.y,'검풍 ×'+hits,'#9fdfff');ring(target.x,target.y,radius,'#9fdfff');return done({target,hits});
   }
   if(skill.id==='chain'){
-    const candidates=enemies.filter(e=>e.type!=='spirit'&&e.hp>0),max=b.count[rr],jump=b.jump[sr],acquire=b.acquire[sr];let current=P,used=new Set(),hits=0;for(let i=0;i<max;i++){let target=null,near=Infinity;for(const e of candidates){if(used.has(e))continue;const d=distance(current,e),allowed=i===0?acquire:jump;if(d<allowed&&d<near){near=d;target=e}}if(!target)break;dealEnemyDamage(target,damage,'chain');slash(current.x,current.y,target.x,target.y,'#c6d6ff');used.add(target);current=target;hits++}return hits>0;
+    const candidates=enemies.filter(e=>e.type!=='spirit'&&e.hp>0),max=b.count[rr],jump=b.jump[sr],acquire=b.acquire[sr];let current=P,used=new Set(),hits=0;for(let i=0;i<max;i++){let target=null,near=Infinity;for(const e of candidates){if(used.has(e))continue;const d=distance(current,e),allowed=i===0?acquire:jump;if(d<allowed&&d<near){near=d;target=e}}if(!target)break;dealEnemyDamage(target,damage,source,meta);slash(current.x,current.y,target.x,target.y,'#c6d6ff');used.add(target);current=target;hits++}return hits>0?done({target:current,hits}):false;
   }
   if(skill.id==='thunder'){
-    const radius=b.radius[sr],target=bestClusterTarget(b.acquire[sr],radius);if(!target)return false;let hits=0;for(const e of enemies){if(e.type!=='spirit'&&e.hp>0&&distance(target,e)<radius){dealEnemyDamage(e,damage,'thunder');hits++}}if(!hits)return false;pop(target.x,target.y,'낙뢰 ×'+hits,'#d7c8ff');ring(target.x,target.y,radius,'#d7c8ff',.4);return true;
+    const radius=b.radius[sr],target=bestClusterTarget(b.acquire[sr],radius);if(!target)return false;let hits=0;for(const e of enemies){if(e.type!=='spirit'&&e.hp>0&&distance(target,e)<radius){dealEnemyDamage(e,damage,source,meta);hits++}}if(!hits)return false;pop(target.x,target.y,'낙뢰 ×'+hits,'#d7c8ff');ring(target.x,target.y,radius,'#d7c8ff',.4);return done({target,hits});
   }
   if(skill.id==='array'){
-    const radius=b.radius[sr],target=bestClusterTarget(b.acquire[sr],radius);if(!target)return false;const pulse=damage/3;run.scheduledHits.push({kind:'array',t:0.02,x:target.x,y:target.y,r:radius,damage:pulse},{kind:'array',t:.36,x:target.x,y:target.y,r:radius,damage:pulse},{kind:'array',t:.70,x:target.x,y:target.y,r:radius,damage:pulse});pop(target.x,target.y,'만검진','#ffe9a8');ring(target.x,target.y,radius,'#ffe9a8',.24);return true;
+    const radius=b.radius[sr],target=bestClusterTarget(b.acquire[sr],radius);if(!target)return false;const pulse=damage/3;run.scheduledHits.push({kind:'array',source,t:0.02,x:target.x,y:target.y,r:radius,damage:pulse,triggerMeta:copyTriggerMeta(meta)},{kind:'array',source,t:.36,x:target.x,y:target.y,r:radius,damage:pulse,triggerMeta:copyTriggerMeta(meta)},{kind:'array',source,t:.70,x:target.x,y:target.y,r:radius,damage:pulse,triggerMeta:copyTriggerMeta(meta)});pop(target.x,target.y,'만검진','#ffe9a8');ring(target.x,target.y,radius,'#ffe9a8',.24);return done({target});
   }
   return false;
 }
@@ -1101,7 +1174,7 @@ function update(dt){
   P.cd=Math.max(0,P.cd-dt);P.hitGrace=Math.max(0,(P.hitGrace||0)-dt);
   if(run.combo>0){run.comboTime-=dt;if(run.comboTime<=0){run.combo=0;run.comboTime=0}}
   for(const id of Object.keys(run.skillCooldowns))run.skillCooldowns[id]=Math.max(0,run.skillCooldowns[id]-dt);
-  if(run.scheduledHits?.length){for(const h of run.scheduledHits){h.t-=dt;if(h.t<=0&&!h.done){h.done=1;for(const e of enemies)if(e.type!=='spirit'&&distance(h,e)<h.r)dealEnemyDamage(e,h.damage,h.kind||'array');ring(h.x,h.y,h.r,'#ffe9a8',.28)}}run.scheduledHits=run.scheduledHits.filter(h=>!h.done)}
+  if(run.scheduledHits?.length){for(const h of run.scheduledHits){h.t-=dt;if(h.t<=0&&!h.done){h.done=1;for(const e of enemies)if(e.type!=='spirit'&&distance(h,e)<h.r)dealEnemyDamage(e,h.damage,h.source||h.kind||'array',h.triggerMeta||null);ring(h.x,h.y,h.r,'#ffe9a8',.28)}}run.scheduledHits=run.scheduledHits.filter(h=>!h.done)}
   const activeTargets=[...enemies,...objects,...(vein?[vein]:[])];if(P.target&&!activeTargets.includes(P.target))P.target=null;if(P.target){P.tx=P.target.x;P.ty=P.target.y}
   foundationContent()?.updateRun?.(dt,foundationApi());
   const speed=(isMortal()?150:(M.cult.mov||150))*areaMoveScale()*(1+run.combo*.005);
@@ -1125,7 +1198,22 @@ function update(dt){
     let speedMul=1,period=enemy.attackPeriod||1;if(enemy.rareTrait==='frenzy'&&enemy.hp/enemy.max<.5){speedMul=1.15;period*=.8}if(enemy.aggressive){if(strikeSet.has(enemy))moveToward(enemy,P.x,P.y,enemy.speed*speedMul,dt);else{const rr=58+(enemy.r||12),tx=P.x+Math.cos(enemy.slotAngle||0)*rr,ty=P.y+Math.sin(enemy.slotAngle||0)*rr;moveToward(enemy,tx,ty,enemy.speed*.82*speedMul,dt)}}else if(home>5)moveToward(enemy,enemy.homeX,enemy.homeY,enemy.speed*.55,dt);
     if(strikeSet.has(enemy)&&d<P.r+enemy.r+3&&enemy.cd<=0){if(enemy.type==='attacker'){enemy.windup=.55;enemy.pendingStrike=1;enemy.cd=period+.55;ring(enemy.x,enemy.y,enemy.r+18,'#c96893',.55)}else{let dmg=(enemy.attack||beastConfig().hit)*incomingDamageScale();if(enemies.some(o=>o!==enemy&&o.rareTrait==='howl'&&o.hp>0&&distance(o,enemy)<130))dmg*=1.15;if(P.hitGrace>0&&M.trainingNodes?.q6_spirit)dmg*=M.trainingNodes?.q9_harmony ? .90 : .92;dmg=Math.ceil(dmg);takePlayerDamage(dmg,true,'enemy_melee');enemy.cd=period;ring(P.x,P.y,P.r+7,'#f47b6f',.16)}}
   }
-  enemies=enemies.filter(e=>{if((e.type==='rogue'||e.type==='rat')&&(e.x<-10||e.x>W+10))return false;if(e.hp<=0){foundationContent()?.beforeEnemyDeath?.(e,foundationApi());if(e.type!=='spirit')reward(e);return false}return true});
+  enemies=enemies.filter(e=>{
+    if((e.type==='rogue'||e.type==='rat')&&(e.x<-10||e.x>W+10))return false;
+    if(e.hp<=0){
+      foundationContent()?.beforeEnemyDeath?.(e,foundationApi());
+      if(e.type!=='spirit'){
+        const hit=e._lastHit||{source:'unknown',meta:{}},meta=copyTriggerMeta(hit.meta||{});
+        if(!meta.source)meta.source=hit.source||'unknown';
+        const payload={enemy:e,source:hit.source||meta.source,special:isSpecialEnemy(e)};
+        emitTrigger('onKill',payload,meta);
+        if(payload.special)emitTrigger('onSpecialKill',payload,meta);
+        reward(e);
+      }
+      return false;
+    }
+    return true;
+  });
   if(!isMortal()&&P.cd<=0){const range=basicAttackRange(),targets=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&distance(P,e)<range).sort((a,b)=>distance(P,a)-distance(P,b)).slice(0,basicAttackTargets());if(targets.length){const dmg=basicDamage()*combatPower(),scales=[1,.62,.48,.36];targets.forEach((target,i)=>{dealEnemyDamage(target,dmg*(scales[i]||.32),'basic');slash(P.x,P.y,target.x,target.y,i?'#e8d6a5':'#f7e5ad')});run.skillCasts.basic=(run.skillCasts.basic||0)+1;P.cd=basicInterval()}}
   for(const skill of SKILLS){const st=skillState(skill.id);if(!st.u)continue;if(run.skillCooldowns[skill.id]<=0&&cast(skill)){run.skillCasts[skill.id]=(run.skillCasts[skill.id]||0)+1;run.skillCooldowns[skill.id]=skillCooldown(skill.id)}}
   updateHazards(dt);updateNonCombatRecovery(dt);if(P.hp<=0){P.hp=0;finish('dead');return}syncHud();
@@ -1692,7 +1780,11 @@ window.__xianxiaDebug={
   finish,
   objectiveData,
   setMenuOpen,
-  foundationApi
+  foundationApi,
+  registerTriggerHandler,
+  emitTrigger,
+  childTriggerMeta,
+  triggerSnapshot:()=>run?.triggers?JSON.parse(JSON.stringify(run.triggers)):null
 };
 
 function loadNormalized(value){
