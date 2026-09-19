@@ -579,8 +579,9 @@ function scheduleAreaHit({t,x,y,r,damage,source,family,meta,pull=0,followPlayer=
 }
 function scheduleDirectHit({t,target,damage,source,family,meta,color='#d7eaff',chainState=null}){
   if(!target)return false;
-  if(chainState)chainState.pending=(chainState.pending||0)+1;
-  return enqueueScheduledHit({kind:'trait-direct',t,targetId:target.id,damage,source,family,triggerMeta:copyTriggerMeta(meta||{}),color,chainState});
+  const ok=enqueueScheduledHit({kind:'trait-direct',t,targetId:target.id,damage,source,family,triggerMeta:copyTriggerMeta(meta||{}),color,chainState});
+  if(ok&&chainState)chainState.pending=(chainState.pending||0)+1;
+  return ok;
 }
 function processScheduledTraitHit(h){
   const center=h.followPlayer?{x:P.x,y:P.y}:{x:h.x,y:h.y};
@@ -600,9 +601,8 @@ function processScheduledTraitHit(h){
         const next=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&!state.used.has(e.id)&&distance(target,e)<state.jump)
           .sort((a,b)=>distance(target,a)-distance(target,b))[0];
         if(next){
-          state.endlessLeft--;state.used.add(next.id);
-          scheduleDirectHit({t:.14,target:next,damage:state.damage,source:state.source,family:'chain',meta:state.meta,color:'#c6d6ff',chainState:state});
-          emitProjectileVisual('chain',target,next,{delay:.04,duration:.10,color:'#c6d6ff'});
+          const queued=scheduleDirectHit({t:.14,target:next,damage:state.damage,source:state.source,family:'chain',meta:state.meta,color:'#c6d6ff',chainState:state});
+          if(queued){state.endlessLeft--;state.used.add(next.id);emitProjectileVisual('chain',target,next,{delay:.04,duration:.10,color:'#c6d6ff'})}
         }
       }
       state.pending=Math.max(0,(state.pending||1)-1);
