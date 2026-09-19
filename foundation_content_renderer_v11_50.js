@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.51.10-damage-floats';
+const VERSION='11.51.11-boss-scale';
 if(window.__xianxiaFoundationRenderer?.version===VERSION)return;
 const W=1800,H=2400,BASE='assets/ink_v1/foundation_trial_v1/';
 const areaAssets={
@@ -35,7 +35,7 @@ function drawEnvironment(area,t){
   if(ambient?.naturalWidth){const sw=ambient.naturalWidth/2,sh=ambient.naturalHeight/2;for(let i=0;i<4;i++){const x=280+i*410,y=520+(i%2)*850;c.save();c.globalAlpha=.13+.05*Math.sin(t+i);c.drawImage(ambient,i%2*sw,Math.floor(i/2)*sh,sw,sh,x-130,y-130,260,260);c.restore()}}
   if(node?.naturalWidth){for(const[x,y]of[[330,720],[1470,760],[380,1800],[1420,1760]]){c.save();c.globalAlpha=.55;c.drawImage(node,x-52,y-72,104,104);c.restore()}}
 }
-function enemyHeight(e){return e.boss?(e.type==='taixu_boss'?190:176):92}
+function enemyHeight(e){return e.boss?(e.type==='taixu_boss'?310:270):92}
 function syncFoundationDeaths(snapshot,area,now){
   const current=(snapshot.enemies||[]).filter(e=>e.visualOwner==='foundation');
   if(state.lastArea!==area){
@@ -63,23 +63,23 @@ function drawFoundationDeaths(area,now){
     const im=image(area,d.type);if(!im?.naturalWidth)continue;
     const rows=d.boss?4:3,row=d.boss?3:2,steps=4,step=Math.min(steps-1,Math.floor(age/duration*steps));
     const index=d.boss?2+step:step,height=enemyHeight(d),fade=age>duration*.68?1-(age-duration*.68)/(duration*.32):1;
-    c.save();c.globalAlpha=.18*fade;c.fillStyle='#111';c.beginPath();c.ellipse(d.x,d.y+18,d.boss?48:27,d.boss?12:7,0,0,Math.PI*2);c.fill();c.restore();
+    c.save();c.globalAlpha=.18*fade;c.fillStyle='#111';c.beginPath();c.ellipse(d.x,d.y+20,d.boss?76:27,d.boss?19:7,0,0,Math.PI*2);c.fill();c.restore();
     frame(im,row,6,index,rows,d.x,d.y+24,height,d.facing<0,Math.max(0,fade));
   }
 }
 function drawEnemy(area,e,t,elapsed){const im=image(area,e.type);if(!im?.naturalWidth)return;const boss=e.boss,rows=boss?4:3,row=e.action==='attack'?1:e.action==='special'?(boss?2:1):0,index=Math.floor((t*(e.action==='move'?9:6)+e.id*.7))%6,height=enemyHeight(e),c=state.ctx;
-  c.save();c.globalAlpha=.25;c.fillStyle='#111';c.beginPath();c.ellipse(e.x,e.y+18,boss?48:27,boss?12:7,0,0,Math.PI*2);c.fill();c.restore();
+  c.save();c.globalAlpha=.25;c.fillStyle='#111';c.beginPath();c.ellipse(e.x,e.y+20,boss?76:27,boss?19:7,0,0,Math.PI*2);c.fill();c.restore();
   if(e.commandedUntil>elapsed){const marker=image('marsh','command');centered(marker,4,Math.floor(t*7)%4,e.x,e.y-height-20,42,.95)}
   if(e.shield>0){const shield=image('marsh','shield');centered(shield,4,Math.floor(t*6)%4,e.x,e.y-height*.48,boss?150:105,.76)}
   frame(im,row,6,index,rows,e.x,e.y+24,height,e.facing<0,1);
-  const hp=Math.max(0,e.hp/Math.max(1,e.max)),w=boss?100:54;c.save();c.fillStyle='#071014cc';c.fillRect(e.x-w/2,e.y-height-12,w,7);c.fillStyle=boss?'#c7825a':'#aabf9a';c.fillRect(e.x-w/2+1,e.y-height-11,(w-2)*hp,5);if(e.shield>0){c.strokeStyle='#8ed7d1';c.strokeRect(e.x-w/2,e.y-height-12,w,7)}if(boss){c.font='700 13px serif';c.textAlign='center';c.fillStyle='#f4e6c2';c.fillText(e.name,e.x,e.y-height-20)}c.restore();
+  const hp=Math.max(0,e.hp/Math.max(1,e.max)),w=boss?138:54,barH=boss?9:7;c.save();c.fillStyle='#071014cc';c.fillRect(e.x-w/2,e.y-height-14,w,barH);c.fillStyle=boss?'#c7825a':'#aabf9a';c.fillRect(e.x-w/2+1,e.y-height-13,(w-2)*hp,barH-2);if(e.shield>0){c.strokeStyle='#8ed7d1';c.strokeRect(e.x-w/2,e.y-height-14,w,barH)}if(boss){c.font='800 15px serif';c.textAlign='center';c.fillStyle='#f4e6c2';c.fillText(e.name,e.x,e.y-height-25)}c.restore();
 }
 function drawFoundationDamage(now){
   const c=state.ctx;
   for(let i=state.damageFloats.length-1;i>=0;i--){
     const q=state.damageFloats[i],age=now-q.start,d=.68;
     if(age>=d){state.damageFloats.splice(i,1);continue}
-    const u=age/d,fade=1-u,y=q.y-(q.boss?116:62)-u*28;
+    const u=age/d,fade=1-u,y=q.y-(q.boss?172:62)-u*30;
     c.save();c.globalAlpha=Math.min(1,age/.06)*fade;c.textAlign='center';c.textBaseline='middle';
     c.strokeStyle='rgba(248,241,220,.95)';c.lineWidth=q.boss?5:4;
     c.fillStyle='#8b352d';c.font='900 '+(q.boss?20:17)+'px sans-serif';
