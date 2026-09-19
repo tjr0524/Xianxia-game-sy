@@ -311,6 +311,91 @@ function emitTrigger(event,payload={},meta={}){
 function isSpecialEnemy(enemy){
   return !!enemy&&(!!enemy.boss||!!enemy.rare||enemy.grade==='elite'||!!foundationContent()?.isCombatType?.(enemy.type));
 }
+function selectedFormationTrait(system,tier){
+  return M.formationSkills?.traits?.[system]?.[tier]?.selected||'';
+}
+function hasFormationTrait(system,id){
+  const tiers=M.formationSkills?.traits?.[system];
+  return !!tiers&&Object.values(tiers).some(row=>row?.selected===id);
+}
+function effectiveSkillCooldown(id){
+  let cd=skillCooldown(id);
+  if(id==='sword'&&hasFormationTrait('sword','heavy'))cd*=1.25;
+  return cd;
+}
+function enemyStrengthScore(enemy){
+  if(!enemy||enemy.hp<=0)return -Infinity;
+  return (enemy.boss?1e9:0)+(enemy.grade==='elite'||enemy.rare?2e8:0)+(enemy.shield>0?8e7:0)+(enemy.max||enemy.hp||0)*100+(enemy.hp||0);
+}
+function swordCandidateScore(enemy,origin=P){
+  let score=-distance(origin,enemy);
+  if(hasFormationTrait('sword','break')&&(enemy.shield>0||isSpecialEnemy(enemy)))score+=250000;
+  if(hasFormationTrait('sword','heavy'))score+=enemyStrengthScore(enemy);
+  return score;
+}
+function swordCandidates(range,origin=P){
+  return enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&distance(origin,e)<range).sort((a,b)=>swordCandidateScore(b,origin)-swordCandidateScore(a,origin));
+}
+function swordHit(enemy,baseDamage,scale=1,source='sword',meta={},from=P){
+  if(!enemy||enemy.hp<=0)return 0;
+  let damage=baseDamage*scale;
+  if(hasFormationTrait('sword','mark')){
+    enemy._swordMarkCount=Math.max(0,Math.floor(enemy._swordMarkCount||0));
+    if(enemy._swordMarkPrimed){damage*=1.35;enemy._swordMarkPrimed=0;pop(enemy.x,enemy.y-20,'검흔 폭발','#d8f2ff',.55)}
+  }
+  if(hasFormationTrait('sword','break')&&(enemy.shield>0||isSpecialEnemy(enemy)))damage*=1.5;
+  const dealt=dealEnemyDamage(enemy,damage,source,meta);
+  if(dealt>0&&hasFormationTrait('sword','mark')){
+    enemy._swordMarkCount=(enemy._swordMarkCount||0)+1;
+    if(enemy._swordMarkCount>=3){enemy._swordMarkCount=0;enemy._swordMarkPrimed=1}
+  }
+  slash(from.x,from.y,enemy.x,enemy.y,source==='sword'?'#eef6ff':'#c9efff');
+  return dealt;
+}
+function swordTraitMeta(parent,traitId,source){
+  return childTriggerMeta(parent||{},{originTrait:`sword:${traitId}`,source:source||`sword:${traitId}`});
+}
+function swordVolleyFrom(origin,count,scale,source,meta,range=null,preferDirection=null){
+  const r=range||BAL.skill.sword.range[skillRank('sword')]||160;
+  let pool=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&distance(origin,e)<r*1.45);
+  if(preferDirection){
+    const n=Math.hypot(preferDirection.x,preferDirection.y)||1,dx=preferDirection.x/n,dy=preferDirection.y/n;
+    pool.sort((a,b)=>{
+      const ax=a.x-origin.x,ay=a.y-origin.y,bx=b.x-origin.x,by=b.y-origin.y;
+      const ad=(ax*dx+ay*dy)/(Math.hypot(ax,ay)||1),bd=(bx*dx+by*dy)/(Math.hypot(bx,by)||1);
+      const as=ad*180-distance(origin,a),bs=bd*180-distance(origin,b);
+      return bs-as;
+    });
+  }else pool.sort((a,b)=>swordCandidateScore(b,origin)-swordCandidateScore(a,origin));
+  if(!pool.length)return 0;
+  const base=basicDamage()*BAL.skill.sword.mult[skillRank('sword')],used=new Map();let hits=0;
+  for(let i=0;i<count;i++){
+    const target=pool[i%pool.length];if(!target||target.hp<=0)continue;
+    const duplicate=used.get(target.id)||0,eff=duplicate?scale*.60:scale;
+    if(swordHit(target,base,eff,source,meta,origin)>0){hits++;used.set(target.id,duplicate+1)}
+  }
+  if(hits){run.triggeredCasts.sword=(run.triggeredCasts.sword||0)+1;emitTrigger('onCast',{skillId:'sword',rank:skillRank('sword'),powerScale:scale,triggered:true,hits},meta)}
+  return hits;
+}
+function handleSwordTraitTrigger(payload,ctx){
+  if(ctx.event==='onKill'&&payload?.source==='sword'){
+    const origin={x:payload.enemy?.x??P.x,y:payload.enemy?.y??P.y};
+    if(hasFormationTrait('sword','scatter')){
+      const meta=swordTraitMeta(ctx,'scatter','sword:scatter');
+      swordVolleyFrom(origin,2,.35,'sword:scatter',meta);
+    }
+    if(hasFormationTrait('sword','kill')&&Math.random()<.35){
+      const meta=swordTraitMeta(ctx,'kill','sword:kill');
+      swordVolleyFrom(origin,1,.50,'sword:kill',meta);
+    }
+  }
+  if(ctx.event==='onDash'&&hasFormationTrait('sword','dash')&&triggerIcd('sword:dash',1.0)){
+    const from=payload?.from||P,to=payload?.to||P,dir={x:to.x-from.x,y:to.y-from.y};
+    const meta=swordTraitMeta(ctx,'dash','sword:dash');
+    swordVolleyFrom(to,3,.40,'sword:dash',meta,null,dir);
+  }
+}
+registerTriggerHandler('sword-traits',handleSwordTraitTrigger);
 function beastConfig(){return BAL.enemy[M.area]||BAL.enemy.qingyun}
 function playerProgressTier(){return M.realm.major>0?9+(M.realm.stage||1):(M.realm.stage||1)}
 function areaBaseTier(){return({qingyun:1,blackwind:3,blood:6,foundation_trial:9,thunder:10,marsh:11,taixu:16}[M.area]||1)}
@@ -1123,7 +1208,33 @@ function cast(skill,options={}){
   if(!meta.source)meta.source=source;
   const done=extra=>{if(options.triggered){run.triggeredCasts[skill.id]=(run.triggeredCasts[skill.id]||0)+1}emitTrigger('onCast',{skillId:skill.id,rank:r,powerScale,triggered:!!options.triggered,...(extra||{})},meta);return true};
   if(skill.id==='sword'){
-    const range=b.range[sr];let target=null,nearest=Infinity;for(const e of enemies){if(e.type==='spirit'||e.hp<=0)continue;const d=distance(P,e);if(d<range&&d<nearest){nearest=d;target=e}}if(!target)return false;dealEnemyDamage(target,damage,source,meta);slash(P.x,P.y,target.x,target.y,'#eef6ff');pop(target.x,target.y,'어검 '+Math.round(damage),'#f4f6ff');return done({target});
+    const range=b.range[sr],targets=swordCandidates(range,P);if(!targets.length)return false;
+    const t1=selectedFormationTrait('sword',1),primary=targets[0];let hits=0;
+    if(t1==='split'){
+      const used=new Map();
+      for(let i=0;i<3;i++){
+        const target=targets[i%targets.length],dup=used.get(target.id)||0,scale=dup?.45*.60:.45;
+        if(swordHit(target,damage,scale,source,meta,P)>0){hits++;used.set(target.id,dup+1)}
+      }
+    }else if(t1==='pierce'){
+      const dx=primary.x-P.x,dy=primary.y-P.y,n=Math.hypot(dx,dy)||1,ux=dx/n,uy=dy/n;
+      const lineEnd={x:P.x+ux*range,y:P.y+uy*range};
+      const pierced=targets.filter(e=>{
+        const vx=lineEnd.x-P.x,vy=lineEnd.y-P.y,wx=e.x-P.x,wy=e.y-P.y,ll=vx*vx+vy*vy,t=ll?clamp((wx*vx+wy*vy)/ll,0,1):0;
+        return Math.hypot(e.x-(P.x+vx*t),e.y-(P.y+vy*t))<Math.max(18,e.r+8);
+      }).sort((a,b)=>distance(P,a)-distance(P,b)).slice(0,3);
+      for(const target of pierced)if(swordHit(target,damage,.90,source,meta,P)>0)hits++;
+    }else{
+      const scale=t1==='heavy'?1.55:1;
+      if(swordHit(primary,damage,scale,source,meta,P)>0)hits++;
+    }
+    if(!hits)return false;
+    if(hasFormationTrait('sword','return')&&targets.length===1&&primary.hp>0){
+      const rmeta=swordTraitMeta(meta,'return','sword:return');
+      swordHit(primary,damage,.60,'sword:return',rmeta,P);hits++;
+    }
+    pop(primary.x,primary.y,`어검 ×${hits}`,'#f4f6ff');
+    return done({target:primary,hits});
   }
   if(skill.id==='wave'){
     const radius=b.radius[sr],target=bestClusterTarget(b.acquire[sr],radius);if(!target)return false;let hits=0;for(const e of enemies){if(e.type==='spirit'||e.hp<=0||distance(target,e)>=radius)continue;dealEnemyDamage(e,damage,source,meta);hits++}if(!hits)return false;pop(target.x,target.y,'검풍 ×'+hits,'#9fdfff');ring(target.x,target.y,radius,'#9fdfff');return done({target,hits});
@@ -1215,7 +1326,7 @@ function update(dt){
     return true;
   });
   if(!isMortal()&&P.cd<=0){const range=basicAttackRange(),targets=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&distance(P,e)<range).sort((a,b)=>distance(P,a)-distance(P,b)).slice(0,basicAttackTargets());if(targets.length){const dmg=basicDamage()*combatPower(),scales=[1,.62,.48,.36];targets.forEach((target,i)=>{dealEnemyDamage(target,dmg*(scales[i]||.32),'basic');slash(P.x,P.y,target.x,target.y,i?'#e8d6a5':'#f7e5ad')});run.skillCasts.basic=(run.skillCasts.basic||0)+1;P.cd=basicInterval()}}
-  for(const skill of SKILLS){const st=skillState(skill.id);if(!st.u)continue;if(run.skillCooldowns[skill.id]<=0&&cast(skill)){run.skillCasts[skill.id]=(run.skillCasts[skill.id]||0)+1;run.skillCooldowns[skill.id]=skillCooldown(skill.id)}}
+  for(const skill of SKILLS){const st=skillState(skill.id);if(!st.u)continue;if(run.skillCooldowns[skill.id]<=0&&cast(skill)){run.skillCasts[skill.id]=(run.skillCasts[skill.id]||0)+1;run.skillCooldowns[skill.id]=effectiveSkillCooldown(skill.id)}}
   updateHazards(dt);updateNonCombatRecovery(dt);if(P.hp<=0){P.hp=0;finish('dead');return}syncHud();
 }
 
