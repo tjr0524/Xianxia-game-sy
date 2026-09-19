@@ -1341,6 +1341,9 @@ function pop(x,y,text,color='#fff',life=.85){
 function ring(x,y,r,color,life=.32){
   pushFx({kind:'ring',x,y,r,color,t:life,ttl:life});
 }
+function fieldFx(x,y,r,color,life){
+  pushFx({kind:'field',x,y,r,color,t:life,ttl:life});
+}
 function slash(x1,y1,x2,y2,color='#e9f4ff'){
   pushFx({kind:'slash',x:x1,y:y1,x2,y2,color,t:.16,ttl:.16});
 }
@@ -1664,9 +1667,9 @@ function cast(skill,options={}){
     const t1=selectedFormationTrait('wave',1),base=currentWaveBaseDamage()*powerScale;let hits=0;
     if(t1==='wide')radius*=1.45;
     if(t1==='vortex'){
-      const vmeta=copyTriggerMeta(meta);
-      for(let i=0;i<5;i++)scheduleAreaHit({t:.05+i*.50,x:target.x,y:target.y,r:radius,damage:base*.22,source:'wave:vortex',family:'wave',meta:vmeta,color:'#9fdfff'});
-      ring(target.x,target.y,radius,'#9fdfff',.32);return done({target,hits:1});
+      const vmeta=copyTriggerMeta(meta),duration=2.5,pulses=5,interval=duration/(pulses-1);
+      for(let i=0;i<pulses;i++)scheduleAreaHit({t:.05+i*interval,x:target.x,y:target.y,r:radius,damage:base*.22,source:'wave:vortex',family:'wave',meta:vmeta,color:'#9fdfff'});
+      fieldFx(target.x,target.y,radius,'#9fdfff',duration+.08);return done({target,hits:1});
     }
     if(t1==='double'){
       const dx=target.x-P.x,dy=target.y-P.y,n=Math.hypot(dx,dy)||1,px=-dy/n,py=dx/n,offset=radius*.55,centers=[{x:target.x+px*offset,y:target.y+py*offset},{x:target.x-px*offset,y:target.y-py*offset}],seen=new Set();
@@ -1709,8 +1712,9 @@ function cast(skill,options={}){
     const base=currentThunderBaseDamage()*powerScale;let hits=0;
     if(t1==='bolt')radius*=.65;
     if(t1==='field'){
-      radius*=1.20;for(let i=0;i<6;i++)scheduleAreaHit({t:.05+i*.50,x:target.x,y:target.y,r:radius,damage:base*.20,source:'thunder:field',family:'thunder',meta,color:'#d7c8ff'});
-      ring(target.x,target.y,radius,'#d7c8ff',.4);return done({target,hits:1});
+      const duration=3,pulses=6,interval=duration/(pulses-1);
+      radius*=1.20;for(let i=0;i<pulses;i++)scheduleAreaHit({t:.05+i*interval,x:target.x,y:target.y,r:radius,damage:base*.20,source:'thunder:field',family:'thunder',meta,color:'#d7c8ff'});
+      fieldFx(target.x,target.y,radius,'#d7c8ff',duration+.08);return done({target,hits:1});
     }
     const initialScale=t1==='chain'?.80:1;
     for(const e of enemies){if(e.type!=='spirit'&&e.hp>0&&distance(target,e)<radius){if(thunderDamage(e,base*initialScale,source,meta,target)>0)hits++}}
@@ -2247,6 +2251,13 @@ function drawFx(){
       g.strokeStyle=effect.color;g.lineWidth=3;
       const progress=1-effect.t/effect.ttl;
       g.beginPath();g.arc(effect.x,effect.y,effect.r*(.82+progress*.18),0,6.28);g.stroke();
+    }else if(effect.kind==='field'){
+      const progress=1-effect.t/effect.ttl,pulse=.5+.5*Math.sin(progress*Math.PI*12);
+      g.globalAlpha=Math.min(.62,.28+effect.t/.22)*(.82+.18*pulse);
+      g.fillStyle=effect.color+'24';g.strokeStyle=effect.color;g.lineWidth=2.5;
+      g.beginPath();g.arc(effect.x,effect.y,effect.r,0,6.28);g.fill();g.stroke();
+      g.globalAlpha=.42+.18*pulse;g.setLineDash([8,7]);
+      g.beginPath();g.arc(effect.x,effect.y,effect.r*.78,0,6.28);g.stroke();g.setLineDash([]);
     }else if(effect.kind==='slash'){
       g.strokeStyle=effect.color;g.lineWidth=2.5;
       g.beginPath();g.moveTo(effect.x,effect.y);g.lineTo(effect.x2,effect.y2);g.stroke();
