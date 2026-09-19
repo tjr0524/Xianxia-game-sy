@@ -91,7 +91,7 @@ const TREE={
   storm:[
     {id:'storm1',n:'뢰흔 개방',d:'R1 6.0초 단발 · R2 5.2초 · R3 2연속(0.22초) · R4 집중 낙뢰 · R5 이동 위험구역',tier:1,c:{s:1,h:0}},
     {id:'storm2',n:'천뢰 예지',d:'낙뢰 전조와 연쇄 방향 정보를 강화한다.',tier:2,p:'storm1',c:{s:1,h:0}},
-    {id:'storm3',n:'뇌정 응축',d:'R1 회피 시 상급 영초 기회 · R3 추가 낙뢰 패턴 · R5 고확률 복합 낙뢰',tier:3,p:'storm2',c:{s:1,h:0}}
+    {id:'storm3',n:'뇌정 응축',d:'R1 천뢰 직격 수련 · R3 추가 낙뢰 패턴 · R5 고확률 복합 낙뢰',tier:3,p:'storm2',c:{s:1,h:0}}
   ],
   miasma:[
     {id:'miasma1',n:'폭렬 요기',d:'폭발형 출현과 폭발 위치 판단을 강화한다.',tier:1,c:{s:1,h:0}},
@@ -168,7 +168,7 @@ const OLD=['xianxia_proto_v10','xianxia_proto_v9','xianxia_proto_v8','xianxia_pr
 const zoneBlank=()=>({tree:{},runs:0,safe:0,eliteWins:0,bestStone:0,bestHerb:0,bestKills:0});
 const skillBlank=()=>Object.fromEntries(SKILLS.map(skill=>[skill.id,{u:0,pow:0,range:0,cycle:0}]));
 const fresh=()=>({
-  stone:0,herb:0,herb2:0,herb3:0,
+  stone:0,herb:0,herb2:0,herb3:0,thunderMark:0,purpleEssence:0,
   realm:{major:-1,stage:0},
   cult:{atk:1,mov:150,sen:1,hp:90},
   skills:skillBlank(),
@@ -242,6 +242,8 @@ function loadState(){
   state.herb=Number(state.herb)||0;
   state.herb2=Number(state.herb2)||0;
   state.herb3=Number(state.herb3)||0;
+  state.thunderMark=Math.max(0,Math.floor(Number(state.thunderMark)||0));
+  state.purpleEssence=Math.max(0,Math.floor(Number(state.purpleEssence)||0));
   if(!AREAS.some(area=>area.id===state.area))state.area='qingyun';
   if(!PLANS.some(plan=>plan.id===state.settings.plan))state.settings.plan='harvest';
   if(state.realm.major>=0&&!Object.values(state.skills).some(skill=>skill.u))state.skills.sword.u=1;
@@ -783,6 +785,44 @@ function herbKey(grade){return grade===0?'herb':grade===1?'herb2':'herb3'}
 function herbHave(grade){return Number(M[herbKey(grade)])||0}
 function herbSpend(grade,amount){M[herbKey(grade)]-=amount}
 function herbAdd(grade,amount){M[herbKey(grade)]+=amount}
+function foundationMaterial(){
+  if(M.realm.major!==1)return null;
+  const stage=M.realm.stage||1;
+  if(stage<=3)return {key:'thunderMark',name:'뢰흔'};
+  if(stage<=6)return {key:'purpleEssence',name:'자운정수'};
+  return null;
+}
+function secondaryCost(price,gradeOverride=null){
+  const amount=Math.max(0,Number(price?.h)||0);
+  if(!amount)return {amount:0,name:'',kind:'none'};
+  const mat=foundationMaterial();
+  if(mat)return {amount,key:mat.key,name:mat.name,kind:'foundation'};
+  const grade=gradeOverride??price?.hg??0;
+  return {amount,grade,name:`${HN[grade]} 영초`,kind:'herb'};
+}
+function secondaryHave(price,gradeOverride=null){
+  const q=secondaryCost(price,gradeOverride);
+  if(!q.amount)return true;
+  return q.kind==='foundation'?(Number(M[q.key])||0)>=q.amount:herbHave(q.grade)>=q.amount;
+}
+function secondarySpend(price,gradeOverride=null){
+  const q=secondaryCost(price,gradeOverride);
+  if(!q.amount)return;
+  if(q.kind==='foundation')M[q.key]=Math.max(0,(Number(M[q.key])||0)-q.amount);
+  else herbSpend(q.grade,q.amount);
+}
+function secondaryText(price,gradeOverride=null){
+  const q=secondaryCost(price,gradeOverride);
+  return q.amount?`${q.name} ${q.amount}`:'';
+}
+function resourceSummary(){
+  if(M.realm.major===1){
+    if((M.realm.stage||1)<=3)return `뢰흔 ${M.thunderMark||0}`;
+    if((M.realm.stage||1)<=6)return `자운정수 ${M.purpleEssence||0}`;
+    return `후기 재료 미정 · 上${M.herb3||0}`;
+  }
+  return `下${M.herb} · 中${M.herb2} · 上${M.herb3}`;
+}
 
 function branches(id=M.area){
   if(id==='qingyun')return ['eco'];
@@ -877,12 +917,12 @@ function breakthroughCost(){
     '0:7':{s:1800,h:20,hg:2},
     '0:8':{s:2600,h:28,hg:2},
     '0:9':{s:4500,h:40,hg:2,major:1},
-    '1:1':{s:5400,h:50,hg:2},
-    '1:2':{s:6800,h:60,hg:2},
-    '1:3':{s:8400,h:75,hg:2},
-    '1:4':{s:11000,h:100,hg:2},
-    '1:5':{s:13400,h:120,hg:2},
-    '1:6':{s:16300,h:145,hg:2},
+    '1:1':{s:5400,h:8,hg:2},
+    '1:2':{s:6800,h:12,hg:2},
+    '1:3':{s:8400,h:16,hg:2},
+    '1:4':{s:11000,h:8,hg:2},
+    '1:5':{s:13400,h:12,hg:2},
+    '1:6':{s:16300,h:16,hg:2},
     '1:7':{s:21100,h:190,hg:2},
     '1:8':{s:27200,h:240,hg:2}
   };
@@ -905,7 +945,8 @@ function ventureCopy(){
   if(M.area==='qingyun')return ['무상 귀환','체력 70% 이상으로 귀환 · 혼합 보상'];
   if(M.area==='blackwind')return ['산수 추적','산수·탐보서 1명 격파 · 혼합 보상'];
   if(M.area==='blood')return ['영맥 잠행','영맥에서 영석 10개 채굴 · 혼합 보상'];
-  return ['천뢰 수행','낙뢰 2회 회피 · 혼합 보상'];
+  if(M.area==='thunder')return ['천뢰 수행','낙뢰에 2회 직격 · 뢰흔 확보'];
+  return ['기믹 수행','비경 고유 기믹을 수행'];
 }
 function planCopy(plan){
   if(plan.id!=='venture')return [plan.name,plan.desc];
@@ -930,7 +971,8 @@ function objectiveData(){
   if(M.area==='blood'){
     return {label:'영맥 잠행',value:run?.mined||0,target:10,reward:'영석과 영초'};
   }
-  return {label:'천뢰 수행',value:run?.dodges||0,target:2,reward:'영석과 영초'};
+  if(M.area==='thunder')return {label:'천뢰 수행',value:run?.lightningHits||0,target:2,reward:'뢰흔'};
+  return {label:'기믹 수행',value:0,target:1,reward:'고유 보상'};
 }
 function objectiveMet(){
   const objective=objectiveData();
@@ -949,8 +991,9 @@ function objectiveReward(){
     return `영석 +${amount}`;
   }
   const stone=Math.ceil(10*A().reward);
-  const herbs=1+Math.floor(index/2);
   M.stone+=stone;
+  if(M.area==='thunder'){M.thunderMark=(M.thunderMark||0)+1;return `영석 +${stone} · 뢰흔 +1`}
+  const herbs=1+Math.floor(index/2);
   herbAdd(Math.min(2,index),herbs);
   return `영석 +${stone} · ${HN[Math.min(2,index)]} 영초 +${herbs}`;
 }
@@ -971,7 +1014,7 @@ function syncMobileExpeditionNav(){
 function render(){
   ensurePlan();
   UI.stone.textContent=Math.floor(M.stone);
-  UI.herb.textContent=`下${M.herb} · 中${M.herb2} · 上${M.herb3}`;
+  UI.herb.textContent=resourceSummary();
   UI.realm.textContent=UI.realm2.textContent=realmName();
   UI.area.textContent=A().name;
   UI.desc.textContent=`${A().desc} · 이동 ${Math.round(A().env.move*100)}% / 감응 ${Math.round(A().env.pick*100)}%`;
@@ -990,7 +1033,7 @@ function render(){
     const capped=value>=currentCap;
     label.textContent=isMortal()?'잠김':`Lv.${value}/${currentCap}`;
     cost.textContent=isMortal()?'입문 후 가능':capped?'현재 경지 상한':price.h
-      ?`${HN[price.hg]} 영초 ${price.h}`
+      ?secondaryText(price)
       :`영석 ${price.s}`;
     button.disabled=phase==='run'||isMortal()||capped;
   }
@@ -1002,7 +1045,7 @@ function render(){
     :'소경지 돌파';
   UI.btCost.textContent=breakthrough.init
     ?`하급 영초 ${breakthrough.h}`
-    :`영석 ${breakthrough.s} · ${HN[breakthrough.hg]} 영초 ${breakthrough.h}${needsEvent?' · 축기의 실마리 필요':''}`;
+    :`영석 ${breakthrough.s} · ${secondaryText(breakthrough)}${needsEvent?' · 축기의 실마리 필요':''}`;
   UI.bt.disabled=phase==='run'||needsEvent;
   UI.eventInfo.style.display=breakthrough.major?'block':'none';
   if(breakthrough.major){
@@ -1010,7 +1053,7 @@ function render(){
       ?M.events.foundationInsight
         ?'✓ <b>축기의 실마리 확보</b>'
         :'연기 9층에서 적혈비경 정예 수호수를 격파하고 무사 귀환해야 합니다.'
-      :'대경지 돌파는 막대한 영기와 상급 영초를 요구합니다.';
+      :M.realm.major===1?'축기 후기는 태허유적 기믹 재료를 설계 중입니다.':'대경지 돌파는 막대한 영기와 상급 영초를 요구합니다.';
   }
 
   const zone=Z();
@@ -1143,7 +1186,7 @@ function renderTree(){
       ?'흑풍곡: 요수 + 산수·탐보서'
       :M.area==='blood'
         ?'적혈비경: 요수 + 산수 + 영맥·정예'
-        :'천뢰봉: 요수 + 산수 + 영맥 + 낙뢰 회피';
+        :'천뢰봉: 요수 + 산수 + 영맥 + 천뢰 직격·뢰흔';
 }
 
 function applyTreeCamera(){
@@ -1197,12 +1240,12 @@ function buyNode(node){
   }
   if(!nodeReady(node))return;
   const price=nodeCost(node);
-  if(M.stone<price.s||herbHave(price.hg)<price.h){
+  if(M.stone<price.s||!secondaryHave(price)){
     UI.notice.textContent='인연 강화 자원이 부족합니다.';
     return;
   }
   M.stone-=price.s;
-  if(price.h)herbSpend(price.hg,price.h);
+  if(price.h)secondarySpend(price);
   Z().tree[node.id]=rank(node.id)+1;
   UI.notice.textContent=`${node.n} ${rank(node.id)}/5 강화. 다음 원정부터 비경이 변화합니다.`;
   render();
@@ -1221,7 +1264,7 @@ function renderSkills(){
       const button=document.createElement('button');
       button.className='skill-btn skill-unlock';
       button.textContent=open
-        ?`해금 · ${skill.unlock.s} 영석 · ${HN[skill.grade]} 영초 ${skill.unlock.h}`
+        ?`해금 · ${skill.unlock.s} 영석 · ${secondaryText(skill.unlock,skill.grade)}`
         :`잠김 · ${MAJORS[skill.req.major]} ${skill.req.stage}층 필요`;
       button.disabled=phase==='run'||!open;
       button.onclick=()=>unlockSkill(skill);
@@ -1237,7 +1280,7 @@ function renderSkills(){
         if(level>=currentCap)button.textContent=`${name}\n${level}/${currentCap}`;
         else{
           const price=skillCost(skill,key,level+1);
-          button.textContent=`${name} ${level}/${currentCap}\n${price.s}석${price.h?` · ${HN[price.hg]} ${price.h}초`:''}`;
+          button.textContent=`${name} ${level}/${currentCap}\n${price.s}석${price.h?` · ${secondaryText(price)}`:''}`;
         }
         button.disabled=phase==='run'||level>=currentCap;
         button.onclick=()=>upgradeSkill(skill,key);
@@ -1252,12 +1295,12 @@ function renderSkills(){
 function unlockSkill(skill){
   const state=skillState(skill.id);
   if(!skillOpen(skill)||state.u)return;
-  if(M.stone<skill.unlock.s||herbHave(skill.grade)<skill.unlock.h){
+  if(M.stone<skill.unlock.s||!secondaryHave(skill.unlock,skill.grade)){
     UI.notice.textContent='법술 해금 자원이 부족합니다.';
     return;
   }
   M.stone-=skill.unlock.s;
-  herbSpend(skill.grade,skill.unlock.h);
+  secondarySpend(skill.unlock,skill.grade);
   state.u=1;
   UI.notice.textContent=`${skill.n} 해금. 다음 원정부터 독립 쿨타임으로 자동 발동합니다.`;
   render();
@@ -1268,12 +1311,12 @@ function upgradeSkill(skill,key){
   const currentCap=skillCap(skill);
   if(!state.u||state[key]>=currentCap)return;
   const price=skillCost(skill,key,state[key]+1);
-  if(M.stone<price.s||herbHave(price.hg)<price.h){
+  if(M.stone<price.s||!secondaryHave(price)){
     UI.notice.textContent='법술 강화 자원이 부족합니다.';
     return;
   }
   M.stone-=price.s;
-  if(price.h)herbSpend(price.hg,price.h);
+  if(price.h)secondarySpend(price);
   state[key]++;
   UI.notice.textContent=`${skill.n} ${key==='pow'?'위력':key==='range'?'범위/타수':'순환'} 강화.`;
   render();
@@ -1283,11 +1326,11 @@ function buyTrain(key){
   if(phase==='run'||isMortal()||M.cult[key]>=cap())return;
   const price=trainCost(key);
   if(price.h){
-    if(herbHave(price.hg)<price.h){
-      UI.notice.textContent=`${HN[price.hg]} 영초가 부족합니다.`;
+    if(!secondaryHave(price)){
+      UI.notice.textContent=`${secondaryText(price)}이 부족합니다.`;
       return;
     }
-    herbSpend(price.hg,price.h);
+    secondarySpend(price);
   }else{
     if(M.stone<price.s){
       UI.notice.textContent='영석이 부족합니다.';
@@ -1307,12 +1350,12 @@ function breakthrough(){
     UI.notice.textContent='축기 시련의 수문장을 넘어야 합니다.';
     return;
   }
-  if(M.stone<price.s||herbHave(price.hg)<price.h){
+  if(M.stone<price.s||!secondaryHave(price)){
     UI.notice.textContent='돌파 자원이 부족합니다.';
     return;
   }
   M.stone-=price.s;
-  if(price.h)herbSpend(price.hg,price.h);
+  if(price.h)secondarySpend(price);
   if(price.init){
     M.realm={major:0,stage:1};
     M.skills.sword.u=1;
@@ -1533,17 +1576,18 @@ function begin(){
   hazards=[];
   vein=null;
   const plan=currentPlan();
-  const herbTotal=Math.max(3,Math.round(A().herbs*plan.herbCount));
-  const herbInitial=Math.ceil(herbTotal*.72);
+  const foundationEra=M.realm.major>=1;
+  const herbTotal=foundationEra?0:Math.max(3,Math.round(A().herbs*plan.herbCount));
+  const herbInitial=foundationEra?0:Math.ceil(herbTotal*.72);
   const beastTotal=0,beastInitial=0;
   run={
-    s:0,h0:0,h1:0,h2:0,left:0,minHp:1,kills:0,beastKills:0,elite:0,
-    thieves:0,treasures:0,mined:0,dodges:0,combo:0,comboTime:0,bestCombo:0,
+    s:0,h0:0,h1:0,h2:0,thunderMarks:0,purpleEssence:0,left:0,minHp:1,kills:0,beastKills:0,elite:0,
+    thieves:0,treasures:0,mined:0,dodges:0,lightningHits:0,combo:0,comboTime:0,bestCombo:0,
     herbLeft:herbTotal-herbInitial,beastLeft:beastTotal-beastInitial,
     herbTimer:7+Math.random()*3,beastTimer:4.2+Math.random()*1.8,rogueTimer:6,
     fateContestTimer:rank('fate2')>=5?7.5:999,fateContestDone:0,
     luckySpiritTimer:rank('fate3')>=5?4.5:999,luckySpiritDone:0,
-    lightningTimer:M.area==='thunder'?2.2:999,stormRewardCount:0,stormHerbCount:0,
+    lightningTimer:M.area==='thunder'?1.8:999,lightningTraceSeq:0,lightningTraces:[],
     lastDamageAt:-999,regenPulse:0,damageTaken:0,lastDamageSource:'',damageBySource:{},
     skillDamage:{basic:0,sword:0,wave:0,chain:0,thunder:0,array:0},
     skillCasts:{basic:0,sword:0,wave:0,chain:0,thunder:0,array:0},
@@ -1788,7 +1832,7 @@ function makeStormZone(x,y){
 }
 function updateHazards(dt){
   foundationContent()?.updateHazards?.(dt,foundationApi());
-  if(M.area==='thunder'&&M.realm.major>=1&&(M.realm.stage||0)>=3){
+  if(M.area==='thunder'&&M.realm.major>=1){
     run.lightningTimer-=dt;
     if(run.lightningTimer<=0){
       const level=rank('storm1'),chain=STORM_BAL.chain[level]||1;
@@ -1807,23 +1851,30 @@ function updateHazards(dt){
     }
     h.t-=dt;
     if(h.t>0||h.struck)continue;
-    h.struck=1;h.t=.28;h.ttl=.28;
+    h.struck=1;
+    if(h.kind==='lightning'){h.t=.68;h.ttl=.68}else{h.t=.28;h.ttl=.28}
     if(h.kind==='vein_pulse'){
       if(distance(P,h)<h.r){const dmg=Math.ceil(beastConfig().hit*.42);takePlayerDamage(dmg,false,'vein_pulse');pop(P.x,P.y,'영맥 충격 -'+dmg,'#d9a6ff',.75)}
       ring(h.x,h.y,h.r,'#d9a6ff',.35);continue;
     }
     const hit=distance(P,h)<h.r;
+    if(h.kind==='lightning'){
+      run.lightningTraceSeq=(run.lightningTraceSeq||0)+1;
+      run.lightningTraces??=[];
+      run.lightningTraces.push({seq:run.lightningTraceSeq,x:h.x,y:h.y,hit:hit?1:0});
+      if(run.lightningTraces.length>32)run.lightningTraces.splice(0,run.lightningTraces.length-32);
+    }
     if(hit){
-      const dmg=Math.ceil((foundationTarget('thunder')?.playerHp||P.max)*.40);takePlayerDamage(dmg,false,'lightning');pop(P.x,P.y,'천뢰 -'+dmg,'#ff9fa0',1);
+      const dmg=Math.ceil((foundationTarget('thunder')?.playerHp||P.max)*.40);
+      takePlayerDamage(dmg,false,'lightning');
+      run.lightningHits=(run.lightningHits||0)+1;
+      run.thunderMarks=(run.thunderMarks||0)+1;
+      pop(P.x,P.y,`천뢰 -${dmg} · 뢰흔 +1`,'#ffb6ff',1.15);
     }else{
       run.dodges++;
-      if((run.stormRewardCount||0)<STORM_BAL.rewardCap&&h.reward>0){run.stormRewardCount=(run.stormRewardCount||0)+1;drop('s',h.x,h.y,h.reward)}
-      const s3=rank('storm3');
-      if(s3>0&&(run.stormHerbCount||0)<2&&Math.random()<(STORM_BAL.storm3HerbChance[s3]||0)){run.stormHerbCount=(run.stormHerbCount||0)+1;drop('h',h.x+10,h.y-8,1,2);pop(h.x,h.y-20,'뇌정 응축 · 상급 영초','#d5b8ff',.8)}
-      pop(h.x,h.y,'천뢰 회피','#bfc5ff',.9);
     }
     if(rank('storm1')>=5&&Math.random()<STORM_BAL.r5ZoneChance)additions.push(makeStormZone(h.x,h.y));
-    ring(h.x,h.y,h.r,'#d6d5ff',.3);
+    ring(h.x,h.y,h.r,'#d6d5ff',.55);
   }
   if(additions.length)hazards.push(...additions);
   hazards=hazards.filter(h=>h.t>0);
@@ -1991,10 +2042,14 @@ function finish(reason){
   const h0=Math.floor(run.h0*ratio);
   const h1=Math.floor(run.h1*ratio);
   const h2=Math.floor(run.h2*ratio);
+  const thunderMarks=Math.floor((run.thunderMarks||0)*ratio);
+  const purpleEssence=Math.floor((run.purpleEssence||0)*ratio);
   M.stone+=stone;
   M.herb+=h0;
   M.herb2+=h1;
   M.herb3+=h2;
+  M.thunderMark=(M.thunderMark||0)+thunderMarks;
+  M.purpleEssence=(M.purpleEssence||0)+purpleEssence;
 
   const zone=Z();
   zone.runs++;
@@ -2020,7 +2075,8 @@ function finish(reason){
   UI.ret.disabled=true;
   UI.ot.textContent=safe?'무사 귀환':reason==='dead'?'육신 중상':'비경 붕괴 · 강제 이탈';
   const resultLead=safe?'전리품 전량 확보':reason==='dead'?'전투 불능 · 전리품 40% 회수':'비경이 무너지며 강제로 튕겨났습니다.<br><b>전리품 60% 소실</b> · 40%만 회수';
-  UI.ox.innerHTML=`${resultLead}<br><b>영석 ${stone} · 영초 下${h0} 中${h1} 上${h2}</b>${objective}${event}`;
+  const specialLoot=[thunderMarks?`뢰흔 ${thunderMarks}`:'',purpleEssence?`자운정수 ${purpleEssence}`:''].filter(Boolean).join(' · ');
+  UI.ox.innerHTML=`${resultLead}<br><b>영석 ${stone}${h0+h1+h2?` · 영초 下${h0} 中${h1} 上${h2}`:''}${specialLoot?` · ${specialLoot}`:''}</b>${objective}${event}`;
   render();
   draw();
   window.__xianxiaFrameHub?.wake?.();
@@ -2029,7 +2085,7 @@ function finish(reason){
 function syncHud(){
   UI.hp.textContent=`${Math.ceil(P.hp)} / ${P.max}`;
   UI.hpFill.style.width=`${Math.max(0,P.hp/P.max)*100}%`;
-  UI.loot.textContent=`영석 ${run?.s||0} · 영초 ${totalHerbs(run)}`;
+  UI.loot.textContent=M.realm.major>=1?`영석 ${run?.s||0}${run?.thunderMarks?` · 뢰흔 ${run.thunderMarks}`:''}${run?.purpleEssence?` · 자운정수 ${run.purpleEssence}`:''}`:`영석 ${run?.s||0} · 영초 ${totalHerbs(run)}`;
   const remaining=Math.max(0,(run?.limit||RUN_TIME)-elapsed);
   UI.time.textContent=`${remaining.toFixed(1)}초`;
   UI.time.style.color=phase==='run'&&remaining<=5?'#ff776c':phase==='run'&&remaining<=10?'#e8a06f':'';
