@@ -1,0 +1,498 @@
+/* UI experiment: training + spells only
+   Build 11.49.32-test
+   Uses existing ink_v1 node icon/frame assets. */
+
+.v25-theme [data-panel="train"],
+.v25-theme [data-panel="skills"]{
+  --ui-paper:#f5efe1;
+  --ui-paper-2:#ebe2cf;
+  --ui-ink:#263630;
+  --ui-muted:#718078;
+  --ui-line:#5e716766;
+  --ui-jade:#587f70;
+  --ui-gold:#9d7b39;
+}
+
+/* ------------------------------
+   TRAINING
+   ------------------------------ */
+.v25-theme [data-panel="train"]{
+  padding:7px!important;
+}
+.v25-theme [data-panel="train"]>.section{
+  margin:0 0 8px!important;
+  padding:10px!important;
+  border:0!important;
+  border-radius:10px 4px 10px 4px!important;
+  color:var(--ui-ink)!important;
+  background:
+    linear-gradient(145deg,#faf6ebed,#e9e0cddd),
+    url("assets/paper_fiber.svg")!important;
+  box-shadow:
+    inset 0 0 28px #fff8,
+    0 6px 16px #392f2214!important;
+}
+.v25-theme [data-panel="train"]>.section:first-child{
+  position:relative;
+  overflow:hidden;
+  padding:11px 11px 10px 12px!important;
+  border-image:url("assets/ink_v1/runtime/ui/panel_wide.png") 120 fill / 20px / 0 round!important;
+  background:#f0e8d8dd url("assets/paper_fiber.svg")!important;
+}
+.v25-theme [data-panel="train"]>.section:first-child::after{
+  content:"";
+  position:absolute;
+  right:-16px;
+  bottom:-22px;
+  width:94px;
+  height:94px;
+  opacity:.055;
+  pointer-events:none;
+  background:url("assets/ink_v1/runtime/ui/seal.png") center/contain no-repeat;
+}
+.v25-theme [data-panel="train"] .section-head{
+  position:relative;
+  z-index:1;
+  align-items:center!important;
+  gap:7px;
+  margin:0 0 6px!important;
+  padding:0 0 9px!important;
+  background:url("assets/ink_v1/runtime/ui/divider.png") center bottom/100% 12px no-repeat!important;
+}
+.v25-theme [data-panel="train"] .section-head>b{
+  color:#263630!important;
+  font:800 13px/1.25 var(--v25-serif)!important;
+}
+.v25-theme [data-panel="train"] #cap{
+  margin-left:auto;
+  font-size:8px!important;
+}
+.v25-theme [data-panel="train"] #realmInfo{
+  position:relative;
+  z-index:1;
+  min-height:18px;
+  margin:0 0 7px!important;
+  color:#5e6c66!important;
+  font-size:9px!important;
+  line-height:1.45!important;
+}
+
+.v25-theme [data-panel="train"] #breakthrough{
+  position:relative;
+  z-index:1;
+  width:100%;
+  min-height:58px!important;
+  display:grid!important;
+  grid-template-columns:48px minmax(0,1fr)!important;
+  grid-template-rows:auto auto!important;
+  align-items:center!important;
+  column-gap:8px!important;
+  padding:7px 10px 7px 7px!important;
+  text-align:left!important;
+  border:0!important;
+  border-radius:8px 3px 8px 3px!important;
+  color:#24352f!important;
+  background:
+    linear-gradient(140deg,#f8f1deea,#ddd0b6e6),
+    url("assets/paper_fiber.svg")!important;
+  box-shadow:
+    inset 0 0 0 1px #7d6d4d44,
+    inset 0 1px #fff9,
+    0 3px 10px #40321e16!important;
+}
+.v25-theme [data-panel="train"] #breakthrough::before{
+  content:"";
+  grid-row:1/3;
+  width:46px;
+  height:46px;
+  background:
+    url("assets/ink_v1/foundation_trial_v1/ui/node_icons/node_frames/frame_available_256.png") center/100% 100% no-repeat,
+    url("assets/ink_v1/runtime/ui/seal.png") center/68% 68% no-repeat;
+  filter:drop-shadow(0 2px 3px #493a2540);
+}
+.v25-theme [data-panel="train"] #breakthrough strong{
+  align-self:end;
+  color:#3c3425!important;
+  font:800 13px/1.2 var(--v25-serif)!important;
+}
+.v25-theme [data-panel="train"] #breakthrough small{
+  align-self:start;
+  margin-top:2px;
+  color:#74674d!important;
+  font-size:8px!important;
+  line-height:1.3!important;
+}
+.v25-theme [data-panel="train"] #breakthrough:disabled{
+  filter:grayscale(.55);
+  opacity:.7;
+}
+.v25-theme [data-panel="train"] #eventInfo{
+  position:relative;
+  z-index:1;
+  margin-top:6px!important;
+  font-size:8.5px!important;
+}
+
+/* second section = four core cultivation paths */
+.v25-theme [data-panel="train"]>.section:nth-of-type(2)::before{
+  content:"기초 수련";
+  display:block;
+  margin:0 0 8px;
+  padding:0 0 8px;
+  color:#34473f;
+  background:url("assets/ink_v1/runtime/ui/divider.png") center bottom/100% 11px no-repeat;
+  font:800 12px/1 var(--v25-serif);
+}
+.v25-theme [data-panel="train"] .train-grid{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:7px!important;
+}
+.v25-theme [data-panel="train"] .train-btn{
+  position:relative;
+  min-width:0!important;
+  min-height:92px!important;
+  display:grid!important;
+  grid-template-columns:52px minmax(0,1fr)!important;
+  grid-template-rows:auto auto 1fr!important;
+  align-items:center!important;
+  column-gap:7px!important;
+  padding:8px 7px!important;
+  overflow:hidden;
+  text-align:left!important;
+  border:0!important;
+  border-radius:8px 3px 8px 3px!important;
+  color:var(--ui-ink)!important;
+  background:
+    linear-gradient(145deg,#fbf7ec,#ece4d3),
+    url("assets/paper_fiber.svg")!important;
+  box-shadow:
+    inset 0 0 0 1px #63766b45,
+    inset 0 1px #fff,
+    0 3px 9px #2d392f12!important;
+}
+.v25-theme [data-panel="train"] .train-btn::before{
+  content:"";
+  grid-row:1/4;
+  width:50px;
+  height:50px;
+  align-self:center;
+  background-position:center,center;
+  background-size:100% 100%,68% 68%;
+  background-repeat:no-repeat;
+  filter:drop-shadow(0 2px 3px #35463d2f);
+}
+.v25-theme [data-panel="train"] #atk::before{
+  background-image:
+    url("assets/ink_v1/foundation_trial_v1/ui/node_icons/node_frames/frame_available_256.png"),
+    url("assets/ink_v1/foundation_trial_v1/ui/node_icons/training_core/sword_formula_64.png");
+}
+.v25-theme [data-panel="train"] #mov::before{
+  background-image:
+    url("assets/ink_v1/foundation_trial_v1/ui/node_icons/node_frames/frame_available_256.png"),
+    url("assets/ink_v1/foundation_trial_v1/ui/node_icons/training_core/movement_art_64.png");
+}
+.v25-theme [data-panel="train"] #sen::before{
+  background-image:
+    url("assets/ink_v1/foundation_trial_v1/ui/node_icons/node_frames/frame_available_256.png"),
+    url("assets/ink_v1/foundation_trial_v1/ui/node_icons/training_core/spirit_sense_64.png");
+}
+.v25-theme [data-panel="train"] #hpb::before{
+  background-image:
+    url("assets/ink_v1/foundation_trial_v1/ui/node_icons/node_frames/frame_available_256.png"),
+    url("assets/ink_v1/foundation_trial_v1/ui/node_icons/training_core/body_training_64.png");
+}
+.v25-theme [data-panel="train"] .train-btn strong{
+  align-self:end;
+  color:#2d3e37!important;
+  font:800 12px/1.12 var(--v25-serif)!important;
+  white-space:nowrap;
+}
+.v25-theme [data-panel="train"] .train-btn span{
+  align-self:center;
+  color:#48645a!important;
+  font:800 10px/1.15 var(--v25-body)!important;
+  white-space:nowrap;
+}
+.v25-theme [data-panel="train"] .train-btn small{
+  align-self:start;
+  overflow:hidden;
+  color:#78837d!important;
+  font-size:7.5px!important;
+  line-height:1.2!important;
+  text-overflow:ellipsis;
+}
+.v25-theme [data-panel="train"] .train-btn:not(:disabled):active{
+  transform:translateY(1px);
+}
+.v25-theme [data-panel="train"] .train-btn:disabled{
+  filter:grayscale(.78);
+  opacity:.56;
+}
+
+/* Requested earlier: records do not live under cultivation. Hide for this pass. */
+.v25-theme [data-panel="train"]>.section:nth-of-type(3){
+  display:none!important;
+}
+
+
+/* ------------------------------
+   SPELLS
+   ------------------------------ */
+.v25-theme [data-panel="skills"]{
+  padding:7px!important;
+}
+.v25-theme [data-panel="skills"]>.section{
+  margin:0!important;
+  padding:8px!important;
+  border:0!important;
+  background:
+    linear-gradient(#f5efe2e8,#e8decae6),
+    url("assets/ink_v1/runtime/ui/skill_tree.png") center/cover no-repeat!important;
+  box-shadow:inset 0 0 38px #fff6!important;
+}
+.v25-theme [data-panel="skills"] .spellbook38{
+  position:relative;
+  gap:7px!important;
+}
+.v25-theme [data-panel="skills"] .spellbook38-intro{
+  min-height:68px!important;
+  grid-template-columns:52px minmax(0,1fr)!important;
+  gap:8px!important;
+  padding:8px 9px!important;
+  border:0!important;
+  border-radius:10px 4px 10px 4px!important;
+  color:#263630!important;
+  background:
+    #f3ecdcdf url("assets/paper_fiber.svg")!important;
+  border-image:url("assets/ink_v1/runtime/ui/panel_wide.png") 120 fill / 18px / 0 round!important;
+  box-shadow:0 5px 14px #312a2117!important;
+}
+.v25-theme [data-panel="skills"] .spellbook38-intro::after{
+  display:none!important;
+}
+.v25-theme [data-panel="skills"] .spellbook38-core{
+  width:50px!important;
+  height:50px!important;
+  border:0!important;
+  border-radius:0!important;
+  color:transparent!important;
+  font-size:0!important;
+  background:
+    url("assets/ink_v1/foundation_trial_v1/ui/node_icons/node_frames/frame_mastered_256.png") center/100% 100% no-repeat,
+    url("assets/ink_v1/foundation_trial_v1/ui/node_icons/combat_abilities/basic_sword_64.png") center/68% 68% no-repeat!important;
+  box-shadow:none!important;
+  filter:drop-shadow(0 2px 3px #31443b35);
+}
+.v25-theme [data-panel="skills"] .spellbook38-intro b{
+  color:#2e3e38!important;
+  font:800 13px/1.2 var(--v25-serif)!important;
+}
+.v25-theme [data-panel="skills"] .spellbook38-intro p{
+  color:#65736d!important;
+  font-size:8.7px!important;
+  line-height:1.4!important;
+}
+.v25-theme [data-panel="skills"] .spellbook38-note{
+  margin:0 2px!important;
+  padding:6px 8px!important;
+  border:0!important;
+  border-radius:6px 2px 6px 2px!important;
+  color:#655a43!important;
+  background:#f8f1dfe6!important;
+  box-shadow:inset 0 0 0 1px #8d79513f!important;
+  font-size:8px!important;
+}
+.v25-theme [data-panel="skills"] .spellbook38-note strong{
+  color:#725b28!important;
+  font-size:9px!important;
+}
+
+/* Each spell uses a real pictogram + node-state frame. */
+.v25-theme [data-panel="skills"] .spell-card38{
+  --spell-icon:none;
+  min-height:92px;
+  grid-template-columns:56px minmax(0,1fr)!important;
+  gap:8px!important;
+  padding:8px!important;
+  overflow:visible!important;
+  border:0!important;
+  border-radius:8px 3px 8px 3px!important;
+  background:
+    linear-gradient(145deg,#fbf7edee,#ede4d2eb),
+    url("assets/paper_fiber.svg")!important;
+  box-shadow:
+    inset 0 0 0 1px #5f716640,
+    0 4px 11px #2d372e13!important;
+}
+.v25-theme [data-panel="skills"] .spell-card38::before{
+  display:none!important;
+}
+.v25-theme [data-panel="skills"] .spell-card38[data-skill="sword"]{
+  --spell-icon:url("assets/ink_v1/foundation_trial_v1/ui/node_icons/combat_abilities/sword_control_64.png");
+}
+.v25-theme [data-panel="skills"] .spell-card38[data-skill="wave"]{
+  --spell-icon:url("assets/ink_v1/foundation_trial_v1/ui/node_icons/combat_abilities/sword_wind_64.png");
+}
+.v25-theme [data-panel="skills"] .spell-card38[data-skill="chain"]{
+  --spell-icon:url("assets/ink_v1/foundation_trial_v1/ui/node_icons/combat_abilities/chain_flying_sword_64.png");
+}
+.v25-theme [data-panel="skills"] .spell-card38[data-skill="thunder"]{
+  --spell-icon:url("assets/ink_v1/foundation_trial_v1/ui/node_icons/combat_abilities/thunder_talisman_64.png");
+}
+.v25-theme [data-panel="skills"] .spell-card38[data-skill="array"]{
+  --spell-icon:url("assets/ink_v1/foundation_trial_v1/ui/node_icons/combat_abilities/myriad_sword_formation_64.png");
+}
+.v25-theme [data-panel="skills"] .spell-seal38{
+  width:54px!important;
+  height:54px!important;
+  border:0!important;
+  border-radius:0!important;
+  color:transparent!important;
+  font-size:0!important;
+  background:
+    url("assets/ink_v1/foundation_trial_v1/ui/node_icons/node_frames/frame_locked_256.png") center/100% 100% no-repeat,
+    var(--spell-icon) center/66% 66% no-repeat!important;
+  box-shadow:none!important;
+  filter:grayscale(.8) opacity(.62);
+}
+.v25-theme [data-panel="skills"] .spell-card38.ready .spell-seal38{
+  background-image:
+    url("assets/ink_v1/foundation_trial_v1/ui/node_icons/node_frames/frame_available_256.png"),
+    var(--spell-icon)!important;
+  filter:drop-shadow(0 0 5px #a6864160);
+}
+.v25-theme [data-panel="skills"] .spell-card38.known .spell-seal38{
+  background-image:
+    url("assets/ink_v1/foundation_trial_v1/ui/node_icons/node_frames/frame_selected_256.png"),
+    var(--spell-icon)!important;
+  filter:drop-shadow(0 2px 3px #40594d42);
+}
+.v25-theme [data-panel="skills"] .spell-card38.mastered .spell-seal38{
+  background-image:
+    url("assets/ink_v1/foundation_trial_v1/ui/node_icons/node_frames/frame_mastered_256.png"),
+    var(--spell-icon)!important;
+  filter:drop-shadow(0 2px 4px #476b5c50);
+}
+.v25-theme [data-panel="skills"] .spell-title38 b{
+  color:#293a34!important;
+  font:800 12.5px/1.15 var(--v25-serif)!important;
+}
+.v25-theme [data-panel="skills"] .spell-title38 small{
+  margin-top:1px!important;
+  color:#78827d!important;
+  font-size:7.4px!important;
+}
+.v25-theme [data-panel="skills"] .spell-state38{
+  padding:3px 5px!important;
+  border-color:#83908755!important;
+  color:#69766f!important;
+  background:#f5f1e8c9!important;
+  font-size:7px!important;
+}
+.v25-theme [data-panel="skills"] .spell-card38.ready .spell-state38{
+  color:#785d26!important;
+  background:#faf0cfde!important;
+}
+.v25-theme [data-panel="skills"] .spell-card38.known .spell-state38{
+  color:#49695e!important;
+  background:#e5eee8dd!important;
+}
+.v25-theme [data-panel="skills"] .spell-desc38{
+  display:-webkit-box!important;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  margin:4px 0 5px!important;
+  color:#68756f!important;
+  font-size:8.5px!important;
+  line-height:1.35!important;
+}
+.v25-theme [data-panel="skills"] .spell-rank38{
+  gap:5px!important;
+  margin:0 0 5px!important;
+  color:#748079!important;
+  font-size:7.5px!important;
+}
+.v25-theme [data-panel="skills"] .spell-pips38{
+  gap:2px!important;
+}
+.v25-theme [data-panel="skills"] .spell-pips38 i{
+  height:4px!important;
+  border-radius:4px!important;
+}
+.v25-theme [data-panel="skills"] .spell-pips38 i.on{
+  background:#557f70!important;
+}
+.v25-theme [data-panel="skills"] .spell-actions38{
+  gap:5px!important;
+}
+.v25-theme [data-panel="skills"] .spell-cost38{
+  min-width:0;
+  gap:3px!important;
+}
+.v25-theme [data-panel="skills"] .spell-cost38 span{
+  padding:2px 4px!important;
+  font-size:7px!important;
+}
+.v25-theme [data-panel="skills"] .spell-action38{
+  min-width:78px!important;
+  min-height:29px!important;
+  padding:4px 7px!important;
+  border:0!important;
+  border-radius:4px!important;
+  color:#273a33!important;
+  background:
+    #eee6d5 url("assets/ink_v1/runtime/ui/button_secondary.png") center/100% 100% no-repeat!important;
+  font-size:8px!important;
+  box-shadow:none!important;
+}
+.v25-theme [data-panel="skills"] .spell-action38:not(:disabled):active{
+  transform:translateY(1px);
+}
+.v25-theme [data-panel="skills"] .spell-action38:disabled{
+  opacity:.5!important;
+}
+
+
+/* compact phone tuning: two cultivation nodes stay readable at ~390px */
+@media(max-width:560px){
+  .v25-theme [data-panel="train"]{padding:5px!important}
+  .v25-theme [data-panel="train"]>.section{padding:8px!important;margin-bottom:6px!important}
+  .v25-theme [data-panel="train"] .train-grid{gap:5px!important}
+  .v25-theme [data-panel="train"] .train-btn{
+    min-height:82px!important;
+    grid-template-columns:45px minmax(0,1fr)!important;
+    column-gap:5px!important;
+    padding:6px 5px!important;
+  }
+  .v25-theme [data-panel="train"] .train-btn::before{
+    width:44px;
+    height:44px;
+  }
+  .v25-theme [data-panel="train"] .train-btn strong{font-size:11px!important}
+  .v25-theme [data-panel="train"] .train-btn span{font-size:9px!important}
+  .v25-theme [data-panel="train"] .train-btn small{font-size:7px!important}
+
+  .v25-theme [data-panel="skills"]{padding:5px!important}
+  .v25-theme [data-panel="skills"]>.section{padding:6px!important}
+  .v25-theme [data-panel="skills"] .spellbook38{gap:6px!important}
+  .v25-theme [data-panel="skills"] .spell-card38{
+    min-height:86px!important;
+    grid-template-columns:50px minmax(0,1fr)!important;
+    gap:6px!important;
+    padding:7px 6px!important;
+  }
+  .v25-theme [data-panel="skills"] .spell-seal38{
+    width:49px!important;
+    height:49px!important;
+  }
+  .v25-theme [data-panel="skills"] .spell-title38 b{font-size:12px!important}
+  .v25-theme [data-panel="skills"] .spell-desc38{font-size:8px!important}
+  .v25-theme [data-panel="skills"] .spell-action38{
+    min-width:72px!important;
+    min-height:28px!important;
+    padding:3px 5px!important;
+    font-size:7.5px!important;
+  }
+}
