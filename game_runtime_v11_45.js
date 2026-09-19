@@ -41,11 +41,11 @@ const STORM_BAL={
   reward:[0,6,8,10,12,15],
   rewardCap:3,
   foresightWarn:[0,.10,.18,.26,.34,.42],
-  foresightRadius:[0,2,4,6,7,8],
+  foresightRadiusBonus:[0,4,8,12,16,20],
+  directDamageRatio:[.55,.52,.49,.46,.43,.40],
+  stormExtraChance:[0,0,0,.20,.28,.35],
   r5ZoneChance:.25,
-  r5ZoneDuration:1.8,
-  storm3HerbChance:[0,.08,.12,.18,.24,.30],
-  storm3ExtraChance:[0,0,.10,.20,.28,.35]
+  r5ZoneDuration:1.8
 };
 
 const UI={
@@ -89,9 +89,9 @@ const TREE={
     {id:'res3',n:'대형 영맥',d:'R1 대형 영맥 · R3 채굴 파동 · R5 영맥 폭주 미니 디펜스',tier:3,p:'res2',c:{s:1,h:0}}
   ],
   storm:[
-    {id:'storm1',n:'뢰흔 개방',d:'R1 6.0초 단발 · R2 5.2초 · R3 2연속(0.22초) · R4 집중 낙뢰 · R5 이동 위험구역',tier:1,c:{s:1,h:0}},
-    {id:'storm2',n:'천뢰 예지',d:'낙뢰 전조와 연쇄 방향 정보를 강화한다.',tier:2,p:'storm1',c:{s:1,h:0}},
-    {id:'storm3',n:'뇌정 응축',d:'R1 천뢰 직격 수련 · R3 추가 낙뢰 패턴 · R5 고확률 복합 낙뢰',tier:3,p:'storm2',c:{s:1,h:0}}
+    {id:'storm1',n:'뢰흔 개방',d:'R1 6.0초 단발 · R2 5.2초 · R3 2연속+복합 낙뢰 · R4 집중 낙뢰 · R5 이동 위험구역',tier:1,c:{s:1,h:0}},
+    {id:'storm2',n:'천뢰 예지',d:'전조 +0.10~0.42초 · 직격 반경 +4/+8/+12/+16/+20',tier:2,p:'storm1',c:{s:1,h:0}},
+    {id:'storm3',n:'뇌정 응축',d:'천뢰 직격 피해를 최대 HP의 52/49/46/43/40%로 감소',tier:3,p:'storm2',c:{s:1,h:0}}
   ],
   miasma:[
     {id:'miasma1',n:'폭렬 요기',d:'폭발형 출현과 폭발 위치 판단을 강화한다.',tier:1,c:{s:1,h:0}},
@@ -1840,7 +1840,7 @@ function moveToward(actor,x,y,speed,dt){
 }
 
 function spawnLightning(options={}){
-  const level=rank('storm1'),foresight=rank('storm2'),storm3=rank('storm3');
+  const level=rank('storm1'),foresight=rank('storm2');
   const combat=enemies.some(e=>encounterBeast(e)&&e.aggressive&&distance(P,e)<320);
   let x,y;
   if(options.x!==undefined||options.y!==undefined){
@@ -1855,9 +1855,9 @@ function spawnLightning(options={}){
   // The visible warning circle is the actual strike area. Previously the bright
   // outer telegraph was much wider than the collision radius, making intentional
   // hits feel unfairly strict.
-  const radius=Math.max(58,66-(STORM_BAL.foresightRadius[foresight]||0));
+  const radius=66+(STORM_BAL.foresightRadiusBonus[foresight]||0);
   hazards.push({kind:'lightning',x,y,r:radius,t:warn,ttl:warn,struck:0,reward:STORM_BAL.reward[level]||0,compound:options.compound?1:0});
-  if(!options.compound&&storm3>=3&&Math.random()<(STORM_BAL.storm3ExtraChance[storm3]||0)){
+  if(!options.compound&&level>=3&&Math.random()<(STORM_BAL.stormExtraChance[level]||0)){
     const a=Math.random()*Math.PI*2,d=85+Math.random()*70;
     const ex=clamp(x+Math.cos(a)*d,45,W-45),ey=clamp(y+Math.sin(a)*d,45,H-45);
     setTimeout(()=>{if(phase==='run')spawnLightning({x:ex,y:ey,compound:1})},Math.round((.32+.05*foresight)*1000));
@@ -1902,7 +1902,8 @@ function updateHazards(dt){
       if(run.lightningTraces.length>32)run.lightningTraces.splice(0,run.lightningTraces.length-32);
     }
     if(hit){
-      const dmg=Math.ceil((foundationTarget('thunder')?.playerHp||P.max)*.55);
+      const stormGuard=rank('storm3'),damageRatio=STORM_BAL.directDamageRatio[stormGuard]??.55;
+      const dmg=Math.ceil((foundationTarget('thunder')?.playerHp||P.max)*damageRatio);
       takePlayerDamage(dmg,false,'lightning');
       run.lightningHits=(run.lightningHits||0)+1;
       run.thunderMarks=(run.thunderMarks||0)+1;
