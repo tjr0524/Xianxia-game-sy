@@ -44,8 +44,8 @@ const ENV_FILES={
 };
 const S={version:'11.50.22-death-assets',ready:false,error:null,images:{},envImages:{},envState:{},layer:null,ctx:null,renderScale:1,bufferWidth:0,bufferHeight:0,dprCap:1.5,maxPixels:2600000,assetBindings:'11.49.10'};
 window.__xianxiaInkRuntime=S;
-const tracks=new Map(),deaths=[],casts=[],impacts=[],pickups=[],floaters=[],veinBursts=[];
-let nextId=1,prevP=null,pFacing=1,prevCooldowns={},lastVisualCastSeq=0,lastVisualDamageSeq=0,lastArea=null,lastPhase=null,prevObjects=[],prevRun=null,prevVein=null,hitStopUntil=0,lastSnapshot=null,activeBounds={x:0,y:0,w:W,h:H};
+const tracks=new Map(),deaths=[],casts=[],projectiles=[],impacts=[],pickups=[],floaters=[],veinBursts=[];
+let nextId=1,prevP=null,pFacing=1,prevCooldowns={},lastVisualCastSeq=0,lastVisualProjectileSeq=0,lastVisualDamageSeq=0,lastArea=null,lastPhase=null,prevObjects=[],prevRun=null,prevVein=null,hitStopUntil=0,lastSnapshot=null,activeBounds={x:0,y:0,w:W,h:H};
 const bounds=new Map(),refs=new Map(),frameCanvases=new Map();
 function load(path){return new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('image failed: '+path));im.src=BASE+path+'?v='+encodeURIComponent(CACHE)})}
 function loadEnv(path){return new Promise((resolve,reject)=>{const im=new Image();im.decoding='async';im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('env image failed: '+path));im.src=ENV_BASE+path+'?v='+encodeURIComponent(CACHE)})}
@@ -412,6 +412,67 @@ function drawCasts(now){
     centered('effects',row,4,progress(u,4),e.x,e.y+8,size,e.facing<0,1-u*.45);
   }
 }
+function detectProjectiles(s,now){
+  const list=s.run?.visualProjectiles;if(!Array.isArray(list))return;
+  for(const event of list){
+    const seq=+event.seq||0;if(seq<=lastVisualProjectileSeq)continue;
+    lastVisualProjectileSeq=Math.max(lastVisualProjectileSeq,seq);
+    const offset=(+event.at||+s.elapsed||0)-(+s.elapsed||0);
+    projectiles.push({
+      id:event.id||'sword',fromX:+event.fromX||0,fromY:+event.fromY||0,toX:+event.toX||0,toY:+event.toY||0,
+      duration:Math.max(.06,+event.duration||.12),start:now+offset,color:event.color||'',seq
+    });
+  }
+  if(projectiles.length>64)projectiles.splice(0,projectiles.length-64);
+}
+function drawProjectiles(now){
+  const c=S.ctx;
+  for(let i=projectiles.length-1;i>=0;i--){
+    const q=projectiles[i],age=now-q.start,life=q.duration||.12;
+    if(age>life){projectiles.splice(i,1);continue}
+    if(age<0)continue;
+    const u=Math.max(0,Math.min(1,age/life)),ease=1-Math.pow(1-u,2);
+    const x=q.fromX+(q.toX-q.fromX)*ease,y=q.fromY+(q.toY-q.fromY)*ease;
+    if(!visible(x,y,100))continue;
+    const dx=q.toX-q.fromX,dy=q.toY-q.fromY,a=Math.atan2(dy,dx);
+    c.save();c.translate(x,y);c.rotate(a);
+    if(q.id==='thunder'){
+      c.globalAlpha=.92;c.strokeStyle=q.color||'#d7c8ff';c.shadowColor='#ddd4ff';c.shadowBlur=10;c.lineWidth=3.5;
+      c.beginPath();c.moveTo(-18,0);c.lineTo(-7,-5);c.lineTo(0,4);c.lineTo(9,-4);c.lineTo(18,0);c.stroke();
+      c.globalAlpha=.48;c.fillStyle='#efeaff';c.beginPath();c.arc(0,0,5,0,Math.PI*2);c.fill();
+    }else{
+      const color=q.color||'#eef6ff';
+      c.globalAlpha=.98;c.shadowColor='#dff4ff';c.shadowBlur=9;
+      c.strokeStyle=color;c.fillStyle=color;c.lineCap='round';
+      c.lineWidth=3;c.beginPath();c.moveTo(-17,0);c.lineTo(10,0);c.stroke();
+      c.beginPath();c.moveTo(10,0);c.lineTo(2,-5);c.lineTo(20,0);c.lineTo(2,5);c.closePath();c.fill();
+      c.shadowBlur=0;c.globalAlpha=.65;c.strokeStyle='#94cfe2';c.lineWidth=1.5;c.beginPath();c.moveTo(-23,0);c.lineTo(-12,0);c.stroke();
+    }
+    c.restore();
+  }
+}
+function drawPlayerShield(s,t){
+  const p=s.P,arts=s.run?.foundation?.arts,layers=arts?.shieldLayers;
+  if(!p||!Array.isArray(layers)||!layers.length)return;
+  const active=layers.filter(layer=>(+layer.hp||0)>0).length,total=layers.length,c=S.ctx;
+  const ground=p.y+23,baseY=ground-46,pulse=.5+.5*Math.sin(t*4.5);
+  c.save();c.translate(p.x,baseY);
+  if(active>0){
+    c.globalAlpha=.08+.035*pulse;c.fillStyle='#8fe4ce';c.beginPath();c.arc(0,0,35+active*3,0,Math.PI*2);c.fill();
+  }
+  for(let i=0;i<total;i++){
+    const layer=layers[i],alive=(+layer.hp||0)>0,r=31+i*5;
+    c.globalAlpha=alive?.68:.18;c.strokeStyle=alive?'#a9f1df':'#6f8f88';c.lineWidth=alive?2.2:1.4;
+    c.setLineDash(alive?[]:[5,5]);c.beginPath();c.arc(0,0,r,t*(alive?.25:.10)+i*.7,t*(alive?.25:.10)+i*.7+Math.PI*1.62);c.stroke();
+  }
+  c.setLineDash([]);c.globalAlpha=.96;c.textAlign='center';c.textBaseline='middle';
+  c.font='800 11px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+  c.strokeStyle='rgba(18,39,36,.92)';c.lineWidth=3;c.fillStyle=active?'#d8fff3':'#9caea8';
+  const label=active?`호체 ${active}/${total}`:`호체 재생 ${Math.max(0,+arts.shieldCd||0).toFixed(1)}s`;
+  c.strokeText(label,0,-44-total*2);c.fillText(label,0,-44-total*2);
+  c.restore();
+}
+
 function objectKey(o){return `${o.type}:${o.grade??'-'}:${Math.round(o.x)}:${Math.round(o.y)}`}
 function detectRewards(s,now){if(s.phase!=='run'||!s.run){prevObjects=(s.objects||[]).map(o=>({...o}));prevRun=s.run?{...s.run}:null;return}const prev=prevRun||s.run,ds=Math.max(0,(s.run.s||0)-(prev.s||0)),dh=[0,1,2].map(i=>Math.max(0,(s.run['h'+i]||0)-(prev['h'+i]||0)));const curKeys=new Set((s.objects||[]).map(objectKey)),gone=prevObjects.filter(o=>!curKeys.has(objectKey(o)));const recentDeath=deaths.length?deaths[deaths.length-1]:null;const takeOrigin=(kind,grade)=>{const ix=gone.findIndex(o=>o.type===kind&&(grade==null||o.grade===grade));if(ix>=0)return gone.splice(ix,1)[0];if(recentDeath)return {x:recentDeath.x,y:recentDeath.y};if(s.vein)return {x:s.vein.x,y:s.vein.y};return {x:s.P?.x||350,y:s.P?.y||230}};if(ds>0){const o=takeOrigin('s');pickups.push({kind:'s',x:o.x,y:o.y,start:now,d:.3,amount:ds});floaters.push({text:`+${ds} 영석`,color:'#9e792f',start:now+.18,d:.8})}for(let g=0;g<3;g++)if(dh[g]>0){const o=takeOrigin('h',g);pickups.push({kind:'h',grade:g,x:o.x,y:o.y,start:now,d:.28,amount:dh[g]});floaters.push({text:`+${dh[g]} ${['하급','중급','상급'][g]} 영초`,color:['#477d53','#397d6b','#76549a'][g],start:now+.16,d:.82})}prevObjects=(s.objects||[]).map(o=>({...o}));prevRun={s:s.run.s||0,h0:s.run.h0||0,h1:s.run.h1||0,h2:s.run.h2||0}}
 function detectVeinFx(s,now){
@@ -455,8 +516,8 @@ function detectDamageEvents(s,now){
 }
 function drawImpacts(now){const c=S.ctx;for(let i=impacts.length-1;i>=0;i--){const q=impacts[i],life=.62,age=now-q.start;if(age>life){impacts.splice(i,1);continue}const u=age/life;c.save();if(q.beam&&age<.14){const beamU=Math.min(1,age/.1),tx=q.fromX+(q.x-q.fromX)*beamU,ty=q.fromY+(q.y-q.fromY)*beamU;c.globalAlpha=1-age/.16;c.strokeStyle='#f6efd3';c.shadowColor='#fff7d6';c.shadowBlur=9;c.lineWidth=4;c.beginPath();c.moveTo(q.fromX,q.fromY);c.lineTo(tx,ty);c.stroke();c.strokeStyle='#8caea3';c.lineWidth=1.4;c.beginPath();c.moveTo(q.fromX,q.fromY+2);c.lineTo(tx,ty+2);c.stroke()}c.globalAlpha=(1-u)*.88;c.strokeStyle='#fff7df';c.lineWidth=2.8;c.beginPath();c.arc(q.x,q.y,8+u*19,0,Math.PI*2);c.stroke();c.beginPath();c.moveTo(q.x-12-u*6,q.y+9);c.lineTo(q.x+13+u*8,q.y-11);c.moveTo(q.x-8,q.y-13-u*4);c.lineTo(q.x+9,q.y+11+u*5);c.stroke();c.globalAlpha=Math.min(1,age/.05)*(1-u);c.fillStyle='#8b352d';c.strokeStyle='#f8f1dc';c.lineWidth=4;c.font='900 17px sans-serif';c.textAlign='center';const text=`-${Math.max(1,Math.round(q.damage))}`;c.strokeText(text,q.x,q.y-31-u*22);c.fillText(text,q.x,q.y-31-u*22);c.restore()}}
 function resetRunVisuals(){
-  tracks.clear();deaths.length=0;casts.length=0;impacts.length=0;pickups.length=0;floaters.length=0;veinBursts.length=0;
-  prevP=null;prevCooldowns={};lastVisualCastSeq=0;lastVisualDamageSeq=0;prevObjects=[];prevRun=null;prevVein=null;hitStopUntil=0;lastSnapshot=null;
+  tracks.clear();deaths.length=0;casts.length=0;projectiles.length=0;impacts.length=0;pickups.length=0;floaters.length=0;veinBursts.length=0;
+  prevP=null;prevCooldowns={};lastVisualCastSeq=0;lastVisualProjectileSeq=0;lastVisualDamageSeq=0;prevObjects=[];prevRun=null;prevVein=null;hitStopUntil=0;lastSnapshot=null;
   if(S.ctx&&S.layer)clearViewport();
 }
 function drawFrame(s,meta){
@@ -489,10 +550,13 @@ function drawFrame(s,meta){
   drawVeinProgress(s,t);
   drawVeinFx(now);
   detectCasts(s,now);
+  detectProjectiles(s,now);
   detectDamageEvents(s,now);
   drawEnemies(s,t,now);
   drawCasts(now);
+  drawProjectiles(now);
   drawPlayer(s,t);
+  drawPlayerShield(s,t);
   drawMortalHerbGuide(s,t);
   drawReturnGuide(s,t);
   drawImpacts(now);
