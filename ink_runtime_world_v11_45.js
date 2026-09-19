@@ -280,11 +280,14 @@ function drawHazards(s){const c=S.ctx;for(const h of s.hazards||[]){if(h.visualO
     c.save();const r=h.r||32;
     if(!h.struck){
       const p=1-Math.max(0,h.t)/(h.ttl||1),pulse=.5+.5*Math.sin(p*Math.PI*8);
-      c.globalAlpha=.12+.08*pulse;c.fillStyle='#c9c8ff';c.beginPath();c.arc(h.x,h.y,r,0,Math.PI*2);c.fill();
-      c.globalAlpha=.92;c.strokeStyle='#e5e2ff';c.lineWidth=4;c.setLineDash([]);c.beginPath();c.arc(h.x,h.y,r,0,Math.PI*2);c.stroke();
-      c.globalAlpha=.58+.20*pulse;c.strokeStyle='#aeb6ff';c.lineWidth=2.2;c.setLineDash([7,5]);c.beginPath();c.arc(h.x,h.y,r+20+6*pulse,0,Math.PI*2);c.stroke();c.setLineDash([]);
-      c.globalAlpha=.72;c.lineWidth=1.8;for(let i=0;i<4;i++){const a=i*Math.PI/2;c.beginPath();c.moveTo(h.x+Math.cos(a)*(r+7),h.y+Math.sin(a)*(r+7));c.lineTo(h.x+Math.cos(a)*(r+32),h.y+Math.sin(a)*(r+32));c.stroke()}
-      c.font='900 12px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';c.textAlign='center';c.fillStyle='#f1efff';c.strokeStyle='rgba(28,31,50,.9)';c.lineWidth=3;c.strokeText('천뢰',h.x,h.y-r-34);c.fillText('천뢰',h.x,h.y-r-34);
+      // High-contrast warm telegraph: the Thunder Peak background is blue/violet,
+      // so the reward strike must read instantly even in peripheral vision.
+      c.globalAlpha=.18+.10*pulse;c.fillStyle='#ff9b22';c.beginPath();c.arc(h.x,h.y,r,0,Math.PI*2);c.fill();
+      c.shadowColor='#fff2a8';c.shadowBlur=14+8*pulse;
+      c.globalAlpha=.98;c.strokeStyle='#fff4a8';c.lineWidth=5.5;c.setLineDash([]);c.beginPath();c.arc(h.x,h.y,r,0,Math.PI*2);c.stroke();
+      c.shadowBlur=8;c.globalAlpha=.82+.12*pulse;c.strokeStyle='#ff6b2c';c.lineWidth=3.2;c.setLineDash([9,5]);c.beginPath();c.arc(h.x,h.y,r+23+7*pulse,0,Math.PI*2);c.stroke();c.setLineDash([]);
+      c.shadowBlur=0;c.globalAlpha=.92;c.strokeStyle='#fff4a8';c.lineWidth=2.8;for(let i=0;i<4;i++){const a=i*Math.PI/2;c.beginPath();c.moveTo(h.x+Math.cos(a)*(r+7),h.y+Math.sin(a)*(r+7));c.lineTo(h.x+Math.cos(a)*(r+38),h.y+Math.sin(a)*(r+38));c.stroke()}
+      c.font='900 13px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';c.textAlign='center';c.fillStyle='#fff3a1';c.strokeStyle='rgba(78,25,12,.96)';c.lineWidth=4;c.strokeText('천뢰 · 직격 보상',h.x,h.y-r-38);c.fillText('천뢰 · 직격 보상',h.x,h.y-r-38);
     }else{
       const fade=Math.max(0,Math.min(1,h.t/(h.ttl||.68)));
       c.globalAlpha=.35+.55*fade;c.strokeStyle='#f5f1ff';c.shadowColor='#c9c2ff';c.shadowBlur=18;c.lineCap='round';
