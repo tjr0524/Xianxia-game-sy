@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.50.12';
+const VERSION='11.50.23-late-balance';
 if(window.__xianxiaFoundationContent?.version===VERSION)return;
 
 const TYPES=new Set(['charging_boar','ranged_toad','exploding_beetle','command_ape','shield_pangolin','sword_sentinel','formation_warden','foundation_guardian','taixu_boss']);
@@ -12,13 +12,13 @@ const ICON={
   burst:'assets/ink_v1/runtime/ui/formation_skills/burst_main.png'
 };
 const TYPE_SPEC={
-  charging_boar:{name:'철갑돌진돈',hp:1.25,atk:.70,speed:.86,r:17,reward:1.15},
-  ranged_toad:{name:'청무독섬',hp:.90,atk:.58,speed:.68,r:15,reward:1.05},
-  exploding_beetle:{name:'균열석갑충',hp:1.10,atk:.62,speed:.76,r:15,reward:1.10},
-  command_ape:{name:'묵령원',hp:1.50,atk:.52,speed:.72,r:18,reward:1.35},
-  shield_pangolin:{name:'옥린천산갑',hp:1.40,atk:.48,speed:.70,r:18,reward:1.30},
-  sword_sentinel:{name:'태허검위',hp:1.25,atk:.62,speed:.78,r:17,reward:1.20},
-  formation_warden:{name:'태허진위',hp:1.15,atk:.60,speed:.74,r:17,reward:1.20},
+  charging_boar:{name:'철갑돌진돈',hp:1.25,atk:.70,speed:.86,r:17,reward:1.25},
+  ranged_toad:{name:'청무독섬',hp:.90,atk:.58,speed:.68,r:15,reward:1.30},
+  exploding_beetle:{name:'균열석갑충',hp:1.10,atk:.62,speed:.76,r:15,reward:1.35},
+  command_ape:{name:'묵령원',hp:1.50,atk:.52,speed:.72,r:18,reward:1.55},
+  shield_pangolin:{name:'옥린천산갑',hp:1.40,atk:.48,speed:.70,r:18,reward:1.50},
+  sword_sentinel:{name:'태허검위',hp:1.25,atk:.62,speed:.78,r:17,reward:1.60},
+  formation_warden:{name:'태허진위',hp:1.15,atk:.60,speed:.74,r:17,reward:1.60},
   foundation_guardian:{name:'축기 수문장',hp:8.0,atk:.82,speed:.78,r:31,reward:7,boss:1},
   taixu_boss:{name:'태허진령',hp:12.0,atk:.90,speed:.72,r:36,reward:10,boss:1}
 };
@@ -171,6 +171,41 @@ function updateControls(api){
   });
 }
 
+const THREAT={charging_boar:1.35,ranged_toad:1.40,exploding_beetle:1.45,command_ape:1.70,shield_pangolin:1.65,sword_sentinel:1.75,formation_warden:1.75};
+const THREAT_CAP=[2.2,2.5,3.4,4.8,6.2,8.2],SPECIAL_LIMIT=[1,1,1,2,2,3];
+function zoneRank(api,id,area=api?.state?.area){return clamp(Math.round(+api?.state?.zones?.[area]?.tree?.[id]||0),0,5)}
+function uniqueRank(api,area=api?.state?.area){return area==='marsh'?zoneRank(api,'miasma1',area):area==='taixu'?zoneRank(api,'formation1',area):0}
+function expectedHp(api){return Math.max(1,+api?.expectedPlayerHp?.()||+api?.player?.max||1)}
+function ratioDamage(api,ratio){return Math.ceil(expectedHp(api)*ratio)}
+function packThreatFits(api,type,options={}){
+  if(options.packId==null)return true;
+  const eco2=zoneRank(api,'eco2'),cap=THREAT_CAP[eco2]||THREAT_CAP[0],size=Math.max(1,+options.packSize||1);
+  let raw=size;
+  for(const enemy of api.enemies||[])if(enemy.packId===options.packId&&THREAT[enemy.type])raw+=(THREAT[enemy.type]-1);
+  raw+=(THREAT[type]||1)-1;
+  return raw<=cap+.001;
+}
+function packProfile(api,area,stage,options={}){
+  if(options.packId==null||!api?.run?.foundation)return null;
+  const store=api.run.foundation.packProfiles||(api.run.foundation.packProfiles={});
+  if(store[options.packId])return store[options.packId];
+  const r=uniqueRank(api,area),eco2=zoneRank(api,'eco2',area),limit=SPECIAL_LIMIT[eco2]||1,size=Math.max(1,+options.packSize||1);
+  let seq=[],elite=0;
+  if(area==='marsh'){
+    if(r>=5&&stage>=6&&size>=5&&Math.random()<.65){seq=['exploding_beetle','command_ape','shield_pangolin'];elite=1}
+    else if(r>=4&&stage>=6&&size>=4&&Math.random()<.60)seq=Math.random()<.5?['exploding_beetle','shield_pangolin']:['command_ape','shield_pangolin'];
+    else if(r>=3&&stage>=5&&size>=3&&Math.random()<.62)seq=['exploding_beetle','command_ape'];
+    else if(r>=2&&stage>=4&&size>=3&&Math.random()<.55)seq=['exploding_beetle','exploding_beetle'];
+    else if(stage>=4&&Math.random()<.40+r*.06)seq=['exploding_beetle'];
+  }else if(area==='taixu'){
+    if(r>=5&&stage>=9&&size>=5&&Math.random()<.65){seq=['sword_sentinel','formation_warden','sword_sentinel'];elite=1}
+    else if(r>=4&&stage>=8&&size>=4&&Math.random()<.62)seq=['sword_sentinel','formation_warden'];
+    else if(r>=3&&stage>=8&&size>=3&&Math.random()<.58)seq=['sword_sentinel','formation_warden'];
+    else if(stage>=7&&Math.random()<.44+r*.06)seq=['sword_sentinel'];
+  }
+  seq=seq.slice(0,Math.min(limit,size));
+  return store[options.packId]={seq,elite};
+}
 function configureEnemy(enemy,type,options,api){
   const spec=TYPE_SPEC[type];if(!spec)return;
   enemy.visualOwner='foundation';enemy.name=spec.name;enemy.boss=spec.boss||0;enemy.r=spec.r;
@@ -179,30 +214,71 @@ function configureEnemy(enemy,type,options,api){
   if(spec.boss){enemy.grade='elite';enemy.rare=0;enemy.packLeader=1}
 }
 
-function spawnType(area,realm,fallback){
+function spawnType(area,realm,fallback,api,options={}){
   const stage=realm?.major>=1?(realm.stage||1):0,u=Math.random();
   if(area==='thunder'){
     const pool=['charging_boar'];if(stage>=2)pool.push('ranged_toad');
-    return u<.82?pool[Math.floor(Math.random()*pool.length)]:fallback;
+    const candidate=u<.62?pool[Math.floor(Math.random()*pool.length)]:fallback;
+    return packThreatFits(api,candidate,options)?candidate:fallback;
   }
   if(area==='marsh'){
+    const profile=packProfile(api,area,stage,options),index=Math.max(0,+options.packIndex||0);
+    if(profile?.seq[index]){
+      const candidate=profile.seq[index];
+      if(packThreatFits(api,candidate,options)){
+        if(profile.elite)options.grade=index===0?'rare':'enhanced';
+        return candidate;
+      }
+    }
     const pool=[];if(stage>=4)pool.push('exploding_beetle');if(stage>=5)pool.push('command_ape');if(stage>=6)pool.push('shield_pangolin');
-    return pool.length&&u<.86?pool[Math.floor(Math.random()*pool.length)]:fallback;
+    if(!pool.length)return fallback;
+    const r=uniqueRank(api,area),specialChance=Math.min(.82,.28+r*.08);
+    let candidate=fallback;
+    if(Math.random()<specialChance){
+      if(r>=1&&stage>=4&&Math.random()<.48)candidate='exploding_beetle';
+      else candidate=pool[Math.floor(Math.random()*pool.length)];
+    }
+    return packThreatFits(api,candidate,options)?candidate:fallback;
   }
-  if(area==='taixu')return u<.82?(stage>=8&&Math.random()<.48?'formation_warden':'sword_sentinel'):fallback;
+  if(area==='taixu'){
+    const profile=packProfile(api,area,stage,options),index=Math.max(0,+options.packIndex||0);
+    if(profile?.seq[index]){
+      const candidate=profile.seq[index];
+      if(packThreatFits(api,candidate,options)){
+        if(profile.elite)options.grade=index===0?'rare':'enhanced';
+        return candidate;
+      }
+    }
+    const r=uniqueRank(api,area),specialChance=Math.min(.78,.30+r*.075);
+    if(Math.random()>=specialChance)return fallback;
+    const candidate=stage>=8&&Math.random()<(.30+r*.06)?'formation_warden':'sword_sentinel';
+    return packThreatFits(api,candidate,options)?candidate:fallback;
+  }
   return fallback;
 }
 
-function spawnAt(api,type,x,y){return api.spawn(type,{p:{x:clamp(x,70,api.W-70),y:clamp(y,70,api.H-70)},homeX:x,homeY:y,packLeader:true,grade:'normal'})}
+function spawnAt(api,type,x,y,extra={}){return api.spawn(type,{p:{x:clamp(x,70,api.W-70),y:clamp(y,70,api.H-70)},homeX:x,homeY:y,packLeader:true,grade:'normal',...extra})}
+function spawnFormationNode(api,x,y,index){
+  const enemy=spawnAt(api,'formation_warden',x,y,{environmentObjective:1});
+  enemy.environmentObjective=1;enemy.formationNode=1;enemy.name='진법 결절';enemy.speed=0;enemy.homeX=enemy.x;enemy.homeY=enemy.y;enemy.hp*=1.65;enemy.max=enemy.hp;enemy.rewardMult*=1.20;enemy.mechanicCd=1.6+index*.45;
+  return enemy;
+}
 function onBegin(api){
-  api.run.foundation={bossKilled:0,arts:{
+  api.run.foundation={bossKilled:0,packProfiles:{},arts:{
     shieldLayers:[],shieldHp:0,shieldMax:0,shieldCd:0,moveBuffPct:0,moveBuffUntil:0,slowImmuneUntil:0,dotReduceUntil:0,
     dashCharges:maxDashCharges(api),dashRecharge:0,dashSpellBoost:0,
     burstCd:0,burstTime:0,trueburstTime:0,burstKillExtend:0,burstGuardExtend:0,burstWarExtend:0
   },bossSpawned:0};
   const arts=artState(api);arts.shieldLayers=makeShieldLayers(api);syncShieldTotals(arts);
   if(api.state.area==='foundation_trial')spawnAt(api,'foundation_guardian',api.W*.5,api.H*.34);
-  if(api.state.area==='taixu'&&api.state.realm?.major===1&&api.state.realm.stage>=9)spawnAt(api,'taixu_boss',api.W*.5,api.H*.32);
+  if(api.state.area==='taixu'){
+    const fr=uniqueRank(api,'taixu'),stage=api.state.realm?.major===1?(api.state.realm.stage||1):0;
+    if(stage>=8&&fr>=3){
+      const spots=[[api.W*.27,api.H*.30],[api.W*.73,api.H*.44],[api.W*.48,api.H*.66]],count=fr>=4?3:2;
+      for(let i=0;i<count;i++)spawnFormationNode(api,spots[i][0],spots[i][1],i);
+    }
+    if(stage>=9)spawnAt(api,'taixu_boss',api.W*.5,api.H*.32);
+  }
   updateControls(api);
 }
 
@@ -256,16 +332,29 @@ function updateEnemy(enemy,dt,api){
   enemy.mechanicCd-=dt;enemy.action='move';
   if(enemy.type==='charging_boar'||enemy.type==='foundation_guardian'){
     if(enemy.chargeWindup>0){enemy.chargeWindup-=dt;enemy.action='special';if(enemy.chargeWindup<=0){enemy.chargeTime=enemy.type==='foundation_guardian'?.58:.42;enemy.hitOnce=0}return true}
-    if(enemy.chargeTime>0){enemy.chargeTime-=dt;enemy.action='attack';const speed=enemy.type==='foundation_guardian'?720:610;enemy.x=clamp(enemy.x+enemy.chargeDx*speed*dt,20,api.W-20);enemy.y=clamp(enemy.y+enemy.chargeDy*speed*dt,20,api.H-20);if(!enemy.hitOnce&&dist(enemy,api.player)<enemy.r+api.player.r+8){enemy.hitOnce=1;api.damagePlayer(Math.ceil(enemy.attack*.62),enemy.type+'_charge')}if(enemy.chargeTime<=0)enemy.mechanicCd=enemy.type==='foundation_guardian'?2.2:3.2;return true}
+    if(enemy.chargeTime>0){enemy.chargeTime-=dt;enemy.action='attack';const speed=enemy.type==='foundation_guardian'?720:610;enemy.x=clamp(enemy.x+enemy.chargeDx*speed*dt,20,api.W-20);enemy.y=clamp(enemy.y+enemy.chargeDy*speed*dt,20,api.H-20);if(!enemy.hitOnce&&dist(enemy,api.player)<enemy.r+api.player.r+8){enemy.hitOnce=1;api.damagePlayer(ratioDamage(api,.45),enemy.type+'_charge')}if(enemy.chargeTime<=0)enemy.mechanicCd=enemy.type==='foundation_guardian'?2.2:3.2;return true}
     if(enemy.mechanicCd<=0){const dx=api.player.x-enemy.x,dy=api.player.y-enemy.y,n=Math.hypot(dx,dy)||1;enemy.chargeDx=dx/n;enemy.chargeDy=dy/n;enemy.facing=dx>=0?1:-1;enemy.chargeWindup=enemy.type==='foundation_guardian'?1.05:.82;addTargetHazard(api,'charge_lane',enemy.x,enemy.y,34,enemy.chargeWindup,0,enemy.type,{x2:enemy.x+enemy.chargeDx*460,y2:enemy.y+enemy.chargeDy*460,sourceId:enemy.id});return true}
     meleeMovement(enemy,dt,api,.30);return true;
   }
   if(enemy.type==='ranged_toad'||enemy.type==='formation_warden'){
+    if(enemy.formationNode){
+      enemy.x=enemy.homeX;enemy.y=enemy.homeY;enemy.facing=api.player.x>=enemy.x?1:-1;
+      if(enemy.mechanicCd<=0){
+        enemy.action='special';const fr=uniqueRank(api,'taixu'),count=fr>=4?2:1;
+        for(let i=0;i<count;i++){const a=Math.random()*Math.PI*2,d=i?85+Math.random()*70:25+Math.random()*55;addTargetHazard(api,'moving_zone',clamp(api.player.x+Math.cos(a)*d,45,api.W-45),clamp(api.player.y+Math.sin(a)*d,45,api.H-45),58,1.35,ratioDamage(api,.18),'formation_node',{vx:Math.cos(a+1.1)*72,vy:Math.sin(a+1.1)*72})}
+        enemy.mechanicCd=fr>=4?7.5:10;
+      }
+      return true;
+    }
     rangedMovement(enemy,dt,api,enemy.type==='formation_warden'?230:205);
-    if(enemy.mechanicCd<=0){enemy.action='special';addTargetHazard(api,enemy.type==='formation_warden'?'formation_bolt':'projectile',api.player.x,api.player.y,enemy.type==='formation_warden'?34:28,.88,Math.ceil(enemy.attack*.62),enemy.type,{fromX:enemy.x,fromY:enemy.y});enemy.mechanicCd=enemy.type==='formation_warden'?2.4:2.9}return true;
+    if(enemy.mechanicCd<=0){enemy.action='special';const ratio=enemy.type==='formation_warden'?.18:.21;addTargetHazard(api,enemy.type==='formation_warden'?'formation_bolt':'projectile',api.player.x,api.player.y,enemy.type==='formation_warden'?34:28,.88,ratioDamage(api,ratio),enemy.type,{fromX:enemy.x,fromY:enemy.y});enemy.mechanicCd=enemy.type==='formation_warden'?2.4:2.9}return true;
   }
   if(enemy.type==='exploding_beetle'){
-    if(enemy.hp/enemy.max<.28&&!enemy.detonating){enemy.detonating=1;enemy.mechanicCd=1.05;addTargetHazard(api,'explosion',enemy.x,enemy.y,78,1.05,Math.ceil(enemy.attack*.75),enemy.type,{sourceId:enemy.id,friendlyFire:1})}
+    if(enemy.hp/enemy.max<.28&&!enemy.detonating){
+      const m=uniqueRank(api,'marsh'),overlap=m>=2&&(api.hazards||[]).some(h=>h.kind==='explosion'&&!h.struck&&h.t>0&&dist(h,enemy)<128);
+      if(!overlap){enemy.detonating=1;enemy.mechanicCd=1.05;addTargetHazard(api,'explosion',enemy.x,enemy.y,78,1.05,ratioDamage(api,.45),enemy.type,{sourceId:enemy.id,friendlyFire:1})}
+      else enemy.mechanicCd=Math.max(enemy.mechanicCd,.18);
+    }
     if(enemy.detonating){enemy.action='special';if(enemy.mechanicCd<=0)enemy.hp=0;return true}meleeMovement(enemy,dt,api,.30);return true;
   }
   if(enemy.type==='command_ape'){
@@ -275,10 +364,19 @@ function updateEnemy(enemy,dt,api){
     meleeMovement(enemy,dt,api,.26);if(enemy.mechanicCd<=0){enemy.action='special';for(const ally of api.enemies)if(ally.hp>0&&dist(enemy,ally)<220){ally.shield=Math.max(ally.shield||0,ally.max*.30);ally.shieldMax=Math.max(ally.shieldMax||0,ally.shield)}api.addHazard({visualOwner:'foundation',kind:'shield_cast',x:enemy.x,y:enemy.y,r:220,t:.65,ttl:.65,struck:1});enemy.mechanicCd=5.5}return true;
   }
   if(enemy.type==='sword_sentinel'){
-    meleeMovement(enemy,dt,api,.32);if(enemy.mechanicCd<=0){enemy.action='special';addTargetHazard(api,'sword_zone',api.player.x,api.player.y,48,.92,Math.ceil(enemy.attack*.70),enemy.type);enemy.mechanicCd=3.0}return true;
+    meleeMovement(enemy,dt,api,.32);if(enemy.mechanicCd<=0){
+      enemy.action='special';const fr=uniqueRank(api,'taixu'),a=Math.random()*Math.PI*2,d=fr>=2?Math.random()*52:0;
+      const x=clamp(api.player.x+Math.cos(a)*d,45,api.W-45),y=clamp(api.player.y+Math.sin(a)*d,45,api.H-45),r=fr>=2?44+Math.random()*12:48,warn=fr>=2?.72+Math.random()*.38:.92;
+      addTargetHazard(api,'sword_zone',x,y,r,warn,ratioDamage(api,.27),enemy.type);enemy.mechanicCd=fr>=2?2.7:3.0;
+    }return true;
   }
   if(enemy.type==='taixu_boss'){
-    rangedMovement(enemy,dt,api,245);if(enemy.mechanicCd<=0){enemy.action='special';const a=Math.random()*Math.PI*2;addTargetHazard(api,'moving_zone',api.player.x+Math.cos(a)*90,api.player.y+Math.sin(a)*90,72,1.15,Math.ceil(enemy.attack*.68),enemy.type,{vx:Math.cos(a+Math.PI*.55)*95,vy:Math.sin(a+Math.PI*.55)*95});enemy.mechanicCd=1.8}return true;
+    rangedMovement(enemy,dt,api,245);if(enemy.mechanicCd<=0){
+      enemy.action='special';const fr=uniqueRank(api,'taixu'),a=Math.random()*Math.PI*2;
+      addTargetHazard(api,'moving_zone',api.player.x+Math.cos(a)*90,api.player.y+Math.sin(a)*90,72,.95,ratioDamage(api,.66),enemy.type,{vx:Math.cos(a+Math.PI*.55)*95,vy:Math.sin(a+Math.PI*.55)*95});
+      if(fr>=5){const b=a+Math.PI*.72;addTargetHazard(api,'moving_zone',clamp(api.player.x+Math.cos(b)*145,50,api.W-50),clamp(api.player.y+Math.sin(b)*145,50,api.H-50),58,1.35,ratioDamage(api,.18),enemy.type,{vx:Math.cos(b+1.2)*80,vy:Math.sin(b+1.2)*80})}
+      enemy.mechanicCd=8.0;
+    }return true;
   }
   return true;
 }
@@ -374,7 +472,7 @@ function onTrigger(event,payload,ctx,api){
 function beforeEnemyDeath(enemy,api){if(enemy.boss)api.run.foundation.bossKilled=1}
 function rewardEnemy(enemy,api){
   if(!TYPES.has(enemy.type))return false;
-  const amount=Math.ceil(90*(enemy.rewardMult||1));api.gainStone(amount,enemy.x,enemy.y);
+  const amount=Math.ceil(90*(enemy.rewardMult||1)*(api.planRewardMultiplier?.()||1)*(api.areaRewardMultiplier?.()||1));api.gainStone(amount,enemy.x,enemy.y);
   if(enemy.boss){api.run.elite=1;api.gainHerb(enemy.type==='taixu_boss'?5:3,2,enemy.x+12,enemy.y);api.pop(enemy.x,enemy.y-42,`${enemy.name} 격파`,'#ffe4a0',1.25)}
   return true;
 }
