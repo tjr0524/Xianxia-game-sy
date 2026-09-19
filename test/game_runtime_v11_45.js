@@ -744,6 +744,15 @@ function dealEnemyDamage(enemy,amount,source='unknown',triggerMeta=null){
   if(run){
     run.skillDamage=run.skillDamage||{};
     run.skillDamage[source]=(run.skillDamage[source]||0)+effective;
+    run.visualDamageSeq=(run.visualDamageSeq||0)+1;
+    run.visualDamage??=[];
+    const directBeam=family==='basic'||family==='sword';
+    run.visualDamage.push({
+      seq:run.visualDamageSeq,targetId:enemy.id??null,x:enemy.x,y:enemy.y,
+      amount:effective,source:String(source||''),family,beam:directBeam?1:0,
+      foundation:enemy.visualOwner==='foundation'?1:0,fromX:P.x,fromY:P.y,at:elapsed
+    });
+    if(run.visualDamage.length>64)run.visualDamage.splice(0,run.visualDamage.length-64);
   }
   emitTrigger('onHit',{enemy,amount:effective,source,lethal:enemy.hp<=0},meta);
   if(brandConsumed)emitTrigger('onBrandConsume',{enemy,source,amount:effective},meta);
@@ -1538,7 +1547,7 @@ function begin(){
     lastDamageAt:-999,regenPulse:0,damageTaken:0,lastDamageSource:'',damageBySource:{},
     skillDamage:{basic:0,sword:0,wave:0,chain:0,thunder:0,array:0},
     skillCasts:{basic:0,sword:0,wave:0,chain:0,thunder:0,array:0},
-    skillCooldowns:Object.fromEntries(SKILLS.map(skill=>[skill.id,0])),scheduledHits:[],visualCastSeq:0,visualCasts:[],
+    skillCooldowns:Object.fromEntries(SKILLS.map(skill=>[skill.id,0])),scheduledHits:[],visualCastSeq:0,visualCasts:[],visualDamageSeq:0,visualDamage:[],
     triggers:{counts:{},blocked:{depth:0,recursion:0},icd:{},last:null},triggeredCasts:{},traitRuntime:{waveAfter:[],arrayMini:[],arrayDashUntil:0,arrayZone:null,cloudTimer:4,swordLineHits:0},performanceDrops:{scheduledHits:0,fx:0}
   };
   run.limit=foundationContent()?.runLimit?.(M.area,M.realm)||RUN_TIME;
