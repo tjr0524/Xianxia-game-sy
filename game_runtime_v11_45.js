@@ -250,8 +250,11 @@ function skillRangeRank(id){return clamp(Math.round(+M.skills?.[id]?.range||0),0
 function skillCycleRank(id){return clamp(Math.round(+M.skills?.[id]?.cycle||0),0,5)}
 function skillCooldown(id){const b=BAL.skill[id];return b?b.cd[skillRank(id)]??99:99}
 const TRIGGER_MAX_DEPTH=2;
+const SCHEDULED_HIT_CAP=64;
+const FX_CAP=128;
 const KILL_TRIGGER_EVENTS=new Set(['onKill','onSpecialKill']);
 const triggerHandlers=new Map();
+const triggerHandlersByEvent=new Map();
 function copyTriggerMeta(meta={}){
   return {
     depth:Math.max(0,Math.floor(+meta.depth||0)),
@@ -281,11 +284,19 @@ function triggerIcd(key,seconds){
   const until=+state.icd[key]||0;if(elapsed<until)return false;
   state.icd[key]=elapsed+Math.max(0,+seconds||0);return true;
 }
-function registerTriggerHandler(name,handler){
+function registerTriggerHandler(name,handler,events='*'){
   if(typeof handler!=='function')return ()=>{};
-  const key=String(name||`handler-${triggerHandlers.size+1}`);
-  triggerHandlers.set(key,handler);
-  return ()=>triggerHandlers.delete(key);
+  const key=String(name||`handler-${triggerHandlers.size+1}`),list=events==='*'?['*']:(Array.isArray(events)?events:[events]).map(String);
+  const entry={key,handler,events:list};
+  triggerHandlers.set(key,entry);
+  for(const event of list){
+    if(!triggerHandlersByEvent.has(event))triggerHandlersByEvent.set(event,new Map());
+    triggerHandlersByEvent.get(event).set(key,handler);
+  }
+  return ()=>{
+    triggerHandlers.delete(key);
+    for(const event of list){const bucket=triggerHandlersByEvent.get(event);bucket?.delete(key);if(bucket&&!bucket.size)triggerHandlersByEvent.delete(event)}
+  };
 }
 function emitTrigger(event,payload={},meta={}){
   if(phase!=='run'||!run)return false;
@@ -302,10 +313,10 @@ function emitTrigger(event,payload={},meta={}){
     child:extra=>childTriggerMeta(m,extra||{}),
     icd:(key,seconds)=>triggerIcd(`${m.originTrait||m.source||'core'}:${key}`,seconds)
   };
-  for(const [name,handler] of triggerHandlers){
-    try{handler(payload,ctx,foundationApi())}catch(error){console.warn('[trigger]',name,error)}
-  }
-  try{foundationContent()?.onTrigger?.(event,payload,ctx,foundationApi())}catch(error){console.warn('[trigger] foundation',event,error)}
+  const api=foundationApi(),specific=triggerHandlersByEvent.get(event),wild=triggerHandlersByEvent.get('*');
+  if(specific)for(const [name,handler] of specific){try{handler(payload,ctx,api)}catch(error){console.warn('[trigger]',name,error)}}
+  if(wild)for(const [name,handler] of wild){if(specific?.has(name))continue;try{handler(payload,ctx,api)}catch(error){console.warn('[trigger]',name,error)}}
+  try{foundationContent()?.onTrigger?.(event,payload,ctx,api)}catch(error){console.warn('[trigger] foundation',event,error)}
   return true;
 }
 function isSpecialEnemy(enemy){
@@ -395,13 +406,19 @@ function handleSwordTraitTrigger(payload,ctx){
     swordVolleyFrom(to,3,.40,'sword:dash',meta,null,dir);
   }
 }
-registerTriggerHandler('sword-traits',handleSwordTraitTrigger);
+registerTriggerHandler('sword-traits',handleSwordTraitTrigger,['onKill','onDash']);
 
 const AUTO_SPELLS=new Set(['sword','wave','chain','thunder','array']);
 const SWORD_LINE_SPELLS=new Set(['sword','wave','chain','array']);
 function familyOf(source){return String(source||'').split(':')[0]}
 function strongestLivingEnemy(origin=P,range=Infinity){
-  return enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&distance(origin,e)<range).sort((a,b)=>enemyStrengthScore(b)-enemyStrengthScore(a))[0]||null;
+  let best=null,bestScore=-Infinity;
+  for(const enemy of enemies){
+    if(enemy.type==='spirit'||enemy.hp<=0||distance(origin,enemy)>=range)continue;
+    const score=enemyStrengthScore(enemy);
+    if(score>bestScore){best=enemy;bestScore=score}
+  }
+  return best;
 }
 function systemTraitMeta(parent,system,id,source){
   return childTriggerMeta(parent||{},{originTrait:`${system}:${id}`,source:source||`${system}:${id}`});
@@ -482,11 +499,20 @@ function arrayDamage(enemy,amount,source,meta){
   if(hasFormationTrait('array','break')&&(enemy?.shield>0||enemy?.type==='formation_warden'||enemy?.type==='shield_pangolin'))amount*=1.60;
   return dealEnemyDamage(enemy,amount,source,meta);
 }
+function enqueueScheduledHit(hit){
+  if(!run?.scheduledHits)return false;
+  if(run.scheduledHits.length>=SCHEDULED_HIT_CAP){
+    run.performanceDrops??={scheduledHits:0,fx:0};
+    run.performanceDrops.scheduledHits=(run.performanceDrops.scheduledHits||0)+1;
+    return false;
+  }
+  run.scheduledHits.push(hit);return true;
+}
 function scheduleAreaHit({t,x,y,r,damage,source,family,meta,pull=0,followPlayer=false,color='#d7eaff'}){
-  run.scheduledHits.push({kind:'trait-area',t,x,y,r,damage,source,family,triggerMeta:copyTriggerMeta(meta||{}),pull,followPlayer,color});
+  return enqueueScheduledHit({kind:'trait-area',t,x,y,r,damage,source,family,triggerMeta:copyTriggerMeta(meta||{}),pull,followPlayer,color});
 }
 function scheduleDirectHit({t,target,damage,source,family,meta,color='#d7eaff'}){
-  if(!target)return;run.scheduledHits.push({kind:'trait-direct',t,targetId:target.id,damage,source,family,triggerMeta:copyTriggerMeta(meta||{}),color});
+  if(!target)return false;return enqueueScheduledHit({kind:'trait-direct',t,targetId:target.id,damage,source,family,triggerMeta:copyTriggerMeta(meta||{}),color});
 }
 function processScheduledTraitHit(h){
   const center=h.followPlayer?{x:P.x,y:P.y}:{x:h.x,y:h.y};
@@ -578,10 +604,10 @@ function handleArrayTraits(payload,ctx){
     }
   }
 }
-registerTriggerHandler('wave-traits',handleWaveTraits);
-registerTriggerHandler('chain-traits',handleChainTraits);
-registerTriggerHandler('thunder-traits',handleThunderTraits);
-registerTriggerHandler('array-traits',handleArrayTraits);
+registerTriggerHandler('wave-traits',handleWaveTraits,['onKill','onBrandConsume','onDash']);
+registerTriggerHandler('chain-traits',handleChainTraits,['onDash','onChainSealConsume']);
+registerTriggerHandler('thunder-traits',handleThunderTraits,['onDash','onHit','onBurstStart']);
+registerTriggerHandler('array-traits',handleArrayTraits,['onDash','onKill','onCast']);
 
 function updateFormationTraitRuntime(dt){
   const tr=traitRuntime();if(!tr)return;
@@ -1211,14 +1237,25 @@ function edgePoint(){
   const angle=Math.random()*Math.PI*2,radius=260+Math.random()*220;
   return {x:clamp(P.x+Math.cos(angle)*radius,64,W-64),y:clamp(P.y+Math.sin(angle)*radius,64,H-64)};
 }
+function pushFx(effect){
+  if(fx.length>=FX_CAP){
+    const dropIndex=effect.kind==='text'?fx.findIndex(item=>item.kind!=='text'):-1;
+    if(dropIndex>=0)fx.splice(dropIndex,1);
+    else{
+      if(run){run.performanceDrops??={scheduledHits:0,fx:0};run.performanceDrops.fx=(run.performanceDrops.fx||0)+1}
+      return false;
+    }
+  }
+  fx.push(effect);return true;
+}
 function pop(x,y,text,color='#fff',life=.85){
-  fx.push({kind:'text',x,y,text,color,t:life,ttl:life});
+  pushFx({kind:'text',x,y,text,color,t:life,ttl:life});
 }
 function ring(x,y,r,color,life=.32){
-  fx.push({kind:'ring',x,y,r,color,t:life,ttl:life});
+  pushFx({kind:'ring',x,y,r,color,t:life,ttl:life});
 }
 function slash(x1,y1,x2,y2,color='#e9f4ff'){
-  fx.push({kind:'slash',x:x1,y:y1,x2,y2,color,t:.16,ttl:.16});
+  pushFx({kind:'slash',x:x1,y:y1,x2,y2,color,t:.16,ttl:.16});
 }
 function drop(type,x,y,value=1,grade=null){
   if(type==='h'&&grade==null){
@@ -1342,7 +1379,7 @@ function begin(){
     skillDamage:{basic:0,sword:0,wave:0,chain:0,thunder:0,array:0},
     skillCasts:{basic:0,sword:0,wave:0,chain:0,thunder:0,array:0},
     skillCooldowns:Object.fromEntries(SKILLS.map(skill=>[skill.id,0])),scheduledHits:[],
-    triggers:{counts:{},blocked:{depth:0,recursion:0},icd:{},last:null},triggeredCasts:{},traitRuntime:{waveAfter:[],arrayMini:[],arrayDashUntil:0,arrayZone:null,cloudTimer:4,swordLineHits:0}
+    triggers:{counts:{},blocked:{depth:0,recursion:0},icd:{},last:null},triggeredCasts:{},traitRuntime:{waveAfter:[],arrayMini:[],arrayDashUntil:0,arrayZone:null,cloudTimer:4,swordLineHits:0},performanceDrops:{scheduledHits:0,fx:0}
   };
   run.limit=foundationContent()?.runLimit?.(M.area,M.realm)||RUN_TIME;
   P.x=P.tx=EXIT_APPROACH.x;
@@ -1417,12 +1454,14 @@ function reward(enemy){
 }
 
 function bestClusterTarget(acquire,radius){
-  const candidates=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&distance(P,e)<acquire);
+  const candidates=[];
+  for(const enemy of enemies)if(enemy.type!=='spirit'&&enemy.hp>0&&distance(P,enemy)<acquire)candidates.push(enemy);
   if(!candidates.length)return null;
-  let target=candidates[0],best=-1,nearest=Infinity;
-  for(const e of candidates){
-    const crowd=candidates.filter(o=>distance(e,o)<radius*1.35).length,d=distance(P,e);
-    if(crowd>best||(crowd===best&&d<nearest)){best=crowd;nearest=d;target=e}
+  const rr=radius*1.35;let target=candidates[0],best=-1,nearest=Infinity;
+  for(const enemy of candidates){
+    let crowd=0;for(const other of candidates)if(distance(enemy,other)<rr)crowd++;
+    const d=distance(P,enemy);
+    if(crowd>best||(crowd===best&&d<nearest)){best=crowd;nearest=d;target=enemy}
   }
   return target;
 }
@@ -2177,7 +2216,8 @@ window.__xianxiaDebug={
   registerTriggerHandler,
   emitTrigger,
   childTriggerMeta,
-  triggerSnapshot:()=>run?.triggers?JSON.parse(JSON.stringify(run.triggers)):null
+  triggerSnapshot:()=>run?.triggers?JSON.parse(JSON.stringify(run.triggers)):null,
+  performanceSnapshot:()=>run?{scheduledHits:run.scheduledHits?.length||0,fx:fx.length,drops:{...(run.performanceDrops||{})},caps:{scheduledHits:SCHEDULED_HIT_CAP,fx:FX_CAP}}:null
 };
 
 function loadNormalized(value){
