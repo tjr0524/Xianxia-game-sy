@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.50.20';
+const VERSION='11.51.0';
 if(window.__xianxiaFormationSkillsVersion===VERSION)return;
 window.__xianxiaFormationSkillsVersion=VERSION;
 
@@ -13,7 +13,7 @@ const $=s=>document.querySelector(s);
 const REALMS=['연기','축기','결단','원영'];
 const HERB_KEYS=['herb','herb2','herb3'];
 const HERB_NAMES=['하급','중급','상급'];
-const TEST_DAO_MARK_COST=0; // TEST only: trait unlocks are free while combat traits are being validated.
+const DAO_MARK_COST=1;
 
 const A='assets/ink_v1/foundation_trial_v1/ui/node_icons/';
 const F='assets/ink_v1/runtime/ui/formation_skills/';
@@ -241,6 +241,7 @@ function artState(M,create=false){
   return x;
 }
 function daoMarks(M){return Math.max(0,+artState(M).daoMarks||0)}
+function daoists(M){return window.__xianxiaMastery?.daoists?.(M)||0}
 function artRank(M,id){return Math.max(0,Math.min(5,+artState(M).ranks?.[id]||0))}
 function artCap(M,id){
   const rows=ART_RANKS[id]||[];
@@ -351,11 +352,11 @@ function chooseTrait(id,tier,optId){
       notice(`${s.name} Tier ${tier} 첫 특성을 무료로 영구 해금했습니다.`);
       return true;
     }
-    const f=artState(M,true),cost=TEST_DAO_MARK_COST;
+    const f=artState(M,true),cost=DAO_MARK_COST;
     if(cost>0&&(+f.daoMarks||0)<cost){notice(`추가 선택지 해금에는 도흔 ${cost}개가 필요합니다.`);return false}
     if(cost>0)f.daoMarks-=cost;
     st.owned.push(optId);st.selected=optId;
-    notice(cost>0?`${s.name} 특성을 도흔 ${cost}개로 영구 해금하고 장착했습니다.`:`TEST · ${s.name} 특성을 도흔 없이 해금했습니다.`);
+    notice(`${s.name} 특성을 도흔 ${cost}개로 영구 해금하고 장착했습니다.`);
     return true;
   });
 }
@@ -414,7 +415,7 @@ function summaryPanel(M){
     }
     if(bits.length)selected.push(`<div><b>${s.short}</b><span>${bits.join(' · ')}</span></div>`);
   }
-  return `<div class="fs49-detail-head"><b>팔괘 진반</b><span>도흔 ${daoMarks(M)}</span></div>
+  return `<div class="fs49-detail-head"><b>팔괘 진반</b><span>도흔 ${daoMarks(M)} · 도인 ${daoists(M)}/6</span></div>
     <p class="fs49-detail-copy">큰 본체 노드를 누르면 Rank를 강화하고, 각 팔각형 변의 세 점에서 Tier 특성을 선택합니다. 모든 점이 항상 보여서 이 화면 한 장으로 현재 세팅을 확인할 수 있습니다.</p>
     <div class="fs49-build-summary">${selected.join('')||'<small>아직 선택된 특성이 없습니다.</small>'}</div>`;
 }
@@ -474,6 +475,7 @@ function traitPanel(M,s,tier,opt,phase){
   else if((st.owned?.length||0)===0){action='무료 해금 · 장착'}
   else{action='도흔 1 · 해금'}
   if(phase==='run')disabled='disabled';
+  if(!owned&&(st.owned?.length||0)>0&&daoMarks(M)<DAO_MARK_COST)disabled='disabled';
   const statusLabel={locked:'봉인',available:'해금 가능',owned:'보유',selected:'장착 중'}[status]||status;
   const condition=status==='locked'||t.reserved
     ?`<small class="fs49-lock-reason"><b>잠금 조건</b> · ${lockReason||'조건 확인 필요'}</small>`
@@ -507,7 +509,7 @@ function render(){
     });
   });
   root.innerHTML=`<div class="formation-board49">
-    <div class="fs49-topline"><span>팔괘 진반</span><small>본체=Rank · 내/중/외환=Tier Ⅰ/Ⅱ/Ⅲ · 도흔 ${daoMarks(M)}</small></div>
+    <div class="fs49-topline"><span>팔괘 진반</span><small>본체=Rank · 내/중/외환=Tier Ⅰ/Ⅱ/Ⅲ · 도흔 ${daoMarks(M)} · 도인 ${daoists(M)}/6</small></div>
     <div class="fs49-viewport" id="fs49Viewport">
       <div class="fs49-board" id="fs49Board">
       <svg class="fs49-lines" viewBox="0 0 1000 1000" aria-hidden="true">

@@ -12,6 +12,17 @@ const EXIT={x:900,y:1200,r:27};
 const PLAYER_GROUND_OFFSET=23;
 const EXIT_APPROACH={x:EXIT.x,y:EXIT.y-PLAYER_GROUND_OFFSET};
 const RUN_TIME=25;
+const FOUNDATION_ECONOMY={
+  1:{gross:1359.38,efficiency:.93,targetRuns:16,killStone:210},
+  2:{gross:1625,efficiency:.93,targetRuns:16,killStone:250},
+  3:{gross:1950,efficiency:.93,targetRuns:17,killStone:300},
+  4:{gross:2400,efficiency:.93,targetRuns:17,killStone:369},
+  5:{gross:2950,efficiency:.93,targetRuns:18,killStone:454},
+  6:{gross:3600,efficiency:.93,targetRuns:18,killStone:554},
+  7:{gross:4400,efficiency:.93,targetRuns:18,killStone:677},
+  8:{gross:5400,efficiency:.93,targetRuns:19,killStone:831},
+  9:{gross:6600,efficiency:.93,targetRuns:20,killStone:1015}
+};
 const MAJORS=['연기','축기','결단','원영'];
 const HN=['하급','중급','상급'];
 const VERSION='11';
@@ -56,9 +67,9 @@ const AREAS=[
   {id:'blackwind',name:'흑풍곡',desc:'무리 요수와 산수의 전리품 경쟁이 시작되는 골짜기.',enemy:1,reward:1,killStone:34,herbs:10,env:{move:.86,pick:.75},baseStage:3,rec:'연기 3~6층',req:{major:0,stage:3,prev:'qingyun',nodes:2},palette:['#191f22','#34342a','#6d6042']},
   {id:'blood',name:'적혈비경',desc:'영맥 점유와 정예 수호전이 핵심인 고위 비경.',enemy:1,reward:1,killStone:90,herbs:9,env:{move:.77,pick:.60},baseStage:6,rec:'연기 6~9층',req:{major:0,stage:6,prev:'blackwind',nodes:3},palette:['#291719','#532127','#8c493b']},
   {id:'foundation_trial',name:'축기 시련',desc:'축기에 오르기 전 수문장과 맞서는 단일 보스 시련.',enemy:1,reward:1,rewardTier:2,killStone:90,herbs:9,env:{move:.77,pick:.60},baseStage:9,rec:'연기 9층',req:{major:0,stage:9,prev:'blood',nodes:0},palette:['#171d1c','#32403a','#708574']},
-  {id:'thunder',name:'천뢰봉',desc:'낙뢰 전조와 돌진 요수를 함께 읽는 축기 첫 비경.',enemy:1,reward:1,rewardTier:2,killStone:90,herbs:9,env:{move:.77,pick:.60},baseStage:1,rec:'축기 1층 이상',req:{major:1,stage:1,prev:'foundation_trial',nodes:0},palette:['#11182b','#24284b','#555c91']},
-  {id:'marsh',name:'자운택',desc:'폭발·호령·수호 특수몹 조합을 공략하는 습지 비경.',enemy:1,reward:1,rewardTier:2,killStone:90,herbs:9,env:{move:.77,pick:.60},baseStage:4,rec:'축기 4층 이상',req:{major:1,stage:4,prev:'thunder',nodes:0},palette:['#172422','#31483f','#758c79']},
-  {id:'taixu',name:'태허유적',desc:'움직이는 진법과 수호령, 태허진령이 지키는 최종 비경.',enemy:1,reward:1,rewardTier:2,killStone:90,herbs:9,env:{move:.77,pick:.60},baseStage:7,rec:'축기 7층 이상',req:{major:1,stage:7,prev:'marsh',nodes:0},palette:['#171a24','#30354a','#747b9a']}
+  {id:'thunder',name:'천뢰봉',desc:'낙뢰 전조와 돌진 요수를 함께 읽는 축기 첫 비경.',enemy:1,reward:1,rewardTier:2,killStone:210,herbs:9,env:{move:.77,pick:.60},baseStage:1,rec:'축기 1층 이상',req:{major:1,stage:1,prev:'foundation_trial',nodes:0},palette:['#11182b','#24284b','#555c91']},
+  {id:'marsh',name:'자운택',desc:'폭발·호령·수호 특수몹 조합을 공략하는 습지 비경.',enemy:1,reward:1,rewardTier:2,killStone:369,herbs:9,env:{move:.77,pick:.60},baseStage:4,rec:'축기 4층 이상',req:{major:1,stage:4,prev:'thunder',nodes:0},palette:['#172422','#31483f','#758c79']},
+  {id:'taixu',name:'태허유적',desc:'움직이는 진법과 수호령, 태허진령이 지키는 최종 비경.',enemy:1,reward:1,rewardTier:2,killStone:677,herbs:9,env:{move:.77,pick:.60},baseStage:7,rec:'축기 7층 이상',req:{major:1,stage:7,prev:'marsh',nodes:0},palette:['#171a24','#30354a','#747b9a']}
 ];
 
 const TREE={
@@ -83,10 +94,14 @@ const TREE={
     {id:'storm3',n:'뇌정 응축',d:'R1 회피 시 상급 영초 기회 · R3 추가 낙뢰 패턴 · R5 고확률 복합 낙뢰',tier:3,p:'storm2',c:{s:1,h:0}}
   ],
   miasma:[
-    {id:'miasma1',n:'요기',d:'R1 폭발형 가중 · R2 폭발 2체 혼합/영역 중첩 제한 · R3 폭발+호령 · R4 수호막 포함 조합 · R5 3종 정예 특수팩',tier:1,c:{s:1,h:0}}
+    {id:'miasma1',n:'폭렬 요기',d:'폭발형 출현과 폭발 위치 판단을 강화한다.',tier:1,c:{s:1,h:0}},
+    {id:'miasma2',n:'호령 요기',d:'호령형과 폭발형 혼합팩을 활성화한다.',tier:2,p:'miasma1',c:{s:1,h:0}},
+    {id:'miasma3',n:'호체 요기',d:'수호막형과 3종 정예 조합을 활성화한다.',tier:3,p:'miasma2',c:{s:1,h:0}}
   ],
   formation:[
-    {id:'formation1',n:'진법',d:'R1 장판형 가중 · R2 장판 위치/예고 다양화 · R3 진법 결절+이동 진법 · R4 복합 진법+팩전 · R5 태허진령 고위 진법 종합전',tier:1,c:{s:1,h:0}}
+    {id:'formation1',n:'검진 장판',d:'장판형 수호령과 공간 압박을 강화한다.',tier:1,c:{s:1,h:0}},
+    {id:'formation2',n:'진법 결절',d:'파괴 가능한 결절과 이동 진법을 활성화한다.',tier:2,p:'formation1',c:{s:1,h:0}},
+    {id:'formation3',n:'태허진령',d:'태허진령의 고위 진법 종합전을 강화한다.',tier:3,p:'formation2',c:{s:1,h:0}}
   ]
 };
 
@@ -667,13 +682,18 @@ function foundationTarget(area=M.area){
   const stage=foundationStageForArea(area);
   return BAL.foundationCurve[stage]||null;
 }
+function foundationEconomy(area=M.area){
+  const stage=foundationStageForArea(area);
+  return FOUNDATION_ECONOMY[stage]||null;
+}
+function killStoneBase(area=M.area){return foundationEconomy(area)?.killStone||A().killStone}
 function beastConfig(){
   const base=BAL.enemy[M.area]||BAL.enemy.qingyun,target=foundationTarget();
   return target?{...base,hp:target.enemyHp,hit:target.enemyHit,chaserSpeed:target.enemySpeed}:base;
 }
 function uniqueAreaRank(area=M.area){
-  if(area==='marsh')return rank('miasma1',area);
-  if(area==='taixu')return rank('formation1',area);
+  const ids=area==='marsh'?['miasma1','miasma2','miasma3']:area==='taixu'?['formation1','formation2','formation3']:[];
+  if(ids.length)return clamp(Math.round(ids.reduce((sum,id)=>sum+rank(id,area),0)/ids.length),0,5);
   return 0;
 }
 function uniqueRewardMultiplier(area=M.area){
@@ -760,8 +780,8 @@ function branches(id=M.area){
   if(id==='blackwind')return ['eco','fate'];
   if(id==='blood')return ['eco','fate','res'];
   if(id==='thunder')return ['eco','fate','res','storm'];
-  if(id==='marsh')return ['eco','miasma'];
-  if(id==='taixu')return ['eco','formation'];
+  if(id==='marsh')return ['eco','fate','res','miasma'];
+  if(id==='taixu')return ['eco','fate','res','formation'];
   return [];
 }
 
@@ -1472,6 +1492,8 @@ function foundationApi(){
     get phase(){return phase},get elapsed(){return elapsed},W,H,EXIT,clamp,distance,moveToward,
     expectedPlayerHp:()=>foundationTarget()?.playerHp||P.max,
     uniqueRank:id=>rank(id),
+    baseKillStone:()=>killStoneBase(),
+    foundationEconomy:()=>foundationEconomy(),
     areaRewardMultiplier:()=>uniqueRewardMultiplier(),
     planRewardMultiplier:()=>currentPlan().reward,
     spawn:(type,options={})=>actor(type,options),
@@ -1531,7 +1553,9 @@ function begin(){
     for(let i=0;i<normalCount;i++)actor('spirit');
   }
   setupVein();
+  run.veinSeen=vein?1:0;
   foundationContent()?.onBegin?.(foundationApi());
+  window.__xianxiaMastery?.onBegin?.(foundationApi());
   UI.ov.classList.add('hide');
   if(window.matchMedia?.('(max-width:920px)').matches)setMenuOpen(false);
   UI.ret.disabled=false;
@@ -1576,12 +1600,12 @@ function reward(enemy){
   if(handled){
     // Content module owns the reward, while the shared kill/combo accounting stays here.
   }else if(['basic','guard','chaser','attacker'].includes(enemy.type)){
-    gainStone(Math.ceil(A().killStone*plan.reward*uniqueReward*(enemy.rewardMult||1)),enemy.x,enemy.y);
+    gainStone(Math.ceil(killStoneBase()*plan.reward*uniqueReward*(enemy.rewardMult||1)),enemy.x,enemy.y);
   }else if(enemy.type==='elite'){
-    run.elite=1;gainStone(Math.ceil(A().killStone*6*plan.reward*uniqueReward),enemy.x,enemy.y);gainHerb(2+rank('res3'),Math.min(2,areaIndex()),enemy.x+10,enemy.y);if(vein){vein.cleared=1;vein.stock+=20+rank('res3')*8}
+    run.elite=1;gainStone(Math.ceil(killStoneBase()*6*plan.reward*uniqueReward),enemy.x,enemy.y);gainHerb(2+rank('res3'),Math.min(2,areaIndex()),enemy.x+10,enemy.y);if(vein){vein.cleared=1;vein.stock+=20+rank('res3')*8}
   }else if(enemy.type==='rogue'||enemy.type==='rat'){
-    run.thieves++;spillCarry(enemy);gainStone(Math.ceil((enemy.type==='rogue'?A().killStone*.65:A().killStone*.28)*plan.reward*uniqueReward),enemy.x,enemy.y);
-    if(enemy.type==='rogue'&&enemy.treasure){const bonus=Math.ceil(A().killStone*(1.2+rank('fate2')*.35));gainStone(bonus,enemy.x+8,enemy.y-5);gainHerb(1+Math.floor(rank('fate2')/3),Math.min(2,areaIndex()),enemy.x-8,enemy.y);run.treasures++;pop(enemy.x,enemy.y-20,'✦ 비보 확보','#ffe28a',1.25)}
+    run.thieves++;spillCarry(enemy);gainStone(Math.ceil((enemy.type==='rogue'?killStoneBase()*.65:killStoneBase()*.28)*plan.reward*uniqueReward),enemy.x,enemy.y);
+    if(enemy.type==='rogue'&&enemy.treasure){const bonus=Math.ceil(killStoneBase()*(1.2+rank('fate2')*.35));gainStone(bonus,enemy.x+8,enemy.y-5);gainHerb(1+Math.floor(rank('fate2')/3),Math.min(2,areaIndex()),enemy.x-8,enemy.y);run.treasures++;pop(enemy.x,enemy.y-20,'✦ 비보 확보','#ffe28a',1.25)}
   }
   if(enemy.type!=='spirit'){
     for(const other of enemies){if(other!==enemy&&other.rareTrait==='devour'&&other.hp>0&&distance(other,enemy)<150)other.hp=Math.min(other.max,other.hp+other.max*.12)}
@@ -1830,7 +1854,7 @@ function update(dt){
         if(r3>=3&&vein.waveStage<1&&vein.progress>=Math.min(1,vein.required*.40)){vein.waveStage=1;spawnVeinBeasts(2,false)}
         if(r3>=3&&vein.waveStage<2&&vein.progress>=Math.min(2,vein.required*.75)){vein.waveStage=2;spawnVeinBeasts(2+(r3>=4?1:0),false)}
         if(vein.progress>=vein.required){
-          const mined=vein.stock,x=vein.x,y=vein.y,doneVein=vein;run.mined+=mined;gainStone(mined,x,y);
+          const mined=vein.stock,x=vein.x,y=vein.y,doneVein=vein;run.mined+=mined;run.veinMined=1;run.veinDefenseComplete=doneVein.defenseCleared?1:0;run.largeVein=rank('res3')>=4?1:0;gainStone(mined,x,y);
           pop(x,y-34,r3>=5?'대형 영맥 확보':'영맥 채굴 완료','#b8d7ef',1.1);
           if(P.target===doneVein)P.target=null;vein=null;
         }
@@ -1900,6 +1924,7 @@ function update(dt){
         emitTrigger('onKill',payload,meta);
         if(payload.special)emitTrigger('onSpecialKill',payload,meta);
         reward(e);
+        window.__xianxiaMastery?.onKill?.(e,foundationApi());
       }
       return false;
     }
@@ -1950,6 +1975,7 @@ function finish(reason){
 
   let event='';
   event+=foundationContent()?.onFinish?.(reason,foundationApi())||'';
+  event+=window.__xianxiaMastery?.onFinish?.(reason,foundationApi())||'';
   event+=fortune(reason);
 
   let objective='';
