@@ -396,6 +396,218 @@ function handleSwordTraitTrigger(payload,ctx){
   }
 }
 registerTriggerHandler('sword-traits',handleSwordTraitTrigger);
+
+const AUTO_SPELLS=new Set(['sword','wave','chain','thunder','array']);
+const SWORD_LINE_SPELLS=new Set(['sword','wave','chain','array']);
+function familyOf(source){return String(source||'').split(':')[0]}
+function strongestLivingEnemy(origin=P,range=Infinity){
+  return enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&distance(origin,e)<range).sort((a,b)=>enemyStrengthScore(b)-enemyStrengthScore(a))[0]||null;
+}
+function systemTraitMeta(parent,system,id,source){
+  return childTriggerMeta(parent||{},{originTrait:`${system}:${id}`,source:source||`${system}:${id}`});
+}
+function traitRuntime(){
+  if(!run)return null;
+  run.traitRuntime??={waveAfter:[],arrayMini:[],arrayDashUntil:0,arrayZone:null,cloudTimer:4,swordLineHits:0};
+  return run.traitRuntime;
+}
+function pullEnemyToward(enemy,center,maxDistance){
+  if(!enemy||enemy.hp<=0)return;
+  const dx=center.x-enemy.x,dy=center.y-enemy.y,d=Math.hypot(dx,dy);if(d<1)return;
+  const move=Math.min(Math.max(0,maxDistance||0),d);
+  enemy.x=clamp(enemy.x+dx/d*move,18,W-18);enemy.y=clamp(enemy.y+dy/d*move,18,H-18);
+}
+function applyWeakWind(enemy){
+  if(!enemy||enemy.hp<=0)return;
+  if((enemy._waveWeakUntil||0)<=elapsed){
+    enemy._waveWeakBaseSpeed=enemy.speed;
+    enemy._waveWeakBasePeriod=enemy.attackPeriod;
+    enemy.speed*=.80;
+    if(Number.isFinite(enemy.attackPeriod))enemy.attackPeriod*=1.10;
+  }
+  enemy._waveWeakUntil=elapsed+2.5;
+}
+function refreshCombatStatuses(enemy){
+  if((enemy._waveWeakUntil||0)>0&&(enemy._waveWeakUntil||0)<=elapsed){
+    if(Number.isFinite(enemy._waveWeakBaseSpeed))enemy.speed=enemy._waveWeakBaseSpeed;
+    if(Number.isFinite(enemy._waveWeakBasePeriod))enemy.attackPeriod=enemy._waveWeakBasePeriod;
+    enemy._waveWeakUntil=0;delete enemy._waveWeakBaseSpeed;delete enemy._waveWeakBasePeriod;
+  }
+  if((enemy._swordBrandUntil||0)<=elapsed)enemy._swordBrandUntil=0;
+  if((enemy._chainSealUntil||0)<=elapsed)enemy._chainSealUntil=0;
+  if((enemy._shockUntil||0)<=elapsed)enemy._shockUntil=0;
+}
+function currentWaveBaseDamage(){
+  let d=basicDamage()*BAL.skill.wave.mult[skillRank('wave')];
+  if(hasFormationTrait('wave','wide'))d*=.85;
+  if(hasFormationTrait('wave','weak'))d*=.90;
+  return d;
+}
+function waveDamage(enemy,amount,source,meta,center=null){
+  const dealt=dealEnemyDamage(enemy,amount,source,meta);if(!dealt)return 0;
+  if(hasFormationTrait('wave','weak'))applyWeakWind(enemy);
+  if(hasFormationTrait('wave','pull')&&center)pullEnemyToward(enemy,center,80);
+  if(hasFormationTrait('wave','brand'))enemy._swordBrandUntil=elapsed+4;
+  return dealt;
+}
+function currentThunderBaseDamage(){
+  let d=basicDamage()*BAL.skill.thunder.mult[skillRank('thunder')];
+  if(hasFormationTrait('thunder','bolt'))d*=1.55;
+  return d;
+}
+function thunderDamage(enemy,amount,source,meta,center=null){
+  if(!enemy||enemy.hp<=0)return 0;
+  const dealt=dealEnemyDamage(enemy,amount,source,meta);if(!dealt)return 0;
+  if(hasFormationTrait('thunder','shock'))enemy._shockUntil=elapsed+3;
+  if(hasFormationTrait('thunder','charge')&&source!=='thunder:charge'){
+    enemy._thunderChargeCount=(enemy._thunderChargeCount||0)+1;
+    if(enemy._thunderChargeCount>=3&&(enemy._thunderChargeIcd||0)<=elapsed){
+      enemy._thunderChargeCount=0;enemy._thunderChargeIcd=elapsed+2;
+      const cmeta=systemTraitMeta(meta,'thunder','charge','thunder:charge'),radius=(BAL.skill.thunder.radius[skillRank('thunder')]||70)*.75,boom=currentThunderBaseDamage()*.40;
+      for(const other of enemies)if(other.type!=='spirit'&&other.hp>0&&distance(enemy,other)<radius)dealEnemyDamage(other,boom,'thunder:charge',cmeta);
+      ring(enemy.x,enemy.y,radius,'#d8ccff',.28);
+    }
+  }
+  return dealt;
+}
+function currentArrayBaseDamage(){
+  let d=basicDamage()*BAL.skill.array.mult[skillRank('array')];
+  if(hasFormationTrait('array','focus'))d*=1.45;
+  if(hasFormationTrait('array','wide'))d*=.80;
+  if(hasFormationTrait('array','follow'))d*=.85;
+  if(hasFormationTrait('array','pull'))d*=.90;
+  return d;
+}
+function arrayDamage(enemy,amount,source,meta){
+  if(hasFormationTrait('array','break')&&(enemy?.shield>0||enemy?.type==='formation_warden'||enemy?.type==='shield_pangolin'))amount*=1.60;
+  return dealEnemyDamage(enemy,amount,source,meta);
+}
+function scheduleAreaHit({t,x,y,r,damage,source,family,meta,pull=0,followPlayer=false,color='#d7eaff'}){
+  run.scheduledHits.push({kind:'trait-area',t,x,y,r,damage,source,family,triggerMeta:copyTriggerMeta(meta||{}),pull,followPlayer,color});
+}
+function scheduleDirectHit({t,target,damage,source,family,meta,color='#d7eaff'}){
+  if(!target)return;run.scheduledHits.push({kind:'trait-direct',t,targetId:target.id,damage,source,family,triggerMeta:copyTriggerMeta(meta||{}),color});
+}
+function processScheduledTraitHit(h){
+  const center=h.followPlayer?{x:P.x,y:P.y}:{x:h.x,y:h.y};
+  const hitOne=e=>{
+    if(!e||e.type==='spirit'||e.hp<=0)return;
+    if(h.pull)pullEnemyToward(e,center,h.pull);
+    if(h.family==='wave')waveDamage(e,h.damage,h.source,h.triggerMeta,center);
+    else if(h.family==='thunder')thunderDamage(e,h.damage,h.source,h.triggerMeta,center);
+    else if(h.family==='array')arrayDamage(e,h.damage,h.source,h.triggerMeta);
+    else dealEnemyDamage(e,h.damage,h.source,h.triggerMeta);
+  };
+  if(h.targetId){hitOne(enemies.find(e=>e.id===h.targetId));return}
+  for(const e of enemies)if(e.type!=='spirit'&&e.hp>0&&distance(center,e)<h.r)hitOne(e);
+  ring(center.x,center.y,h.r,h.color||'#d7eaff',.24);
+}
+function spawnSmallWave(origin,scale,source,meta){
+  const tr=traitRuntime();tr.waveAfter=tr.waveAfter.filter(t=>t>elapsed);if(tr.waveAfter.length>=3)return false;
+  tr.waveAfter.push(elapsed+.7);
+  scheduleAreaHit({t:.06,x:origin.x,y:origin.y,r:(BAL.skill.wave.radius[skillRank('wave')]||70)*.68,damage:currentWaveBaseDamage()*scale,source,family:'wave',meta,color:'#9fdfff'});
+  return true;
+}
+function spawnMiniArray(origin,totalScale,duration,source,meta,radiusScale=.62){
+  const r=(BAL.skill.array.radius[skillRank('array')]||130)*radiusScale,base=currentArrayBaseDamage()*totalScale/3;
+  for(let i=0;i<3;i++)scheduleAreaHit({t:.04+i*(duration/3),x:origin.x,y:origin.y,r,damage:base,source,family:'array',meta,color:'#ffe9a8'});
+}
+function handleWaveTraits(payload,ctx){
+  if(ctx.event==='onKill'&&payload?.source==='wave'&&hasFormationTrait('wave','after')&&Math.random()<.25){
+    spawnSmallWave({x:payload.enemy.x,y:payload.enemy.y},.35,'wave:after',systemTraitMeta(ctx,'wave','after','wave:after'));
+  }
+  if(ctx.event==='onBrandConsume'&&hasFormationTrait('wave','resonate')&&triggerIcd('wave:resonate',.8)){
+    spawnSmallWave({x:payload.enemy.x,y:payload.enemy.y},.25,'wave:resonate',systemTraitMeta(ctx,'wave','resonate','wave:resonate'));
+  }
+  if(ctx.event==='onDash'&&hasFormationTrait('wave','dashtrail')){
+    const from=payload.from||P,to=payload.to||P,meta=systemTraitMeta(ctx,'wave','dashtrail','wave:dashtrail'),base=currentWaveBaseDamage()*.15,r=(BAL.skill.wave.radius[skillRank('wave')]||70)*.55;
+    for(let i=1;i<=4;i++){const q=i/5;scheduleAreaHit({t:.08+(i-1)*.30,x:from.x+(to.x-from.x)*q,y:from.y+(to.y-from.y)*q,r,damage:base,source:'wave:dashtrail',family:'wave',meta,color:'#9fdfff'})}
+  }
+}
+function handleChainTraits(payload,ctx,api){
+  if(ctx.event==='onDash'&&hasFormationTrait('chain','dash')&&triggerIcd('chain:dash',1.0)){
+    api.castSpell('chain',{powerScale:.65,triggered:true,source:'chain:dash',triggerMeta:systemTraitMeta(ctx,'chain','dash','chain:dash')});
+  }
+  if(ctx.event==='onChainSealConsume'){
+    const enemy=payload.enemy;if(!enemy||enemy.hp<=0)return;
+    const base=basicDamage()*BAL.skill.sword.mult[skillRank('sword')];
+    swordHit(enemy,base,.40,'chain:seal',systemTraitMeta(ctx,'chain','seal','chain:seal'),P);
+    if(hasFormationTrait('chain','resonate')&&Math.random()<.25&&triggerIcd('chain:resonate',1.5)){
+      api.castSpell('chain',{powerScale:.50,triggered:true,source:'chain:resonate',triggerMeta:systemTraitMeta(ctx,'chain','resonate','chain:resonate'),startTarget:enemy});
+    }
+  }
+}
+function thunderAt(origin,scale,source,meta,radiusScale=1){
+  const r=(BAL.skill.thunder.radius[skillRank('thunder')]||70)*radiusScale,d=currentThunderBaseDamage()*scale;
+  let hits=0;for(const e of enemies)if(e.type!=='spirit'&&e.hp>0&&distance(origin,e)<r){thunderDamage(e,d,source,meta,origin);hits++}
+  if(hits)ring(origin.x,origin.y,r,'#d7c8ff',.34);return hits;
+}
+function handleThunderTraits(payload,ctx){
+  const tr=traitRuntime();
+  if(ctx.event==='onDash'&&hasFormationTrait('thunder','dash')&&triggerIcd('thunder:dash',1.5)){
+    thunderAt(payload.to||P,.50,'thunder:dash',systemTraitMeta(ctx,'thunder','dash','thunder:dash'));
+  }
+  if(ctx.event==='onHit'&&hasFormationTrait('thunder','resonate')&&SWORD_LINE_SPELLS.has(familyOf(payload.source))){
+    tr.swordLineHits=(tr.swordLineHits||0)+1;
+    if(tr.swordLineHits>=6&&triggerIcd('thunder:resonate',.8)){
+      tr.swordLineHits=0;thunderAt(payload.enemy,.45,'thunder:resonate',systemTraitMeta(ctx,'thunder','resonate','thunder:resonate'),.8);
+    }
+  }
+  if(ctx.event==='onBurstStart'&&hasFormationTrait('thunder','burst')){
+    const target=strongestLivingEnemy(P,BAL.skill.thunder.acquire[skillRank('thunder')]||300);
+    if(target)thunderAt(target,.70,'thunder:burst',systemTraitMeta(ctx,'thunder','burst','thunder:burst'),.85);
+  }
+}
+function handleArrayTraits(payload,ctx){
+  const tr=traitRuntime();
+  if(ctx.event==='onDash'&&hasFormationTrait('array','dash')){
+    if((tr.arrayDashUntil||0)>elapsed)run.scheduledHits=run.scheduledHits.filter(h=>h.source!=='array:dash');
+    tr.arrayDashUntil=elapsed+2;
+    spawnMiniArray(payload.to||P,.40,2,'array:dash',systemTraitMeta(ctx,'array','dash','array:dash'),.55);
+  }
+  if(ctx.event==='onKill'&&payload?.source==='array'&&hasFormationTrait('array','multiply')&&Math.random()<.25){
+    tr.arrayMini=tr.arrayMini.filter(t=>t>elapsed);if(tr.arrayMini.length<2){tr.arrayMini.push(elapsed+2);spawnMiniArray(payload.enemy,.30,2,'array:multiply',systemTraitMeta(ctx,'array','multiply','array:multiply'),.50)}
+  }
+  if(ctx.event==='onCast'&&payload?.skillId&&payload.skillId!=='array'&&AUTO_SPELLS.has(payload.skillId)&&hasFormationTrait('array','resonate')){
+    const z=tr.arrayZone;if(z&&z.until>elapsed&&triggerIcd('array:resonate',.5)){
+      const center=z.follow?P:z;if(distance(P,center)<=z.r){
+        const meta=systemTraitMeta(ctx,'array','resonate','array:resonate'),d=currentArrayBaseDamage()*.15;
+        for(const e of enemies)if(e.type!=='spirit'&&e.hp>0&&distance(center,e)<z.r)arrayDamage(e,d,'array:resonate',meta);
+        ring(center.x,center.y,z.r,'#ffe9a8',.18);
+      }
+    }
+  }
+}
+registerTriggerHandler('wave-traits',handleWaveTraits);
+registerTriggerHandler('chain-traits',handleChainTraits);
+registerTriggerHandler('thunder-traits',handleThunderTraits);
+registerTriggerHandler('array-traits',handleArrayTraits);
+
+function updateFormationTraitRuntime(dt){
+  const tr=traitRuntime();if(!tr)return;
+  tr.waveAfter=tr.waveAfter.filter(t=>t>elapsed);tr.arrayMini=tr.arrayMini.filter(t=>t>elapsed);
+  if(tr.arrayZone?.follow){tr.arrayZone.x=P.x;tr.arrayZone.y=P.y}
+  if(hasFormationTrait('thunder','cloud')&&enemies.some(e=>e.type!=='spirit'&&e.hp>0)){
+    tr.cloudTimer=(tr.cloudTimer??4)-dt;
+    if(tr.cloudTimer<=0){
+      tr.cloudTimer=4;
+      const target=strongestLivingEnemy(P,BAL.skill.thunder.acquire[skillRank('thunder')]||300);
+      if(target)thunderAt(target,.35,'thunder:cloud',systemTraitMeta({},'thunder','cloud','thunder:cloud'),.72);
+    }
+  }else tr.cloudTimer=4;
+  if(hasFormationTrait('thunder','burst')&&(run.foundation?.arts?.burstTime||0)>0){
+    run.skillCooldowns.thunder=Math.max(0,(run.skillCooldowns.thunder||0)-dt);
+  }
+  const z=tr.arrayZone;
+  if(z&&z.until>elapsed&&hasFormationTrait('array','return')){
+    z.nextReturn??=elapsed+3;
+    if(elapsed>=z.nextReturn){
+      z.nextReturn+=3;
+      const center=z.follow?P:z,target=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&distance(center,e)<z.r).sort((a,b)=>enemyStrengthScore(b)-enemyStrengthScore(a))[0];
+      if(target)arrayDamage(target,currentArrayBaseDamage()*.60,'array:return',systemTraitMeta({},'array','return','array:return'));
+    }
+  }
+}
 function beastConfig(){return BAL.enemy[M.area]||BAL.enemy.qingyun}
 function playerProgressTier(){return M.realm.major>0?9+(M.realm.stage||1):(M.realm.stage||1)}
 function areaBaseTier(){return({qingyun:1,blackwind:3,blood:6,foundation_trial:9,thunder:10,marsh:11,taixu:16}[M.area]||1)}
@@ -420,10 +632,20 @@ function takePlayerDamage(dmg,grantGrace=false,source='enemy'){
 }
 function dealEnemyDamage(enemy,amount,source='unknown',triggerMeta=null){
   amount=Math.max(0,+amount||0);
-  amount=foundationContent()?.modifyEnemyDamage?.(enemy,amount,source,foundationApi())??amount;
   if(!enemy||enemy.hp<=0||!amount)return 0;
-  const effective=Math.min(enemy.hp,amount),meta=copyTriggerMeta(triggerMeta||{});
+  const meta=copyTriggerMeta(triggerMeta||{}),family=String(source||'').split(':')[0];
   if(!meta.source)meta.source=source;
+  let brandConsumed=false,sealConsumed=false;
+  if((enemy._shockUntil||0)>elapsed&&['sword','wave','chain','thunder','array'].includes(family))amount*=1.12;
+  if((enemy._swordBrandUntil||0)>elapsed&&['sword','chain','array'].includes(family)){
+    amount*=1.15;enemy._swordBrandUntil=0;brandConsumed=true;
+  }
+  if((enemy._chainSealUntil||0)>elapsed&&['sword','wave','thunder','array'].includes(family)){
+    enemy._chainSealUntil=0;sealConsumed=true;
+  }
+  amount=foundationContent()?.modifyEnemyDamage?.(enemy,amount,source,foundationApi())??amount;
+  if(!amount)return 0;
+  const effective=Math.min(enemy.hp,amount);
   enemy.hp-=amount;
   enemy._lastHit={source,meta:copyTriggerMeta(meta)};
   if(run){
@@ -431,6 +653,8 @@ function dealEnemyDamage(enemy,amount,source='unknown',triggerMeta=null){
     run.skillDamage[source]=(run.skillDamage[source]||0)+effective;
   }
   emitTrigger('onHit',{enemy,amount:effective,source,lethal:enemy.hp<=0},meta);
+  if(brandConsumed)emitTrigger('onBrandConsume',{enemy,source,amount:effective},meta);
+  if(sealConsumed)emitTrigger('onChainSealConsume',{enemy,source,amount:effective},meta);
   return effective;
 }
 function updateNonCombatRecovery(dt){
@@ -1118,7 +1342,7 @@ function begin(){
     skillDamage:{basic:0,sword:0,wave:0,chain:0,thunder:0,array:0},
     skillCasts:{basic:0,sword:0,wave:0,chain:0,thunder:0,array:0},
     skillCooldowns:Object.fromEntries(SKILLS.map(skill=>[skill.id,0])),scheduledHits:[],
-    triggers:{counts:{},blocked:{depth:0,recursion:0},icd:{},last:null},triggeredCasts:{}
+    triggers:{counts:{},blocked:{depth:0,recursion:0},icd:{},last:null},triggeredCasts:{},traitRuntime:{waveAfter:[],arrayMini:[],arrayDashUntil:0,arrayZone:null,cloudTimer:4,swordLineHits:0}
   };
   run.limit=foundationContent()?.runLimit?.(M.area,M.realm)||RUN_TIME;
   P.x=P.tx=EXIT_APPROACH.x;
@@ -1237,16 +1461,73 @@ function cast(skill,options={}){
     return done({target:primary,hits});
   }
   if(skill.id==='wave'){
-    const radius=b.radius[sr],target=bestClusterTarget(b.acquire[sr],radius);if(!target)return false;let hits=0;for(const e of enemies){if(e.type==='spirit'||e.hp<=0||distance(target,e)>=radius)continue;dealEnemyDamage(e,damage,source,meta);hits++}if(!hits)return false;pop(target.x,target.y,'검풍 ×'+hits,'#9fdfff');ring(target.x,target.y,radius,'#9fdfff');return done({target,hits});
+    let radius=b.radius[sr],target=bestClusterTarget(b.acquire[sr],radius);if(!target)return false;
+    const t1=selectedFormationTrait('wave',1),base=currentWaveBaseDamage()*powerScale;let hits=0;
+    if(t1==='wide')radius*=1.45;
+    if(t1==='vortex'){
+      const vmeta=copyTriggerMeta(meta);
+      for(let i=0;i<5;i++)scheduleAreaHit({t:.05+i*.50,x:target.x,y:target.y,r:radius,damage:base*.22,source:'wave:vortex',family:'wave',meta:vmeta,color:'#9fdfff'});
+      ring(target.x,target.y,radius,'#9fdfff',.32);return done({target,hits:1});
+    }
+    if(t1==='double'){
+      const dx=target.x-P.x,dy=target.y-P.y,n=Math.hypot(dx,dy)||1,px=-dy/n,py=dx/n,offset=radius*.55,centers=[{x:target.x+px*offset,y:target.y+py*offset},{x:target.x-px*offset,y:target.y-py*offset}],seen=new Set();
+      for(const center of centers){for(const e of enemies){if(e.type==='spirit'||e.hp<=0||distance(center,e)>=radius*.82)continue;const scale=seen.has(e.id)?.30:.60;if(waveDamage(e,base*scale,source,meta,center)>0){hits++;seen.add(e.id)}}ring(center.x,center.y,radius*.82,'#9fdfff',.24)}
+    }else{
+      for(const e of enemies){if(e.type==='spirit'||e.hp<=0||distance(target,e)>=radius)continue;if(waveDamage(e,base,source,meta,target)>0)hits++}
+      ring(target.x,target.y,radius,'#9fdfff');
+    }
+    if(!hits)return false;pop(target.x,target.y,'검풍 ×'+hits,'#9fdfff');return done({target,hits});
   }
   if(skill.id==='chain'){
-    const candidates=enemies.filter(e=>e.type!=='spirit'&&e.hp>0),max=b.count[rr],jump=b.jump[sr],acquire=b.acquire[sr];let current=P,used=new Set(),hits=0;for(let i=0;i<max;i++){let target=null,near=Infinity;for(const e of candidates){if(used.has(e))continue;const d=distance(current,e),allowed=i===0?acquire:jump;if(d<allowed&&d<near){near=d;target=e}}if(!target)break;dealEnemyDamage(target,damage,source,meta);slash(current.x,current.y,target.x,target.y,'#c6d6ff');used.add(target);current=target;hits++}return hits>0?done({target:current,hits}):false;
+    const candidates=enemies.filter(e=>e.type!=='spirit'&&e.hp>0),jump=b.jump[sr],acquire=b.acquire[sr],t1=selectedFormationTrait('chain',1);
+    let limit=b.count[rr]+(t1==='spread'?2:0),current=P,used=new Set(),hits=0,first=null,last=null,killExtra=0;
+    const scale=t1==='spread'?.75:1;
+    for(let i=0;i<limit;i++){
+      let target=null,near=Infinity;
+      if(i===0&&options.startTarget&&options.startTarget.hp>0&&distance(current,options.startTarget)<acquire){target=options.startTarget}
+      if(!target)for(const e of candidates){if(used.has(e)||e.hp<=0)continue;const d=distance(current,e),allowed=i===0?acquire:jump;if(d<allowed&&d<near){near=d;target=e}}
+      if(!target)break;
+      const before=target.hp;dealEnemyDamage(target,damage*scale,source,meta);slash(current.x,current.y,target.x,target.y,'#c6d6ff');
+      if(!first)first=target;last=target;used.add(target);current=target;hits++;
+      if(hasFormationTrait('chain','ghost')&&hits<=4)scheduleDirectHit({t:.6,target,damage:damage*.20,source:'chain:ghost',family:'chain',meta:systemTraitMeta(meta,'chain','ghost','chain:ghost'),color:'#c6d6ff'});
+      if(hasFormationTrait('chain','endless')&&before>0&&target.hp<=0&&killExtra<4){killExtra++;limit++}
+    }
+    if(t1==='boss'){
+      const strong=candidates.filter(e=>e.hp>0&&distance(current,e)<jump*1.35).sort((a,b)=>enemyStrengthScore(b)-enemyStrengthScore(a))[0]||first;
+      if(strong&&strong.hp>0)for(let re=1;re<=3;re++){dealEnemyDamage(strong,damage*(1+.15*re),source,meta);slash(current.x,current.y,strong.x,strong.y,'#c6d6ff');current=strong;last=strong;hits++;if(strong.hp<=0)break}
+    }
+    if(t1==='back'&&first&&first.hp>0){dealEnemyDamage(first,damage*.50,source,meta);slash(current.x,current.y,first.x,first.y,'#dce5ff');last=first;hits++}
+    if(last&&hasFormationTrait('chain','seal'))last._chainSealUntil=elapsed+5;
+    if(!hits)return false;
+    const result=done({target:last,hits});
+    if(!options.triggered&&hasFormationTrait('chain','burst')&&(run.foundation?.arts?.burstTime||0)>0){
+      for(let i=0;i<2;i++)cast(skill,{powerScale:.55,triggered:true,source:'chain:burst',triggerMeta:systemTraitMeta(meta,'chain','burst','chain:burst')});
+    }
+    return result;
   }
   if(skill.id==='thunder'){
-    const radius=b.radius[sr],target=bestClusterTarget(b.acquire[sr],radius);if(!target)return false;let hits=0;for(const e of enemies){if(e.type!=='spirit'&&e.hp>0&&distance(target,e)<radius){dealEnemyDamage(e,damage,source,meta);hits++}}if(!hits)return false;pop(target.x,target.y,'낙뢰 ×'+hits,'#d7c8ff');ring(target.x,target.y,radius,'#d7c8ff',.4);return done({target,hits});
+    let radius=b.radius[sr],t1=selectedFormationTrait('thunder',1),target=t1==='bolt'?strongestLivingEnemy(P,b.acquire[sr]):bestClusterTarget(b.acquire[sr],radius);if(!target)return false;
+    const base=currentThunderBaseDamage()*powerScale;let hits=0;
+    if(t1==='bolt')radius*=.65;
+    if(t1==='field'){
+      radius*=1.20;for(let i=0;i<6;i++)scheduleAreaHit({t:.05+i*.50,x:target.x,y:target.y,r:radius,damage:base*.20,source:'thunder:field',family:'thunder',meta,color:'#d7c8ff'});
+      ring(target.x,target.y,radius,'#d7c8ff',.4);return done({target,hits:1});
+    }
+    const initialScale=t1==='chain'?.80:1;
+    for(const e of enemies){if(e.type!=='spirit'&&e.hp>0&&distance(target,e)<radius){if(thunderDamage(e,base*initialScale,source,meta,target)>0)hits++}}
+    if(t1==='chain'){
+      let current=target,used=new Set([target.id]);
+      for(let i=0;i<3;i++){const next=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&!used.has(e.id)).sort((a,b)=>distance(current,a)-distance(current,b))[0];if(!next)break;thunderDamage(next,base*.70,'thunder:chain',meta,current);slash(current.x,current.y,next.x,next.y,'#d7c8ff');used.add(next.id);current=next;hits++}
+    }
+    if(!hits)return false;pop(target.x,target.y,'낙뢰 ×'+hits,'#d7c8ff');ring(target.x,target.y,radius,'#d7c8ff',.4);return done({target,hits});
   }
   if(skill.id==='array'){
-    const radius=b.radius[sr],target=bestClusterTarget(b.acquire[sr],radius);if(!target)return false;const pulse=damage/3;run.scheduledHits.push({kind:'array',source,t:0.02,x:target.x,y:target.y,r:radius,damage:pulse,triggerMeta:copyTriggerMeta(meta)},{kind:'array',source,t:.36,x:target.x,y:target.y,r:radius,damage:pulse,triggerMeta:copyTriggerMeta(meta)},{kind:'array',source,t:.70,x:target.x,y:target.y,r:radius,damage:pulse,triggerMeta:copyTriggerMeta(meta)});pop(target.x,target.y,'만검진','#ffe9a8');ring(target.x,target.y,radius,'#ffe9a8',.24);return done({target});
+    let radius=b.radius[sr],t1=selectedFormationTrait('array',1),target=t1==='focus'?strongestLivingEnemy(P,b.acquire[sr]):bestClusterTarget(b.acquire[sr],radius);if(!target)return false;
+    if(t1==='focus')radius*=.65;if(t1==='wide')radius*=1.50;
+    const follow=t1==='follow',center=follow?{x:P.x,y:P.y}:{x:target.x,y:target.y},base=currentArrayBaseDamage()*powerScale,pulse=base/3,pull=hasFormationTrait('array','pull')?100/3:0;
+    for(const t of [0.02,.36,follow?.84:.70])scheduleAreaHit({t,x:center.x,y:center.y,r:radius,damage:pulse,source,family:'array',meta,pull,followPlayer:follow,color:'#ffe9a8'});
+    const tr=traitRuntime();tr.arrayZone={x:center.x,y:center.y,r:radius,follow,until:elapsed+effectiveSkillCooldown('array'),nextReturn:elapsed+3};
+    pop(center.x,center.y,'만검진','#ffe9a8');ring(center.x,center.y,radius,'#ffe9a8',.24);return done({target,hits:1});
   }
   return false;
 }
@@ -1285,9 +1566,10 @@ function update(dt){
   P.cd=Math.max(0,P.cd-dt);P.hitGrace=Math.max(0,(P.hitGrace||0)-dt);
   if(run.combo>0){run.comboTime-=dt;if(run.comboTime<=0){run.combo=0;run.comboTime=0}}
   for(const id of Object.keys(run.skillCooldowns))run.skillCooldowns[id]=Math.max(0,run.skillCooldowns[id]-dt);
-  if(run.scheduledHits?.length){for(const h of run.scheduledHits){h.t-=dt;if(h.t<=0&&!h.done){h.done=1;for(const e of enemies)if(e.type!=='spirit'&&distance(h,e)<h.r)dealEnemyDamage(e,h.damage,h.source||h.kind||'array',h.triggerMeta||null);ring(h.x,h.y,h.r,'#ffe9a8',.28)}}run.scheduledHits=run.scheduledHits.filter(h=>!h.done)}
+  if(run.scheduledHits?.length){for(const h of run.scheduledHits){h.t-=dt;if(h.t<=0&&!h.done){h.done=1;if(h.kind==='trait-area'||h.kind==='trait-direct')processScheduledTraitHit(h);else{for(const e of enemies)if(e.type!=='spirit'&&distance(h,e)<h.r)dealEnemyDamage(e,h.damage,h.source||h.kind||'array',h.triggerMeta||null);ring(h.x,h.y,h.r,'#ffe9a8',.28)}}}run.scheduledHits=run.scheduledHits.filter(h=>!h.done)}
   const activeTargets=[...enemies,...objects,...(vein?[vein]:[])];if(P.target&&!activeTargets.includes(P.target))P.target=null;if(P.target){P.tx=P.target.x;P.ty=P.target.y}
   foundationContent()?.updateRun?.(dt,foundationApi());
+  updateFormationTraitRuntime(dt);
   const speed=(isMortal()?150:(M.cult.mov||150))*areaMoveScale()*(1+run.combo*.005);
   const horizontal=(keys.has('arrowright')||keys.has('d')?1:0)-(keys.has('arrowleft')||keys.has('a')?1:0),vertical=(keys.has('arrowdown')||keys.has('s')?1:0)-(keys.has('arrowup')||keys.has('w')?1:0);
   if(horizontal||vertical){P.target=null;const norm=Math.hypot(horizontal,vertical)||1;P.x+=horizontal/norm*speed*dt;P.y+=vertical/norm*speed*dt;P.tx=P.x;P.ty=P.y}else moveToward(P,P.tx,P.ty,speed,dt);P.x=clamp(P.x,11,W-11);P.y=clamp(P.y,11,H-11);
@@ -1299,7 +1581,7 @@ function update(dt){
   if(vein&&vein.stock>0&&distance(P,vein)<vein.r+P.r+10){vein.progress+=dt;const r3=rank('res3');if(r3>=3&&vein.waveStage<1&&vein.progress>=1){vein.waveStage=1;for(let i=0;i<2;i++){const a=Math.random()*6.28,p={x:vein.x+Math.cos(a)*130,y:vein.y+Math.sin(a)*130};actor(i?'chaser':'guard',{p,homeX:p.x,homeY:p.y})}}if(r3>=3&&vein.waveStage<2&&vein.progress>=2){vein.waveStage=2;for(let i=0;i<2+(r3>=5?2:0);i++){const a=Math.random()*6.28,p={x:vein.x+Math.cos(a)*(130+Math.random()*40),y:vein.y+Math.sin(a)*(130+Math.random()*40)};actor(i%2?'attacker':'chaser',{p,homeX:p.x,homeY:p.y})}}if(vein.progress>=3){const mined=vein.stock,x=vein.x,y=vein.y,doneVein=vein;run.mined+=mined;gainStone(mined,x,y);pop(x,y-34,'영맥 채굴 완료','#b8d7ef',1.1);if(P.target===doneVein)P.target=null;vein=null}}
   const strikeSet=attackStrikeSet();
   for(const enemy of enemies){
-    enemy.cd=Math.max(0,enemy.cd-dt);
+    enemy.cd=Math.max(0,enemy.cd-dt);refreshCombatStatuses(enemy);
     if(foundationContent()?.updateEnemy?.(enemy,dt,foundationApi()))continue;
     if(enemy.type==='attacker'&&enemy.windup>0){enemy.windup-=dt;if(enemy.windup<=0&&enemy.pendingStrike){enemy.pendingStrike=0;if(distance(enemy,P)<P.r+enemy.r+16){let dmg=(enemy.attack||beastConfig().hit)*incomingDamageScale();if(enemies.some(o=>o!==enemy&&o.rareTrait==='howl'&&o.hp>0&&distance(o,enemy)<130))dmg*=1.15;if(P.hitGrace>0&&M.trainingNodes?.q6_spirit)dmg*=M.trainingNodes?.q9_harmony ? .90 : .92;dmg=Math.ceil(dmg);takePlayerDamage(dmg,true,'attacker');ring(P.x,P.y,P.r+9,'#c96893',.20)}}}
     if(enemy.type==='spirit'){const d=distance(enemy,P);if(d<40){enemy.bond+=dt;if(enemy.bond>1.3){const ai=areaIndex(),grade=Math.min(2,ai),bonus=ai>=3?(Math.random()<.35?1:0):ai>=2?(Math.random()<.25?1:0):0,reward=8+Math.floor(Math.random()*5)+bonus;gainHerb(reward,grade,enemy.x,enemy.y);pop(enemy.x,enemy.y-28,bonus?'영수 포획 · 기연 보너스!':'영수 포획 성공','#79ded6',1);enemy.hp=0}}else enemy.bond=Math.max(0,enemy.bond-dt*.3);if(rank('fate3')>=3&&d<130){const dx=enemy.x-P.x,dy=enemy.y-P.y,n=Math.hypot(dx,dy)||1;enemy.vx=dx/n*enemy.speed;enemy.vy=dy/n*enemy.speed}enemy.x=clamp(enemy.x+enemy.vx*dt,18,W-18);enemy.y=clamp(enemy.y+enemy.vy*dt,18,H-18);continue}
