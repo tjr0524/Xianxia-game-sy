@@ -398,7 +398,7 @@ function swordHit(enemy,baseDamage,scale=1,source='sword',meta={},from=P){
     enemy._swordMarkCount=(enemy._swordMarkCount||0)+1;
     if(enemy._swordMarkCount>=3){enemy._swordMarkCount=0;enemy._swordMarkPrimed=1}
   }
-  slash(from.x,from.y,enemy.x,enemy.y,source==='sword'?'#eef6ff':'#c9efff');
+  emitProjectileVisual('sword',from,enemy,{duration:.11,color:source==='sword'?'#eef6ff':'#c9efff'});
   return dealt;
 }
 function swordTraitMeta(parent,traitId,source){
@@ -748,7 +748,7 @@ function dealEnemyDamage(enemy,amount,source='unknown',triggerMeta=null){
     run.skillDamage[source]=(run.skillDamage[source]||0)+effective;
     run.visualDamageSeq=(run.visualDamageSeq||0)+1;
     run.visualDamage??=[];
-    const directBeam=family==='basic'||family==='sword';
+    const directBeam=family==='basic';
     run.visualDamage.push({
       seq:run.visualDamageSeq,targetId:enemy.id??null,x:enemy.x,y:enemy.y,
       amount:effective,source:String(source||''),family,beam:directBeam?1:0,
@@ -1597,7 +1597,7 @@ function begin(){
     lastDamageAt:-999,regenPulse:0,damageTaken:0,lastDamageSource:'',damageBySource:{},
     skillDamage:{basic:0,sword:0,wave:0,chain:0,thunder:0,array:0},
     skillCasts:{basic:0,sword:0,wave:0,chain:0,thunder:0,array:0},
-    skillCooldowns:Object.fromEntries(SKILLS.map(skill=>[skill.id,0])),scheduledHits:[],visualCastSeq:0,visualCasts:[],visualDamageSeq:0,visualDamage:[],
+    skillCooldowns:Object.fromEntries(SKILLS.map(skill=>[skill.id,0])),scheduledHits:[],visualCastSeq:0,visualCasts:[],visualProjectileSeq:0,visualProjectiles:[],visualDamageSeq:0,visualDamage:[],
     triggers:{counts:{},blocked:{depth:0,recursion:0},icd:{},last:null},triggeredCasts:{},traitRuntime:{waveAfter:[],arrayMini:[],arrayDashUntil:0,arrayZone:null,cloudTimer:4,swordLineHits:0},performanceDrops:{scheduledHits:0,fx:0}
   };
   run.limit=foundationContent()?.runLimit?.(M.area,M.realm)||RUN_TIME;
@@ -1694,6 +1694,17 @@ function emitSkillVisual(id,x,y,{r=0,duration=.64,kind='burst'}={}){
   run.visualCasts.push({seq:run.visualCastSeq,id,x,y,r,duration,kind,at:elapsed});
   if(run.visualCasts.length>32)run.visualCasts.splice(0,run.visualCasts.length-32);
 }
+function emitProjectileVisual(id,from,to,{delay=0,duration=.12,color=''}={}){
+  if(!run||!from||!to)return;
+  run.visualProjectileSeq=(run.visualProjectileSeq||0)+1;
+  run.visualProjectiles??=[];
+  run.visualProjectiles.push({
+    seq:run.visualProjectileSeq,id,
+    fromX:+from.x||0,fromY:+from.y||0,toX:+to.x||0,toY:+to.y||0,
+    duration:Math.max(.06,+duration||.12),color,at:elapsed+Math.max(0,+delay||0)
+  });
+  if(run.visualProjectiles.length>64)run.visualProjectiles.splice(0,run.visualProjectiles.length-64);
+}
 function cast(skill,options={}){
   const st=skillState(skill.id),r=skillRank(skill.id),rr=skillRangeRank(skill.id),b=BAL.skill[skill.id];if(!st.u||!r||!b)return false;
   const sr=r,B=basicDamage(),powerScale=options.powerScale===undefined?1:Math.max(0,+options.powerScale||0),source=options.source||skill.id,meta=copyTriggerMeta(options.triggerMeta||{}),damage=B*b.mult[r]*powerScale;
@@ -1749,29 +1760,37 @@ function cast(skill,options={}){
   }
   if(skill.id==='chain'){
     const candidates=enemies.filter(e=>e.type!=='spirit'&&e.hp>0),jump=b.jump[sr],acquire=b.acquire[sr],t1=selectedFormationTrait('chain',1);
-    let limit=b.count[sr]+(t1==='spread'?2:0),current=P,used=new Set(),hits=0,first=null,last=null,killExtra=0;
-    const scale=t1==='spread'?.75:1;
+    let limit=b.count[sr]+(t1==='spread'?2:0),current=P,used=new Set(),hits=0,first=null,last=null,killExtra=0,step=0;
+    const scale=t1==='spread'?.75:1,linkDelay=.14,flight=.10;
+    const queue=(target,hitScale,hitSource=source,hitMeta=meta,color='#c6d6ff')=>{
+      const hitAt=.08+step*linkDelay,from={x:current.x,y:current.y};
+      scheduleDirectHit({t:hitAt,target,damage:damage*hitScale,source:hitSource,family:'chain',meta:hitMeta,color});
+      emitProjectileVisual('chain',from,target,{delay:Math.max(0,hitAt-flight),duration:flight,color});
+      current=target;last=target;hits++;step++;
+      return hitAt;
+    };
     for(let i=0;i<limit;i++){
       let target=null,near=Infinity;
       if(i===0&&options.startTarget&&options.startTarget.hp>0&&distance(current,options.startTarget)<acquire){target=options.startTarget}
       if(!target)for(const e of candidates){if(used.has(e)||e.hp<=0)continue;const d=distance(current,e),allowed=i===0?acquire:jump;if(d<allowed&&d<near){near=d;target=e}}
       if(!target)break;
-      const before=target.hp;dealEnemyDamage(target,damage*scale,source,meta);slash(current.x,current.y,target.x,target.y,'#c6d6ff');
-      if(!first)first=target;last=target;used.add(target);current=target;hits++;
-      if(hasFormationTrait('chain','ghost')&&hits<=4)scheduleDirectHit({t:.6,target,damage:damage*.20,source:'chain:ghost',family:'chain',meta:systemTraitMeta(meta,'chain','ghost','chain:ghost'),color:'#c6d6ff'});
-      if(hasFormationTrait('chain','endless')&&before>0&&target.hp<=0&&killExtra<4){killExtra++;limit++}
+      const predictedLethal=target.hp<=damage*scale;
+      const hitAt=queue(target,scale);
+      if(!first)first=target;used.add(target);
+      if(hasFormationTrait('chain','ghost')&&hits<=4)scheduleDirectHit({t:hitAt+.60,target,damage:damage*.20,source:'chain:ghost',family:'chain',meta:systemTraitMeta(meta,'chain','ghost','chain:ghost'),color:'#c6d6ff'});
+      if(hasFormationTrait('chain','endless')&&predictedLethal&&killExtra<4){killExtra++;limit++}
     }
     if(t1==='boss'){
       const strong=candidates.filter(e=>e.hp>0&&distance(current,e)<jump*1.35).sort((a,b)=>enemyStrengthScore(b)-enemyStrengthScore(a))[0]||first;
-      if(strong&&strong.hp>0)for(let re=1;re<=3;re++){dealEnemyDamage(strong,damage*(1+.15*re),source,meta);slash(current.x,current.y,strong.x,strong.y,'#c6d6ff');current=strong;last=strong;hits++;if(strong.hp<=0)break}
+      if(strong&&strong.hp>0)for(let re=1;re<=3;re++)queue(strong,1+.15*re);
     }
-    if(t1==='back'&&first&&first.hp>0){dealEnemyDamage(first,damage*.50,source,meta);slash(current.x,current.y,first.x,first.y,'#dce5ff');last=first;hits++}
-    if(last&&hasFormationTrait('chain','seal'))last._chainSealUntil=elapsed+5;
+    if(t1==='back'&&first&&first.hp>0)queue(first,.50,source,meta,'#dce5ff');
+    if(last&&hasFormationTrait('chain','seal'))last._chainSealUntil=elapsed+5+step*linkDelay;
     if(!hits)return false;
-    if(last)emitSkillVisual('chain',last.x,last.y,{r:24,duration:.62});
+    if(last)emitSkillVisual('chain',last.x,last.y,{r:24,duration:.62+step*linkDelay});
     const result=done({target:last,hits});
     if(!options.triggered&&hasFormationTrait('chain','burst')&&(run.foundation?.arts?.burstTime||0)>0){
-      for(let i=0;i<2;i++)cast(skill,{powerScale:.55,triggered:true,source:'chain:burst',triggerMeta:systemTraitMeta(meta,'chain','burst','chain:burst')});
+      for(let i=0;i<2;i++)setTimeout(()=>{if(phase==='run')cast(skill,{powerScale:.55,triggered:true,source:'chain:burst',triggerMeta:systemTraitMeta(meta,'chain','burst','chain:burst')})},Math.round((.18+i*.16)*1000));
     }
     return result;
   }
@@ -1784,11 +1803,19 @@ function cast(skill,options={}){
       radius*=1.20;for(let i=0;i<pulses;i++)scheduleAreaHit({t:.05+i*interval,x:target.x,y:target.y,r:radius,damage:base*.20,source:'thunder:field',family:'thunder',meta,color:'#d7c8ff'});
       fieldFx(target.x,target.y,radius,'#d7c8ff',duration+.08);emitSkillVisual('thunder',target.x,target.y,{r:radius,duration,kind:'field'});return done({target,hits:1});
     }
-    const initialScale=t1==='chain'?.80:1;
-    for(const e of enemies){if(e.type!=='spirit'&&e.hp>0&&distance(target,e)<radius){if(thunderDamage(e,base*initialScale,source,meta,target)>0)hits++}}
     if(t1==='chain'){
-      let current=target,used=new Set([target.id]);
-      for(let i=0;i<3;i++){const next=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&!used.has(e.id)).sort((a,b)=>distance(current,a)-distance(current,b))[0];if(!next)break;thunderDamage(next,base*.70,'thunder:chain',meta,current);slash(current.x,current.y,next.x,next.y,'#d7c8ff');used.add(next.id);current=next;hits++}
+      let current=target,used=new Set([target.id]),step=0;
+      scheduleDirectHit({t:.05,target,damage:base*.80,source,family:'thunder',meta,color:'#d7c8ff'});
+      emitProjectileVisual('thunder',P,target,{delay:0,duration:.09,color:'#d7c8ff'});hits++;
+      for(let i=0;i<3;i++){
+        const next=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&!used.has(e.id)).sort((a,b)=>distance(current,a)-distance(current,b))[0];if(!next)break;
+        const hitAt=.20+step*.16;
+        scheduleDirectHit({t:hitAt,target:next,damage:base*.70,source:'thunder:chain',family:'thunder',meta,color:'#d7c8ff'});
+        emitProjectileVisual('thunder',current,next,{delay:hitAt-.09,duration:.09,color:'#d7c8ff'});
+        used.add(next.id);current=next;hits++;step++;
+      }
+    }else{
+      for(const e of enemies){if(e.type!=='spirit'&&e.hp>0&&distance(target,e)<radius){if(thunderDamage(e,base,source,meta,target)>0)hits++}}
     }
     if(!hits)return false;pop(target.x,target.y,'낙뢰 ×'+hits,'#d7c8ff');ring(target.x,target.y,radius,'#d7c8ff',.4);emitSkillVisual('thunder',target.x,target.y,{r:radius,duration:.64});return done({target,hits});
   }
