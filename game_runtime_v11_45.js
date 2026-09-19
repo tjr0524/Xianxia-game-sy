@@ -1067,7 +1067,7 @@ function update(dt){
   }
   enemies=enemies.filter(e=>{if((e.type==='rogue'||e.type==='rat')&&(e.x<-10||e.x>W+10))return false;if(e.hp<=0){if(e.type!=='spirit')reward(e);return false}return true});
   if(!isMortal()&&P.cd<=0){const range=basicAttackRange(),targets=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&distance(P,e)<range).sort((a,b)=>distance(P,a)-distance(P,b)).slice(0,basicAttackTargets());if(targets.length){const dmg=basicDamage()*combatPower(),scales=[1,.62,.48,.36];targets.forEach((target,i)=>{dealEnemyDamage(target,dmg*(scales[i]||.32),'basic');slash(P.x,P.y,target.x,target.y,i?'#e8d6a5':'#f7e5ad')});run.skillCasts.basic=(run.skillCasts.basic||0)+1;P.cd=basicInterval()}}
-  for(const skill of SKILLS){const st=skillState(skill.id);if(!st.u)continue;if(run.skillCooldowns[skill.id]<=0&&cast(skill)){run.skillCasts[skill.id]=(run.skillCasts[skill.id]||0)+1;run.skillCooldowns[skill.id]=skillCooldown(skill.id)}
+  for(const skill of SKILLS){const st=skillState(skill.id);if(!st.u)continue;if(run.skillCooldowns[skill.id]<=0&&cast(skill)){run.skillCasts[skill.id]=(run.skillCasts[skill.id]||0)+1;run.skillCooldowns[skill.id]=skillCooldown(skill.id)}}
   updateHazards(dt);updateNonCombatRecovery(dt);if(P.hp<=0){P.hp=0;finish('dead');return}syncHud();
 }
 
