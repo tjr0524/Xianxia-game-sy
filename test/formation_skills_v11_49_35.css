@@ -1,4 +1,4 @@
-/* 11.49.35 · 팔괘 진반 법술/전투기법 UI */
+/* 11.49.36 · 팔괘 진반 법술/전투기법 UI · zoom/pan + lock reasons */
 .v25-theme [data-panel="skills"]{padding:5px!important}
 .v25-theme [data-panel="skills"]>.section{
   padding:5px!important;margin:0!important;border:0!important;
@@ -10,7 +10,8 @@
 .fs49-topline{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:3px 5px 5px}
 .fs49-topline>span{font:800 12px/1.1 var(--v25-serif,serif);letter-spacing:.08em}
 .fs49-topline>small{font-size:6.8px;color:#7b817b;text-align:right}
-.fs49-board{position:relative;width:min(100%,460px);aspect-ratio:1;margin:0 auto;overflow:visible;isolation:isolate}
+.fs49-viewport{position:relative;width:min(100%,460px);aspect-ratio:1;margin:0 auto;overflow:hidden;isolation:isolate;border-radius:8px;touch-action:none}
+.fs49-board{position:absolute;inset:0;width:100%;height:100%;margin:0;overflow:visible;isolation:isolate;transform-origin:50% 50%;will-change:transform}
 .fs49-lines{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
 .fs49-lines polygon{fill:none;stroke:#6e776e66;stroke-width:3}
 .fs49-lines .tier1{stroke:#71857972}.fs49-lines .tier2{stroke:#7d795f70}.fs49-lines .tier3{stroke:#796b4c70}
@@ -113,3 +114,13 @@
   .fs49-trait.selected{width:19px;height:19px}
   .fs49-detail{min-height:102px;padding:7px}
 }
+
+.fs49-zoom-controls{position:absolute;right:6px;bottom:6px;z-index:15;display:flex;align-items:center;gap:3px;padding:3px;border:1px solid #7d735a55;border-radius:9px;background:#f4eddfdd;box-shadow:0 2px 8px #29342e24;backdrop-filter:blur(4px)}
+.fs49-zoom-controls button{display:grid;place-items:center;min-width:28px;height:28px;margin:0;padding:0;border:1px solid #81775f55;border-radius:6px;background:#f8f2e6e8;color:#3f5149;font:800 15px/1 sans-serif}
+.fs49-zoom-controls .fit{min-width:42px;height:28px;font-size:7px;line-height:1.05}
+.fs49-zoom-controls .fit span,.fs49-zoom-controls .fit small{display:block;font-size:6px;line-height:1.05}
+.fs49-zoom-controls .fit small{color:#827963;font-weight:700}
+.fs49-viewport.zoomed{cursor:grab}
+.fs49-viewport.zoomed:active{cursor:grabbing}
+.fs49-lock-reason{display:block!important;margin-top:3px;padding:3px 5px;border-left:2px solid #a37b38;background:#b9954620;color:#725d35!important;font-size:6.8px!important;line-height:1.35!important}
+.fs49-lock-reason b{color:#775626}
