@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.50.4';
+const VERSION='11.50.9';
 if(window.__xianxiaFoundationContent?.version===VERSION)return;
 
 const TYPES=new Set(['charging_boar','ranged_toad','exploding_beetle','command_ape','shield_pangolin','sword_sentinel','formation_warden','foundation_guardian','taixu_boss']);
@@ -23,7 +23,10 @@ const TYPE_SPEC={
   taixu_boss:{name:'태허진령',hp:12.0,atk:.90,speed:.72,r:36,reward:10,boss:1}
 };
 const ART={
-  shield:{hp:[0,.22,.24,.40,.54,.60],cd:[0,12,11.5,11,10,9.5]},
+  shield:{
+    layers:[0,1,1,2,3,3],perLayer:[0,.22,.24,.20,.18,.20],regen:[0,12,11.5,11,10,9.5],
+    breakSpeed:[0,0,.20,.25,.35,.40],breakDuration:[0,0,1.2,1.5,2.0,2.2]
+  },
   dash:{distance:[0,80,95,105,110,120],charges:[0,1,1,1,2,2],recharge:[0,5,4.5,4,6,5]},
   burst:{duration:[0,1,1.5,2.5,3.5,5],cd:[0,70,50,36,30,24],rate:[0,6,6,6.2,6.3,6.5]}
 };
@@ -53,6 +56,60 @@ function ensureControls(){
 }
 
 function artState(api){return api.run?.foundation?.arts}
+function shieldProfile(api){
+  const r=rank(api,'shield');
+  return {rank:r,count:ART.shield.layers[r]||0,perLayer:ART.shield.perLayer[r]||0,regen:ART.shield.regen[r]||0,breakSpeed:ART.shield.breakSpeed[r]||0,breakDuration:ART.shield.breakDuration[r]||0};
+}
+function shieldRegenSeconds(api){
+  const p=shieldProfile(api);let seconds=p.regen;
+  if(trait(api,'shield','unyield'))seconds*=1.10;
+  if(trait(api,'shield','reverse'))seconds/=1.15;
+  return seconds;
+}
+function makeShieldLayers(api){
+  const p=shieldProfile(api),mul=trait(api,'shield','unyield')?1.25:1,max=api.player.max*p.perLayer*mul;
+  return Array.from({length:p.count},(_,index)=>({index,hp:max,max,regen:0}));
+}
+function syncShieldTotals(arts){
+  const layers=arts?.shieldLayers||[];
+  arts.shieldHp=layers.reduce((sum,layer)=>sum+Math.max(0,layer.hp||0),0);
+  arts.shieldMax=layers.reduce((sum,layer)=>sum+Math.max(0,layer.max||0),0);
+  const timers=layers.filter(layer=>(layer.hp||0)<=0&&(layer.regen||0)>0).map(layer=>layer.regen);
+  arts.shieldCd=timers.length?Math.min(...timers):0;
+}
+function ensureShieldLayers(api){
+  const arts=artState(api);if(!arts)return [];
+  const p=shieldProfile(api);
+  if(!Array.isArray(arts.shieldLayers)||arts.shieldLayers.length!==p.count){
+    arts.shieldLayers=makeShieldLayers(api);syncShieldTotals(arts);
+  }
+  return arts.shieldLayers;
+}
+function advanceOldestShieldRegen(api,seconds){
+  const arts=artState(api),layers=ensureShieldLayers(api),broken=layers.filter(layer=>layer.hp<=0&&layer.regen>0).sort((a,b)=>a.regen-b.regen);
+  if(!broken.length)return false;
+  broken[0].regen=Math.max(0,broken[0].regen-Math.max(0,seconds||0));syncShieldTotals(arts);return true;
+}
+function maxDashCharges(api){
+  const r=rank(api,'dash');return (ART.dash.charges[r]||0)+(trait(api,'dash','step')?1:0);
+}
+function dashRechargeSeconds(api){
+  const r=rank(api,'dash');let seconds=ART.dash.recharge[r]||99;
+  if(trait(api,'dash','flow'))seconds/=1.10;
+  if(trait(api,'dash','step'))seconds*=1.25;
+  if(trait(api,'dash','long'))seconds*=.85;
+  if((artState(api)?.burstTime||0)>0&&trait(api,'burst','heaven'))seconds/=2.5;
+  return seconds;
+}
+function dangerAt(api,point){
+  for(const h of api.hazards||[]){
+    if(h.struck||!(h.t>0))continue;
+    if(h.kind==='charge_lane'&&Number.isFinite(h.x2)&&Number.isFinite(h.y2)){
+      if(pointSegmentDistance(point,{x:h.x,y:h.y},{x:h.x2,y:h.y2})<(h.r||30))return true;
+    }else if(dist(point,h)<(h.r||0))return true;
+  }
+  return false;
+}
 function activateArt(id){
   const api=window.__xianxiaDebug?.foundationApi?.();
   if(!api||api.phase!=='run')return;
@@ -60,28 +117,40 @@ function activateArt(id){
   if(!arts||!r)return;
   if(id==='dash'&&arts.dashCharges>=1){
     let distance=ART.dash.distance[r];
-    if(trait(api,'dash','flow'))distance*=1.25;if(trait(api,'dash','long'))distance*=1.35;
+    if(trait(api,'dash','flow'))distance*=1.25;
+    if(trait(api,'dash','long'))distance*=1.35;
     let dx=api.player.tx-api.player.x,dy=api.player.ty-api.player.y,n=Math.hypot(dx,dy);
     if(n<2){dx=1;dy=0;n=1}
-    const from={x:api.player.x,y:api.player.y},x=clamp(api.player.x+dx/n*distance,11,api.W-11),y=clamp(api.player.y+dy/n*distance,11,api.H-11);
+    const from={x:api.player.x,y:api.player.y},wasDanger=dangerAt(api,from);
+    const x=clamp(api.player.x+dx/n*distance,11,api.W-11),y=clamp(api.player.y+dy/n*distance,11,api.H-11),to={x,y};
     api.slash(api.player.x,api.player.y,x,y,'#a7efe0');api.player.x=api.player.tx=x;api.player.y=api.player.ty=y;
     arts.dashCharges--;arts.dashRecharge=Math.max(arts.dashRecharge,.01);
-    if(trait(api,'dash','guard'))arts.shieldCd=Math.max(0,arts.shieldCd-2);
+    if(trait(api,'dash','guard'))advanceOldestShieldRegen(api,2);
     if(trait(api,'dash','kill'))arts.dashSpellBoost=1.5;
+    if(trait(api,'dash','escape')&&wasDanger&&!dangerAt(api,to)){
+      arts.dashRecharge+=dashRechargeSeconds(api)*.35;
+      api.pop(x,y-24,'탈진 환급','#b9f5e8',.6);
+    }
     api.ring(x,y,30,'#b4f4e5',.3);
-    api.trigger?.('onDash',{from,to:{x,y},distance:Math.hypot(x-from.x,y-from.y),rank:r},{source:'dash'});
+    api.trigger?.('onDash',{
+      from,to,distance:Math.hypot(x-from.x,y-from.y),rank:r,
+      derivedScale:trait(api,'dash','array')?1.40:1,
+      icdScale:trait(api,'dash','void')?.60:1
+    },{source:'dash'});
   }
   if(id==='burst'&&arts.burstCd<=0){
     let duration=ART.burst.duration[r],cooldown=ART.burst.cd[r];
     if(trait(api,'burst','peak'))duration*=.75;
-    if(trait(api,'burst','cycle')){duration*=1.4;cooldown*=.85}
-    arts.burstTime=duration;arts.burstCd=cooldown;arts.burstKillExtend=0;
+    if(trait(api,'burst','cycle')){duration*=1.40;cooldown*=.85}
+    if(trait(api,'burst','trueburst'))duration*=.70;
+    if(trait(api,'burst','greatcycle')){duration*=1.35;cooldown*=.80}
+    arts.burstTime=duration;arts.burstCd=cooldown;arts.burstKillExtend=0;arts.burstGuardExtend=0;arts.burstWarExtend=0;
+    arts.trueburstTime=trait(api,'burst','trueburst')?Math.min(1.5,duration):0;
     api.ring(api.player.x,api.player.y,64,'#ffe09a',.6);api.pop(api.player.x,api.player.y-34,'진기폭주','#fff0b8',1);
     api.trigger?.('onBurstStart',{rank:r,duration,cooldown},{source:'burst'});
   }
   updateControls(api);
 }
-
 function updateControls(api){
   const root=ensureControls();if(!root)return;
   const active=api.phase==='run'&&api.state.realm?.major>=1;
@@ -122,8 +191,12 @@ function spawnType(area,realm,fallback){
 
 function spawnAt(api,type,x,y){return api.spawn(type,{p:{x:clamp(x,70,api.W-70),y:clamp(y,70,api.H-70)},homeX:x,homeY:y,packLeader:true,grade:'normal'})}
 function onBegin(api){
-  const sr=rank(api,'shield');let shieldMax=sr?api.player.max*ART.shield.hp[sr]:0;if(sr&&trait(api,'shield','unyield'))shieldMax*=1.25;
-  api.run.foundation={bossKilled:0,arts:{shieldHp:shieldMax,shieldMax,shieldCd:0,dashCharges:ART.dash.charges[rank(api,'dash')]||0,dashRecharge:0,burstCd:0,burstTime:0,burstKillExtend:0,dashSpellBoost:0},bossSpawned:0};
+  api.run.foundation={bossKilled:0,arts:{
+    shieldLayers:[],shieldHp:0,shieldMax:0,shieldCd:0,moveBuffPct:0,moveBuffUntil:0,slowImmuneUntil:0,dotReduceUntil:0,
+    dashCharges:maxDashCharges(api),dashRecharge:0,dashSpellBoost:0,
+    burstCd:0,burstTime:0,trueburstTime:0,burstKillExtend:0,burstGuardExtend:0,burstWarExtend:0
+  },bossSpawned:0};
+  const arts=artState(api);arts.shieldLayers=makeShieldLayers(api);syncShieldTotals(arts);
   if(api.state.area==='foundation_trial')spawnAt(api,'foundation_guardian',api.W*.5,api.H*.34);
   if(api.state.area==='taixu'&&api.state.realm?.major===1&&api.state.realm.stage>=9)spawnAt(api,'taixu_boss',api.W*.5,api.H*.32);
   updateControls(api);
@@ -131,17 +204,35 @@ function onBegin(api){
 
 function updateRun(dt,api){
   const arts=artState(api);if(!arts)return;
-  arts.shieldCd=Math.max(0,arts.shieldCd-dt);arts.burstCd=Math.max(0,arts.burstCd-dt);arts.burstTime=Math.max(0,arts.burstTime-dt);arts.dashSpellBoost=Math.max(0,arts.dashSpellBoost-dt);
-  const sr=rank(api,'shield');if(sr&&arts.shieldHp<=0&&arts.shieldCd<=0){let hp=api.player.max*ART.shield.hp[sr];if(trait(api,'shield','unyield'))hp*=1.25;arts.shieldHp=arts.shieldMax=hp;api.ring(api.player.x,api.player.y,38,'#8cd6c2',.35);api.pop(api.player.x,api.player.y-28,'호체 재생','#c8fff0',.65)}
-  const dr=rank(api,'dash'),maxCharges=(ART.dash.charges[dr]||0)+(trait(api,'dash','step')?1:0);
-  let recharge=ART.dash.recharge[dr]||99;if(trait(api,'dash','flow'))recharge/=1.10;if(trait(api,'dash','step'))recharge*=1.25;if(trait(api,'dash','long'))recharge*=.85;if(arts.burstTime>0&&trait(api,'burst','heaven'))recharge/=2.5;
-  if(arts.dashCharges<maxCharges){arts.dashRecharge+=dt;if(arts.dashRecharge>=recharge){arts.dashRecharge=0;arts.dashCharges++}}else arts.dashRecharge=0;
-  let rate=1;if(arts.burstTime>0){rate=ART.burst.rate[rank(api,'burst')]||1;if(trait(api,'burst','peak'))rate*=1.4;if(trait(api,'burst','cycle'))rate*=.8}
+  arts.burstCd=Math.max(0,arts.burstCd-dt);arts.burstTime=Math.max(0,arts.burstTime-dt);arts.trueburstTime=Math.max(0,Math.min(arts.trueburstTime||0,arts.burstTime||0)-dt);arts.dashSpellBoost=Math.max(0,arts.dashSpellBoost-dt);
+  const layers=ensureShieldLayers(api);
+  for(const layer of layers){
+    if(layer.hp>0||!(layer.regen>0))continue;
+    layer.regen=Math.max(0,layer.regen-dt);
+    if(layer.regen<=0){
+      layer.hp=layer.max;
+      api.ring(api.player.x,api.player.y,34,'#8cd6c2',.24);
+      api.pop(api.player.x,api.player.y-26,'호체 +1층','#c8fff0',.55);
+    }
+  }
+  syncShieldTotals(arts);
+  const maxCharges=maxDashCharges(api),recharge=dashRechargeSeconds(api);
+  if(arts.dashCharges<maxCharges){
+    arts.dashRecharge+=dt;
+    while(arts.dashRecharge>=recharge&&arts.dashCharges<maxCharges){arts.dashRecharge-=recharge;arts.dashCharges++}
+  }else arts.dashRecharge=0;
+  let rate=1;
+  if(arts.burstTime>0){
+    rate=ART.burst.rate[rank(api,'burst')]||1;
+    if(trait(api,'burst','peak'))rate*=1.40;
+    if(trait(api,'burst','cycle'))rate*=.80;
+    if(trait(api,'burst','greatcycle'))rate*=.85;
+    if((arts.trueburstTime||0)>0)rate*=1.60;
+  }
   if(arts.dashSpellBoost>0)rate*=1.35;
   if(rate>1)for(const id of Object.keys(api.run.skillCooldowns||{}))api.run.skillCooldowns[id]=Math.max(0,api.run.skillCooldowns[id]-dt*(rate-1));
   updateControls(api);
 }
-
 function pointSegmentDistance(p,a,b){const vx=b.x-a.x,vy=b.y-a.y,wx=p.x-a.x,wy=p.y-a.y,l=vx*vx+vy*vy,t=l?clamp((wx*vx+wy*vy)/l,0,1):0;return Math.hypot(p.x-(a.x+vx*t),p.y-(a.y+vy*t))}
 function addTargetHazard(api,kind,x,y,r,t,damage,source,extra={}){api.addHazard({visualOwner:'foundation',kind,x,y,r,t,ttl:t,struck:0,damage,source,...extra})}
 
@@ -197,7 +288,7 @@ function updateHazards(dt,api){
     h.struck=1;h.t=.24;h.ttl=.24;
     if(h.kind==='charge_lane')continue;
     if(['projectile','formation_bolt','sword_zone','moving_zone','explosion'].includes(h.kind)){
-      if(dist(api.player,h)<h.r)api.damagePlayer(h.damage||35,h.source||h.kind);
+      if(dist(api.player,h)<h.r)api.damagePlayer(h.damage||35,`${h.source||'hazard'}:${h.kind}`);
       if(h.friendlyFire)for(const enemy of api.enemies)if(enemy.id!==h.sourceId&&enemy.hp>0&&dist(enemy,h)<h.r)api.damageEnemy(enemy,(h.damage||35)*1.2,'friendly_explosion');
       api.ring(h.x,h.y,h.r,h.kind==='explosion'?'#f4a06b':'#b9c4ff',.32);
     }
@@ -208,18 +299,79 @@ function modifyEnemyDamage(enemy,amount){
   if(!enemy?.shield)return amount;
   const blocked=Math.min(enemy.shield,amount);enemy.shield-=blocked;return amount-blocked;
 }
+function applyShieldBreakEffects(api,arts,brokenLayers,preBroken,blocked,source){
+  if(!brokenLayers.length)return;
+  const p=shieldProfile(api),t=now(api);
+  let speed=p.breakSpeed,duration=p.breakDuration;
+  if(trait(api,'shield','cloud')){speed+=.15;duration+=.5}
+  if(trait(api,'shield','glide')){speed+=.35;duration=Math.max(duration,2.5);arts.dashRecharge+=1.0}
+  if(speed>0){arts.moveBuffPct=speed;arts.moveBuffUntil=t+duration}
+  if(trait(api,'shield','shadow')){arts.slowImmuneUntil=t+1.2;arts.dotReduceUntil=t+1.2}
+  if(trait(api,'shield','reflux'))for(const id of Object.keys(api.run.skillCooldowns||{}))api.run.skillCooldowns[id]*=.92;
+  if(trait(api,'shield','reverse'))for(const id of Object.keys(api.run.skillCooldowns||{}))api.run.skillCooldowns[id]*=.88;
+  if(trait(api,'shield','renew'))for(const layer of preBroken)layer.regen=Math.max(0,(layer.regen||0)-1.5);
+  if(trait(api,'shield','mana')){
+    const rows=Object.entries(api.run.skillCooldowns||{}),longest=rows.reduce((best,row)=>row[1]>(best?.[1]||-1)?row:best,null);
+    for(const [id,value] of rows)api.run.skillCooldowns[id]=Math.max(0,value*(longest&&id===longest[0]?.75:.92));
+  }
+  syncShieldTotals(arts);
+  api.pop(api.player.x,api.player.y-28,brokenLayers.length>1?`호체 ${brokenLayers.length}층 파괴`:'호체 파괴','#a5e6d7',.8);
+  api.trigger?.('onShieldBreak',{rank:p.rank,layersBroken:brokenLayers.length,blocked,damageSource:source,regen:brokenLayers.map(layer=>layer.regen)},{source:'shield'});
+}
 function modifyPlayerDamage(amount,source,api){
-  const arts=artState(api);if(!arts?.shieldHp)return amount;
-  const blocked=Math.min(arts.shieldHp,amount);arts.shieldHp-=blocked;
-  if(arts.shieldHp<=0){arts.shieldHp=0;let regen=ART.shield.cd[rank(api,'shield')]||0;if(trait(api,'shield','unyield'))regen*=1.10;if(trait(api,'shield','reverse'))regen*=1.15;arts.shieldCd=regen;api.pop(api.player.x,api.player.y-28,'호체 파괴','#a5e6d7',.8);if(trait(api,'shield','reflux'))for(const id of Object.keys(api.run.skillCooldowns||{}))api.run.skillCooldowns[id]*=.92;if(trait(api,'shield','reverse'))for(const id of Object.keys(api.run.skillCooldowns||{}))api.run.skillCooldowns[id]*=.88;api.trigger?.('onShieldBreak',{rank:rank(api,'shield'),blocked,damageSource:source,regen},{source:'shield'})}
-  return amount-blocked;
+  const arts=artState(api);if(!arts)return amount;
+  if((arts.dotReduceUntil||0)>now(api)&&/(dot|zone|field|poison|burn|bleed)/i.test(String(source||'')))amount*=.75;
+  const layers=ensureShieldLayers(api);if(!layers.length)return amount;
+  let remaining=Math.max(0,amount),blocked=0,brokenCount=0;
+  const preBroken=layers.filter(layer=>layer.hp<=0&&layer.regen>0),newlyBroken=[];
+  for(const layer of layers){
+    if(remaining<=0)break;
+    if(layer.hp<=0)continue;
+    const efficiency=trait(api,'shield','diamond')&&brokenCount>=1?1.20:1;
+    const capacity=layer.hp*efficiency;
+    if(remaining>=capacity-1e-9){
+      remaining-=capacity;blocked+=capacity;layer.hp=0;layer.regen=shieldRegenSeconds(api);newlyBroken.push(layer);brokenCount++;
+    }else{
+      layer.hp=Math.max(0,layer.hp-remaining/efficiency);blocked+=remaining;remaining=0;
+    }
+  }
+  syncShieldTotals(arts);
+  if(newlyBroken.length)applyShieldBreakEffects(api,arts,newlyBroken,preBroken,blocked,source);
+  return remaining;
+}
+function playerSpeedMultiplier(api){
+  const arts=artState(api);if(!arts)return 1;
+  return (arts.moveBuffUntil||0)>now(api)?1+Math.max(0,arts.moveBuffPct||0):1;
+}
+function onTrigger(event,payload,ctx,api){
+  const arts=artState(api);if(!arts)return;
+  if(event==='onBurstStart'&&trait(api,'burst','spell')){
+    for(const id of ['sword','wave','chain','thunder','array']){
+      if((api.run.skillCooldowns?.[id]||0)>0)continue;
+      api.castSpell?.(id,{powerScale:.60,triggered:true,source:`burst:spell:${id}`,triggerMeta:ctx.child({originTrait:'burst:spell',source:`burst:spell:${id}`})});
+    }
+  }
+  if(event==='onShieldBreak'&&arts.burstTime>0&&trait(api,'burst','guard')&&arts.burstGuardExtend<1.2){
+    const add=Math.min(.4,1.2-arts.burstGuardExtend);arts.burstTime+=add;arts.burstGuardExtend+=add;
+  }
+  if(event==='onKill'){
+    const special=!!payload?.special;
+    if(special&&trait(api,'dash','reflux')&&arts.dashCharges<maxDashCharges(api))arts.dashRecharge+=1.5;
+    if(special&&trait(api,'burst','kill')){
+      arts.burstCd=Math.max(0,arts.burstCd-2);
+      if(arts.burstTime>0){arts.burstTime+=.3;arts.burstKillExtend+=.3}
+    }
+    if(arts.burstTime>0&&trait(api,'burst','warvein')){
+      let add=0;if(special)add=.5;else if(Math.random()<.20)add=.25;
+      if(add&&arts.burstWarExtend<4){add=Math.min(add,4-arts.burstWarExtend);arts.burstTime+=add;arts.burstWarExtend+=add}
+    }
+  }
 }
 function beforeEnemyDeath(enemy,api){if(enemy.boss)api.run.foundation.bossKilled=1}
 function rewardEnemy(enemy,api){
   if(!TYPES.has(enemy.type))return false;
   const amount=Math.ceil(90*(enemy.rewardMult||1));api.gainStone(amount,enemy.x,enemy.y);
   if(enemy.boss){api.run.elite=1;api.gainHerb(enemy.type==='taixu_boss'?5:3,2,enemy.x+12,enemy.y);api.pop(enemy.x,enemy.y-42,`${enemy.name} 격파`,'#ffe4a0',1.25)}
-  const arts=artState(api),special=TYPES.has(enemy.type);if(arts&&special){if(trait(api,'dash','reflux')&&arts.dashCharges<(ART.dash.charges[rank(api,'dash')]||0)+(trait(api,'dash','step')?1:0))arts.dashRecharge+=1.5;if(trait(api,'burst','kill')){arts.burstCd=Math.max(0,arts.burstCd-2);if(arts.burstTime>0&&arts.burstKillExtend<1.2){const add=Math.min(.3,1.2-arts.burstKillExtend);arts.burstTime+=add;arts.burstKillExtend+=add}}}
   return true;
 }
 function onFinish(reason,api){
@@ -232,7 +384,7 @@ function snapshotEnemy(enemy){return{chargeWindup:enemy.chargeWindup||0,chargeTi
 window.__xianxiaFoundationContent={
   version:VERSION,base:BASE,isCombatType:type=>TYPES.has(type),configureEnemy,spawnType,
   bossOnly:area=>area==='foundation_trial',runLimit:(area,realm)=>area==='foundation_trial'||(area==='taixu'&&realm?.major===1&&realm.stage>=9)?60:['thunder','marsh','taixu'].includes(area)?35:25,
-  onBegin,updateRun,updateEnemy,updateHazards,modifyEnemyDamage,modifyPlayerDamage,beforeEnemyDeath,rewardEnemy,onFinish,snapshotEnemy
+  onBegin,updateRun,updateEnemy,updateHazards,modifyEnemyDamage,modifyPlayerDamage,playerSpeedMultiplier,onTrigger,beforeEnemyDeath,rewardEnemy,onFinish,snapshotEnemy
 };
 })();
 
