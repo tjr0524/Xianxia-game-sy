@@ -81,6 +81,12 @@ const TREE={
     {id:'storm1',n:'뢰흔 개방',d:'R1 6.0초 단발 · R2 5.2초 · R3 2연속(0.22초) · R4 집중 낙뢰 · R5 이동 위험구역',tier:1,c:{s:1,h:0}},
     {id:'storm2',n:'천뢰 예지',d:'낙뢰 전조와 연쇄 방향 정보를 강화한다.',tier:2,p:'storm1',c:{s:1,h:0}},
     {id:'storm3',n:'뇌정 응축',d:'R1 회피 시 상급 영초 기회 · R3 추가 낙뢰 패턴 · R5 고확률 복합 낙뢰',tier:3,p:'storm2',c:{s:1,h:0}}
+  ],
+  miasma:[
+    {id:'miasma1',n:'요기',d:'R1 폭발형 가중 · R2 폭발 2체 혼합/영역 중첩 제한 · R3 폭발+호령 · R4 수호막 포함 조합 · R5 3종 정예 특수팩',tier:1,c:{s:1,h:0}}
+  ],
+  formation:[
+    {id:'formation1',n:'진법',d:'R1 장판형 가중 · R2 장판 위치/예고 다양화 · R3 진법 결절+이동 진법 · R4 복합 진법+팩전 · R5 태허진령 고위 진법 종합전',tier:1,c:{s:1,h:0}}
   ]
 };
 
@@ -106,8 +112,19 @@ const BAL={
     blood:{hp:380,hit:95,period:1.10,chaserSpeed:150,total:5,sim:3},
     foundation_trial:{hp:380,hit:95,period:1.10,chaserSpeed:150,total:1,sim:1},
     thunder:{hp:1300,hit:300,period:1.00,chaserSpeed:190,total:6,sim:3},
-    marsh:{hp:380,hit:95,period:1.10,chaserSpeed:150,total:5,sim:3},
-    taixu:{hp:380,hit:95,period:1.10,chaserSpeed:150,total:5,sim:3}
+    marsh:{hp:2229,hit:442,period:1.00,chaserSpeed:207,total:6,sim:3},
+    taixu:{hp:3962,hit:659,period:1.00,chaserSpeed:224,total:6,sim:3}
+  },
+  foundationCurve:{
+    1:{playerHp:760,dps:420,enemyHp:1300,enemyHit:300,enemySpeed:190},
+    2:{playerHp:860,dps:500,enemyHp:1548,enemyHit:339,enemySpeed:196},
+    3:{playerHp:980,dps:595,enemyHp:1842,enemyHit:387,enemySpeed:201},
+    4:{playerHp:1120,dps:720,enemyHp:2229,enemyHit:442,enemySpeed:207},
+    5:{playerHp:1280,dps:870,enemyHp:2693,enemyHit:505,enemySpeed:213},
+    6:{playerHp:1460,dps:1050,enemyHp:3250,enemyHit:576,enemySpeed:218},
+    7:{playerHp:1670,dps:1280,enemyHp:3962,enemyHit:659,enemySpeed:224},
+    8:{playerHp:1910,dps:1560,enemyHp:4829,enemyHit:754,enemySpeed:230},
+    9:{playerHp:2190,dps:1900,enemyHp:5881,enemyHit:864,enemySpeed:235}
   },
   ecoTotal:[1,1.15,1.30,1.50,1.75,2.00],
   ecoSim:[0,0,1,1,2,3],
@@ -638,9 +655,35 @@ function updateFormationTraitRuntime(dt){
     }
   }
 }
-function beastConfig(){return BAL.enemy[M.area]||BAL.enemy.qingyun}
+function foundationStageForArea(area=M.area){
+  if((M.realm?.major??-1)<1)return 0;
+  const stage=clamp(M.realm.stage||1,1,9);
+  if(area==='thunder')return clamp(stage,1,3);
+  if(area==='marsh')return clamp(stage,4,6);
+  if(area==='taixu')return clamp(stage,7,9);
+  return 0;
+}
+function foundationTarget(area=M.area){
+  const stage=foundationStageForArea(area);
+  return BAL.foundationCurve[stage]||null;
+}
+function beastConfig(){
+  const base=BAL.enemy[M.area]||BAL.enemy.qingyun,target=foundationTarget();
+  return target?{...base,hp:target.enemyHp,hit:target.enemyHit,chaserSpeed:target.enemySpeed}:base;
+}
+function uniqueAreaRank(area=M.area){
+  if(area==='marsh')return rank('miasma1',area);
+  if(area==='taixu')return rank('formation1',area);
+  return 0;
+}
+function uniqueRewardMultiplier(area=M.area){
+  const r=uniqueAreaRank(area);
+  if(area==='marsh')return 1+([0,.05,.09,.14,.21,.30][r]||0);
+  if(area==='taixu')return 1+([0,.06,.10,.16,.24,.34][r]||0);
+  return 1;
+}
 function playerProgressTier(){return M.realm.major>0?9+(M.realm.stage||1):(M.realm.stage||1)}
-function areaBaseTier(){return({qingyun:1,blackwind:3,blood:6,foundation_trial:9,thunder:10,marsh:11,taixu:16}[M.area]||1)}
+function areaBaseTier(){return({qingyun:1,blackwind:3,blood:6,foundation_trial:9,thunder:10,marsh:13,taixu:16}[M.area]||1)}
 function areaOverlevelGap(){return Math.max(0,playerProgressTier()-areaBaseTier())}
 function incomingDamageScale(){const slots=Math.max(1,({qingyun:2,blackwind:3,blood:3,foundation_trial:1,thunder:3,marsh:3,taixu:3}[M.area]||3));const multi=1/(1+.25*(slots-1));const over=Math.pow(.85,areaOverlevelGap());return multi*over}
 function takePlayerDamage(dmg,grantGrace=false,source='enemy'){
@@ -717,6 +760,8 @@ function branches(id=M.area){
   if(id==='blackwind')return ['eco','fate'];
   if(id==='blood')return ['eco','fate','res'];
   if(id==='thunder')return ['eco','fate','res','storm'];
+  if(id==='marsh')return ['eco','miasma'];
+  if(id==='taixu')return ['eco','formation'];
   return [];
 }
 
@@ -724,7 +769,10 @@ function branchOf(id){
   if(id.startsWith('eco'))return 'eco';
   if(id.startsWith('fate'))return 'fate';
   if(id.startsWith('res'))return 'res';
-  return 'storm';
+  if(id.startsWith('storm'))return 'storm';
+  if(id.startsWith('miasma'))return 'miasma';
+  if(id.startsWith('formation'))return 'formation';
+  return '';
 }
 
 function allowedNode(id,area=M.area){return branches(area).includes(branchOf(id))}
@@ -1325,7 +1373,7 @@ function actor(type,options={}){
 function spawnBeast(point=null,options={}){
   const mix={qingyun:[['basic',.55],['guard',.25],['chaser',.20],['attacker',0]],blackwind:[['basic',.25],['guard',.25],['chaser',.35],['attacker',.15]],blood:[['basic',.15],['guard',.30],['chaser',.25],['attacker',.30]],thunder:[['basic',.10],['guard',.20],['chaser',.35],['attacker',.35]]}[M.area]||[['basic',1]];
   let u=Math.random(),type=mix[mix.length-1][0];for(const [t,p] of mix){if(u<p){type=t;break}u-=p}
-  type=foundationContent()?.spawnType?.(M.area,M.realm,type,foundationApi())||type;
+  type=foundationContent()?.spawnType?.(M.area,M.realm,type,foundationApi(),options)||type;
   const p=point||edgePoint();return actor(type,{...options,p,homeX:options.homeX??p.x,homeY:options.homeY??p.y});
 }
 function encounterConfig(){return BAL.encounter}
@@ -1335,7 +1383,7 @@ function encounterPackCount(){const e=encounterConfig(),r=encounterRank();return
 function encounterPackSize(){const e=encounterConfig(),r=Math.max(0,Math.min(5,rank('eco2'))),v=e.packSize[r]||e.packSize[0],lo=v[0],hi=v[1];return lo+Math.floor(Math.random()*(hi-lo+1))}
 function encounterLiveCap(){const e=encounterConfig(),r=encounterRank();return e.liveCaps[M.area]?.[r]??8}
 function attackSlotCap(){return encounterConfig().attackSlots[M.area]||3}
-function encounterLiveCount(){let n=0;for(const e of enemies)if(encounterBeast(e))n++;return n}
+function encounterLiveCount(){let n=0;for(const e of enemies)if(encounterBeast(e)&&!e.environmentObjective)n++;return n}
 function encounterPoint(existing,starterIndex=-1,starterCount=0){
   const e=encounterConfig(),r=encounterRank();
   if(starterIndex>=0){const base=Math.random()*Math.PI*2,angle=base+starterIndex*Math.PI*2/Math.max(1,starterCount),radius=320+Math.random()*110;return{x:clamp(P.x+Math.cos(angle)*radius,100,W-100),y:clamp(P.y+Math.sin(angle)*radius,100,H-100)}}
@@ -1343,7 +1391,7 @@ function encounterPoint(existing,starterIndex=-1,starterCount=0){
 }
 function activateEncounterPack(pack,force=false){
   if(!pack||pack.active)return false;const cap=encounterLiveCap(),live=encounterLiveCount();if(!force&&live+pack.size>cap)return false;pack.active=1;pack.activatedAt=elapsed;run.packActivated=(run.packActivated||0)+1;const rarePack=rank('eco3')>=5&&Math.random()<.10;
-  for(let i=0;i<pack.size;i++){const angle=i/Math.max(1,pack.size)*Math.PI*2+Math.random()*.45,radius=18+Math.random()*48,p={x:clamp(pack.x+Math.cos(angle)*radius,64,W-64),y:clamp(pack.y+Math.sin(angle)*radius,64,H-64)},leader=rank('eco2')>=3&&i===0;let grade=null;if(rarePack)grade=i===0?'rare':(Math.random()<.45?'rare':'enhanced');spawnBeast(p,{packId:pack.id,packLeader:leader,grade})}return true
+  for(let i=0;i<pack.size;i++){const angle=i/Math.max(1,pack.size)*Math.PI*2+Math.random()*.45,radius=18+Math.random()*48,p={x:clamp(pack.x+Math.cos(angle)*radius,64,W-64),y:clamp(pack.y+Math.sin(angle)*radius,64,H-64)},leader=rank('eco2')>=3&&i===0;let grade=null;if(rarePack)grade=i===0?'rare':(Math.random()<.45?'rare':'enhanced');spawnBeast(p,{packId:pack.id,packLeader:leader,grade,packIndex:i,packSize:pack.size})}return true
 }
 function nearestDormantEncounterPack(maxRange){let best=null,bd=maxRange;for(const p of run.packs||[]){if(p.active)continue;const d=distance(P,p);if(d<bd){bd=d;best=p}}return best}
 function initEncounterPacks(){
@@ -1422,6 +1470,10 @@ function foundationApi(){
   return {
     get state(){return M},get player(){return P},get run(){return run},get enemies(){return enemies},get hazards(){return hazards},get objects(){return objects},
     get phase(){return phase},get elapsed(){return elapsed},W,H,EXIT,clamp,distance,moveToward,
+    expectedPlayerHp:()=>foundationTarget()?.playerHp||P.max,
+    uniqueRank:id=>rank(id),
+    areaRewardMultiplier:()=>uniqueRewardMultiplier(),
+    planRewardMultiplier:()=>currentPlan().reward,
     spawn:(type,options={})=>actor(type,options),
     addHazard:hazard=>hazards.push(hazard),
     damagePlayer:(amount,source='foundation')=>takePlayerDamage(amount,true,source),
@@ -1519,16 +1571,16 @@ function registerKill(enemy){
   pop(enemy.x,enemy.y+18,`검세 ${run.combo}단`,'#8fe7d1',.65);
 }
 function reward(enemy){
-  const plan=currentPlan();
+  const plan=currentPlan(),uniqueReward=uniqueRewardMultiplier();
   const handled=foundationContent()?.rewardEnemy?.(enemy,foundationApi());
   if(handled){
     // Content module owns the reward, while the shared kill/combo accounting stays here.
   }else if(['basic','guard','chaser','attacker'].includes(enemy.type)){
-    gainStone(Math.ceil(A().killStone*plan.reward*(enemy.rewardMult||1)),enemy.x,enemy.y);
+    gainStone(Math.ceil(A().killStone*plan.reward*uniqueReward*(enemy.rewardMult||1)),enemy.x,enemy.y);
   }else if(enemy.type==='elite'){
-    run.elite=1;gainStone(Math.ceil(A().killStone*6*plan.reward),enemy.x,enemy.y);gainHerb(2+rank('res3'),Math.min(2,areaIndex()),enemy.x+10,enemy.y);if(vein){vein.cleared=1;vein.stock+=20+rank('res3')*8}
+    run.elite=1;gainStone(Math.ceil(A().killStone*6*plan.reward*uniqueReward),enemy.x,enemy.y);gainHerb(2+rank('res3'),Math.min(2,areaIndex()),enemy.x+10,enemy.y);if(vein){vein.cleared=1;vein.stock+=20+rank('res3')*8}
   }else if(enemy.type==='rogue'||enemy.type==='rat'){
-    run.thieves++;spillCarry(enemy);gainStone(Math.ceil((enemy.type==='rogue'?A().killStone*.65:A().killStone*.28)*plan.reward),enemy.x,enemy.y);
+    run.thieves++;spillCarry(enemy);gainStone(Math.ceil((enemy.type==='rogue'?A().killStone*.65:A().killStone*.28)*plan.reward*uniqueReward),enemy.x,enemy.y);
     if(enemy.type==='rogue'&&enemy.treasure){const bonus=Math.ceil(A().killStone*(1.2+rank('fate2')*.35));gainStone(bonus,enemy.x+8,enemy.y-5);gainHerb(1+Math.floor(rank('fate2')/3),Math.min(2,areaIndex()),enemy.x-8,enemy.y);run.treasures++;pop(enemy.x,enemy.y-20,'✦ 비보 확보','#ffe28a',1.25)}
   }
   if(enemy.type!=='spirit'){
@@ -1716,7 +1768,7 @@ function updateHazards(dt){
     }
     const hit=distance(P,h)<h.r;
     if(hit){
-      const dmg=Math.ceil(beastConfig().hit*.55);takePlayerDamage(dmg,false,'lightning');pop(P.x,P.y,'천뢰 -'+dmg,'#ff9fa0',1);
+      const dmg=Math.ceil((foundationTarget('thunder')?.playerHp||P.max)*.40);takePlayerDamage(dmg,false,'lightning');pop(P.x,P.y,'천뢰 -'+dmg,'#ff9fa0',1);
     }else{
       run.dodges++;
       if((run.stormRewardCount||0)<STORM_BAL.rewardCap&&h.reward>0){run.stormRewardCount=(run.stormRewardCount||0)+1;drop('s',h.x,h.y,h.reward)}
