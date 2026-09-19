@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.51.5';
+const VERSION='11.51.19';
 if(window.__xianxiaFormationSkillsVersion===VERSION)return;
 window.__xianxiaFormationSkillsVersion=VERSION;
 
@@ -222,7 +222,30 @@ function realmLabel(req){
   return `${REALMS[req.major]||'후기'} ${req.stage}층`;
 }
 function herbHave(M,g){return +M[HERB_KEYS[g]]||0}
-function canPay(M,c){return !!c&&(+M.stone||0)>=c.s&&herbHave(M,c.hg)>=c.h}
+function foundationMaterial(M){
+  if((M.realm?.major??-1)!==1)return null;
+  const stage=M.realm?.stage||1;
+  if(stage<=3)return {key:'thunderMark',name:'뢰흔'};
+  if(stage<=6)return {key:'purpleEssence',name:'자운정수'};
+  return null;
+}
+function secondaryCost(M,c){
+  const amount=Math.max(0,+c?.h||0);if(!amount)return {kind:'none',amount:0,name:''};
+  const mat=foundationMaterial(M);
+  if(mat)return {kind:'foundation',amount,key:mat.key,name:mat.name};
+  const grade=Math.max(0,Math.min(2,+c?.hg||0));
+  return {kind:'herb',amount,grade,name:`${HERB_NAMES[grade]} 영초`};
+}
+function secondaryHave(M,c){
+  const q=secondaryCost(M,c);if(!q.amount)return true;
+  return q.kind==='foundation'?(+M[q.key]||0)>=q.amount:herbHave(M,q.grade)>=q.amount;
+}
+function secondarySpend(M,c){
+  const q=secondaryCost(M,c);if(!q.amount)return;
+  if(q.kind==='foundation')M[q.key]=Math.max(0,(+M[q.key]||0)-q.amount);
+  else M[HERB_KEYS[q.grade]]=Math.max(0,herbHave(M,q.grade)-q.amount);
+}
+function canPay(M,c){return !!c&&(+M.stone||0)>=c.s&&secondaryHave(M,c)}
 function notice(text){const n=$('#notice');if(n)n.textContent=text}
 function sys(id){return SYSTEMS.find(x=>x.id===id)}
 function spellDef(id){return (P.spellList?.()||D.constants.SKILLS||[]).find(x=>x.id===id)}
@@ -296,14 +319,14 @@ function mutation(fn){
 function pay(M,c){
   if(!canPay(M,c))return false;
   M.stone-=c.s;
-  if(c.h)M[HERB_KEYS[c.hg]]=herbHave(M,c.hg)-c.h;
+  secondarySpend(M,c);
   return true;
 }
-function formatCost(c){
+function formatCost(M,c){
   if(!c)return'비용 미정';
   const a=[];
   if(c.s)a.push(`영석 ${c.s.toLocaleString()}`);
-  if(c.h)a.push(`${HERB_NAMES[c.hg]} 영초 ${c.h}`);
+  if(c.h){const q=secondaryCost(M,c);a.push(`${q.name} ${q.amount}`)}
   return a.join(' · ')||'추가 비용 없음';
 }
 function upgradeMain(id){
@@ -325,8 +348,8 @@ function upgradeMain(id){
       const c=SPELL_COST[id]?.[rank+1];
       if(!c){notice('다음 Rank 비용이 아직 확정되지 않았습니다.');return false}
       if(!pay(M,c)){notice('숙련 강화 재료가 부족합니다.');return false}
-      M.skills[id]={...(M.skills[id]||{}),u:1,pow:rank+1,range:0,cycle:0};
-      notice(`${s.name} Rank ${rank+1} 강화.`);
+      M.skills[id]={...(M.skills[id]||{}),u:1,pow:rank+1};
+      notice(`${s.name} Rank ${rank+1} 강화 · 범위/타수·순환 숙련 유지.`);
       return true;
     }
     const cap=artCap(M,id),rank=artRank(M,id);
@@ -431,12 +454,12 @@ function mainPanel(M,s,phase){
     if(!known(M,s.id)){
       const c={s:+def?.unlock?.s||0,h:+def?.unlock?.h||0,hg:def?.grade||0};
       nextText='법술 전승 후 자동 발동';
-      costText=formatCost(c);actionText='법술 전승';
+      costText=formatCost(M,c);actionText='법술 전승';
       if(phase==='run'||!canPay(M,c))disabled='disabled';
     }else if(rank<cap){
       const c=SPELL_COST[s.id]?.[rank+1];
       nextText=`Rank ${rank+1} 숙련 강화`;
-      costText=formatCost(c);actionText='Rank 강화';
+      costText=formatCost(M,c);actionText='Rank 강화';
       if(phase==='run'||!c||!canPay(M,c))disabled='disabled';
     }else{
       nextText='현재 경지 Rank 상한';
