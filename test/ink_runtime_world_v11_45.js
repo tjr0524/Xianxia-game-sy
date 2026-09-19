@@ -376,11 +376,11 @@ function detectCasts(s,now){
   if(Array.isArray(visual)){
     for(const event of visual){
       const seq=+event.seq||0;if(seq<=lastVisualCastSeq)continue;
-      const lag=Math.max(0,(+s.elapsed||0)-(+event.at||0));
+      const offset=(+event.at||+s.elapsed||0)-(+s.elapsed||0);
       casts.push({
         id:event.id,x:+event.x||0,y:+event.y||0,r:+event.r||0,
         kind:event.kind||'burst',duration:Math.max(.18,+event.duration||.64),
-        start:now-lag,facing:pFacing,seq
+        start:now+offset,facing:pFacing,seq
       });
       lastVisualCastSeq=Math.max(lastVisualCastSeq,seq);
     }

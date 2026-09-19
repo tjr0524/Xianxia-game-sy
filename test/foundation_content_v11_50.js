@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.51.12-foundation-content';
+const VERSION='11.51.19-foundation-content';
 if(window.__xianxiaFoundationContent?.version===VERSION)return;
 
 const TYPES=new Set(['charging_boar','ranged_toad','exploding_beetle','command_ape','shield_pangolin','sword_sentinel','formation_warden','foundation_guardian','taixu_boss']);
@@ -455,7 +455,7 @@ function onTrigger(event,payload,ctx,api){
   if(event==='onBurstStart'&&trait(api,'burst','spell')){
     for(const id of ['sword','wave','chain','thunder','array']){
       if((api.run.skillCooldowns?.[id]||0)>0)continue;
-      api.castSpell?.(id,{powerScale:.60,triggered:true,source:`burst:spell:${id}`,triggerMeta:ctx.child({originTrait:'burst:spell',source:`burst:spell:${id}`})});
+      api.castSpell?.(id,{powerScale:.60,triggered:true,source:`${id}:burst-spell`,triggerMeta:ctx.child({originTrait:'burst:spell',source:`${id}:burst-spell`})});
     }
   }
   if(event==='onShieldBreak'&&arts.burstTime>0&&trait(api,'burst','guard')&&arts.burstGuardExtend<1.2){
