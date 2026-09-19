@@ -878,6 +878,19 @@ function objectiveReward(){
   return `영석 +${stone} · ${HN[Math.min(2,index)]} 영초 +${herbs}`;
 }
 
+function syncPreparation(){
+  if(phase!=='home')return;
+  const area=A();
+  if(UI.ot)UI.ot.textContent=area.name;
+  if(UI.ox)UI.ox.innerHTML=`${area.desc}<br><span style="opacity:.72">수행 방침을 고르고 입장하세요.</span>`;
+}
+function syncMobileExpeditionNav(){
+  if(!document.body.classList.contains('v22-expedition-mode')||document.body.classList.contains('v22-combat-mode'))return false;
+  document.querySelectorAll('.tab-btn').forEach(button=>button.classList.toggle('active',button.dataset.tab==='expedition'));
+  document.querySelectorAll('.panel').forEach(panel=>panel.classList.remove('active'));
+  return true;
+}
+
 function render(){
   ensurePlan();
   UI.stone.textContent=Math.floor(M.stone);
@@ -933,7 +946,7 @@ function render(){
   renderAreas();
   renderTree();
   renderSkills();
-  activateTab(M.settings.tab||'train',false);
+  if(!syncMobileExpeditionNav())activateTab(M.settings.tab||'train',false);
   if(phase==='home')syncHud();
   save();
 }
@@ -974,6 +987,7 @@ function renderAreas(){
       M.area=area.id;
       treeCamera.ready=false;
       ensurePlan();
+      syncPreparation();
       UI.notice.textContent=`${area.name} 선택. 이 비경의 인연과 기록이 복원되었습니다.`;
       render();
       draw();
@@ -2391,10 +2405,11 @@ window.__xianxiaDebug={
   replaceState:value=>{
     M={...fresh(),...value};
     M=loadNormalized(M);
+    if(phase==='home')syncPreparation();
     save();render();draw();
   },
   selectArea:id=>{
-    if(AREAS.some(area=>area.id===id)){M.area=id;M.unlocked[id]=1;ensurePlan();save();render();draw()}
+    if(AREAS.some(area=>area.id===id)){M.area=id;M.unlocked[id]=1;ensurePlan();syncPreparation();save();render();draw()}
   },
   selectPlan:id=>{
     if(PLANS.some(plan=>plan.id===id)){M.settings.plan=id;ensurePlan();save();render()}
@@ -2405,6 +2420,7 @@ window.__xianxiaDebug={
   finish,
   objectiveData,
   setMenuOpen,
+  syncPreparation,
   foundationApi,
   registerTriggerHandler,
   emitTrigger,
