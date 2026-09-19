@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.50.0';
+const VERSION='11.50.1';
 if(window.__xianxiaFoundationContent?.version===VERSION)return;
 
 const TYPES=new Set(['charging_boar','ranged_toad','exploding_beetle','command_ape','shield_pangolin','sword_sentinel','formation_warden','foundation_guardian','taixu_boss']);
@@ -41,7 +41,7 @@ function ensureControls(){
   if(!game)return null;
   const style=document.createElement('style');
   style.id='foundation-content-style';
-  style.textContent=`.foundation-arts{position:absolute;z-index:7;right:10px;bottom:10px;display:none;gap:7px;pointer-events:auto}.foundation-arts.on{display:flex}.foundation-art{position:relative;width:58px;height:58px;margin:0;padding:0;border:1px solid #8aa79a;border-radius:50%;overflow:hidden;background:#10211fd9;box-shadow:0 3px 14px #0009}.foundation-art img{width:100%;height:100%;object-fit:cover;opacity:.86}.foundation-art b{position:absolute;inset:auto 0 2px;text-align:center;font-size:8px;text-shadow:0 1px 3px #000;color:#f1f8e9}.foundation-art i{position:absolute;inset:0;display:grid;place-items:center;background:#0710149c;color:#fff;font:800 13px sans-serif;font-style:normal}.foundation-art.ready{border-color:#e6cd78;box-shadow:0 0 13px #d5b95a66}.foundation-art:disabled{opacity:.38}@media(max-width:560px){.foundation-arts{right:7px;bottom:7px;gap:5px}.foundation-art{width:52px;height:52px}}`;
+  style.textContent=`.foundation-arts{position:absolute;z-index:7;left:10px;right:auto;bottom:10px;display:none;gap:7px;pointer-events:auto}.foundation-arts.on{display:flex}.foundation-art{position:relative;width:58px;height:58px;margin:0;padding:0;border:1px solid #8aa79a;border-radius:50%;overflow:hidden;background:#10211fd9;box-shadow:0 3px 14px #0009}.foundation-art img{width:100%;height:100%;object-fit:cover;opacity:.86}.foundation-art b{position:absolute;inset:auto 0 2px;text-align:center;font-size:8px;text-shadow:0 1px 3px #000;color:#f1f8e9}.foundation-art i{position:absolute;inset:0;display:grid;place-items:center;background:#0710149c;color:#fff;font:800 13px sans-serif;font-style:normal}.foundation-art.ready{border-color:#e6cd78;box-shadow:0 0 13px #d5b95a66}.foundation-art:disabled{opacity:.38}@media(max-width:560px){.foundation-arts{left:7px;right:auto;bottom:7px;gap:5px}.foundation-art{width:52px;height:52px}}`;
   document.head.appendChild(style);
   controls=document.createElement('div');
   controls.className='foundation-arts';
