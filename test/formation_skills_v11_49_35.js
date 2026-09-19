@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.51.0';
+const VERSION='11.51.1';
 if(window.__xianxiaFormationSkillsVersion===VERSION)return;
 window.__xianxiaFormationSkillsVersion=VERSION;
 
@@ -463,6 +463,34 @@ function traitIcon(id,name){
   if(id==='shield')return F+'shield_main.png';
   return sys(id)?.icon||F+'formation_core.png';
 }
+
+function effectKeywordList(text){
+  const parts=String(text||'').split('·').map(x=>x.trim()).filter(Boolean),tags=[];
+  const add=x=>{if(x&&!tags.includes(x))tags.push(x)};
+  for(const p of parts){
+    if(/피해|위력|공격력|타격/.test(p))add(/[+-]?\d/.test(p)&&/-/.test(p)?'화력 조정':'화력 강화');
+    if(/발동간격|재사용|쿨|주기/.test(p))add('발동 주기');
+    if(/범위|반경|거리|사거리/.test(p))add('범위');
+    if(/강적|정예|보스|우선/.test(p))add('강적 우선');
+    if(/추가|연쇄|다중|분열|도탄|관통/.test(p))add('추가 타격');
+    if(/보호막|호체|피해 감소|감면|무적/.test(p))add('생존');
+    if(/회복|재생|흡혈/.test(p))add('회복');
+    if(/이동|축지|속도|거리 증가|질주/.test(p))add('기동');
+    if(/확률|치명/.test(p))add('확률');
+    if(/지속/.test(p))add('지속');
+    if(/대상|적 수|타깃/.test(p))add('대상');
+  }
+  if(!tags.length&&parts.length)add(parts.find(p=>!/[+-]?\d/.test(p))||'특수 효과');
+  return {parts,tags:tags.slice(0,3)};
+}
+function highlightEffectMetric(text){
+  return String(text||'').replace(/([+-]?\d+(?:\.\d+)?(?:%|초|회|개|단계|칸)?|R\d+)/g,'<b>$1</b>');
+}
+function effectPresentation(text){
+  const {parts,tags}=effectKeywordList(text);
+  return `<div class="fs49-effect-keywords">${tags.map(x=>`<b>${x}</b>`).join('')}</div>
+    <div class="fs49-effect-metrics">${parts.map(x=>`<span>${highlightEffectMetric(x)}</span>`).join('')}</div>`;
+}
 function traitPanel(M,s,tier,opt,phase){
   const t=TRAITS[s.id][tier-1],status=traitStatus(M,s,tier-1,opt[0]);
   const st=traitState(M,s.id,tier);
@@ -481,7 +509,7 @@ function traitPanel(M,s,tier,opt,phase){
     ?`<small class="fs49-lock-reason"><b>잠금 조건</b> · ${lockReason||'조건 확인 필요'}</small>`
     :`<small>${realmLabel(t.req)} 개방 · 조건 충족</small>`;
   return `<div class="fs49-detail-head"><b>${s.name} · Tier ${['Ⅰ','Ⅱ','Ⅲ'][tier-1]}</b><span>${statusLabel}</span></div>
-    <div class="fs49-detail-main"><img src="${traitIcon(s.id,opt[1])}" alt=""><div><strong>${opt[1]}</strong><p>${opt[2]}</p>${condition}</div></div>
+    <div class="fs49-detail-main fs49-detail-trait"><img src="${traitIcon(s.id,opt[1])}" alt=""><div><strong>${opt[1]}</strong>${effectPresentation(opt[2])}${condition}</div></div>
     <div class="fs49-detail-actions"><span>${owned?'영구 보유 · 비경 밖 무료 교체':(st.owned?.length?'추가 선택지 비용: 도흔 1':'해당 Tier 첫 선택 무료')}</span>
     <button type="button" data-act="choose" data-id="${s.id}" data-tier="${tier}" data-opt="${opt[0]}" ${disabled}>${action}</button></div>`;
 }
