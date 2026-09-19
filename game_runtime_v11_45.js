@@ -1724,7 +1724,7 @@ function reward(enemy){
     run.thieves++;spillCarry(enemy);gainStone(Math.ceil((enemy.type==='rogue'?killStoneBase()*.65:killStoneBase()*.28)*plan.reward*uniqueReward),enemy.x,enemy.y);
     if(enemy.type==='rogue'&&enemy.treasure){const bonus=Math.ceil(killStoneBase()*(1.2+rank('fate2')*.35));gainStone(bonus,enemy.x+8,enemy.y-5);gainHerb(1+Math.floor(rank('fate2')/3),Math.min(2,areaIndex()),enemy.x-8,enemy.y);run.treasures++;pop(enemy.x,enemy.y-20,'✦ 비보 확보','#ffe28a',1.25)}
   }
-  if(enemy.type!=='spirit'){
+  if(enemy.type!=='spirit'&&enemy.type!=='formation_node'){
     for(const other of enemies){if(other!==enemy&&other.rareTrait==='devour'&&other.hp>0&&distance(other,enemy)<150)other.hp=Math.min(other.max,other.hp+other.max*.12)}
     registerKill(enemy);
   }
