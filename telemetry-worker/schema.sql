@@ -1,0 +1,63 @@
+CREATE TABLE IF NOT EXISTS runs (
+  id TEXT PRIMARY KEY,
+  player_id TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  client_started_at TEXT,
+  game_version TEXT,
+  client_version TEXT,
+  area TEXT,
+  realm_major INTEGER,
+  realm_stage INTEGER,
+  realm_name TEXT,
+  plan TEXT,
+  end_reason TEXT,
+  duration_ms INTEGER,
+  kills_total INTEGER DEFAULT 0,
+  beast_kills INTEGER DEFAULT 0,
+  elite_kills INTEGER DEFAULT 0,
+  thieves INTEGER DEFAULT 0,
+  mined INTEGER DEFAULT 0,
+  dodges INTEGER DEFAULT 0,
+  best_combo INTEGER DEFAULT 0,
+  packs_activated INTEGER DEFAULT 0,
+  stone_gross INTEGER DEFAULT 0,
+  herb0_gross INTEGER DEFAULT 0,
+  herb1_gross INTEGER DEFAULT 0,
+  herb2_gross INTEGER DEFAULT 0,
+  damage_taken REAL DEFAULT 0,
+  death_source TEXT,
+  max_enemies INTEGER DEFAULT 0,
+  max_hazards INTEGER DEFAULT 0,
+  avg_fps REAL,
+  min_fps REAL,
+  long_frames INTEGER DEFAULT 0,
+  eco1 INTEGER DEFAULT 0,
+  eco2 INTEGER DEFAULT 0,
+  eco3 INTEGER DEFAULT 0,
+  unique_rank INTEGER DEFAULT 0,
+  skill_damage_json TEXT,
+  skill_casts_json TEXT,
+  damage_by_source_json TEXT,
+  area_tree_json TEXT,
+  build_json TEXT,
+  device_json TEXT,
+  perf_json TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_runs_created_at ON runs(created_at);
+CREATE INDEX IF NOT EXISTS idx_runs_area_created ON runs(area, created_at);
+CREATE INDEX IF NOT EXISTS idx_runs_version_created ON runs(game_version, created_at);
+
+CREATE TABLE IF NOT EXISTS events (
+  id TEXT PRIMARY KEY,
+  player_id TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  client_created_at TEXT,
+  game_version TEXT,
+  client_version TEXT,
+  event_type TEXT NOT NULL,
+  area TEXT,
+  realm_major INTEGER,
+  realm_stage INTEGER,
+  payload_json TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_events_type_created ON events(event_type, created_at);
