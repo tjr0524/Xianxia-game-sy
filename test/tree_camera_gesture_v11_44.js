@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.50.14-node-tap';
+const VERSION='11.50.15-node-native-click';
 if(window.__xianxiaTreeCameraGesture?.version===VERSION)return;
 window.__xianxiaTreeCameraGesture={version:VERSION};
 
@@ -129,21 +129,22 @@ function interactiveInside(target){return !!target?.closest?.('.camera,.v17float
 // believing a finger is still down while another has already ended the gesture.
 document.addEventListener('pointerdown',e=>{
   const c=cameraForTarget(e.target);if(!c||interactiveInside(e.target))return;
-  e.stopImmediatePropagation();
   syncFromDom(c,true);
   const p=localPoint(c,e);
   const startedOnNode=!!e.target.closest?.('.asc-node,.map-node');
   c.pointers.set(e.pointerId,{x:p.x,y:p.y,startX:p.x,startY:p.y,startedOnNode,captured:false});
   c.moved=false;
   setBaseline(c);
+  // A plain node tap must reach the native button. Own background drags immediately,
+  // but defer node pointer capture until movement crosses the drag threshold.
   if(!startedOnNode){
+    e.stopImmediatePropagation();
     try{elements(c).view?.setPointerCapture(e.pointerId);c.pointers.get(e.pointerId).captured=true}catch{}
   }
 },true);
 
 document.addEventListener('pointermove',e=>{
   const c=cameraForPointer(e);if(!c||!c.pointers.has(e.pointerId))return;
-  e.stopImmediatePropagation();e.preventDefault();
   const p=localPoint(c,e),old=c.pointers.get(e.pointerId);
   old.x=p.x;old.y=p.y;
   if(Math.hypot(p.x-old.startX,p.y-old.startY)>7){
@@ -152,6 +153,9 @@ document.addEventListener('pointermove',e=>{
       try{elements(c).view?.setPointerCapture(e.pointerId);old.captured=true}catch{}
     }
   }
+  // Before the threshold, leave node pointer events untouched so Safari can synthesize
+  // the normal button click. Once it is a real drag, the camera owns the gesture.
+  if(!old.startedOnNode||c.moved){e.stopImmediatePropagation();e.preventDefault()}
   const ps=[...c.pointers.values()],base=c.base;
   if(!base)return;
   if(ps.length===1&&base.n===1){
@@ -170,12 +174,14 @@ document.addEventListener('pointermove',e=>{
 
 function pointerEnd(e){
   const c=cameraForPointer(e);if(!c||!c.pointers.has(e.pointerId))return;
-  e.stopImmediatePropagation();
+  const ended=c.pointers.get(e.pointerId),wasDrag=!!c.moved;
+  // Do not swallow pointerup for an unmoved node tap; its native click/onclick must fire.
+  if(!ended?.startedOnNode||wasDrag)e.stopImmediatePropagation();
   c.pointers.delete(e.pointerId);
-  if(c.moved){c.dragUntil=performance.now()+420;c.userAdjusted=true;c.initialized=true}
+  if(wasDrag){c.dragUntil=performance.now()+420;c.userAdjusted=true;c.initialized=true}
   setBaseline(c);
   if(!c.pointers.size)c.moved=false;
-  try{elements(c).view?.releasePointerCapture(e.pointerId)}catch{}
+  if(ended?.captured){try{elements(c).view?.releasePointerCapture(e.pointerId)}catch{}}
 }
 document.addEventListener('pointerup',pointerEnd,true);
 document.addEventListener('pointercancel',pointerEnd,true);
