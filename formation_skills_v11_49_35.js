@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.51.1';
+const VERSION='11.51.2';
 if(window.__xianxiaFormationSkillsVersion===VERSION)return;
 window.__xianxiaFormationSkillsVersion=VERSION;
 
@@ -468,28 +468,34 @@ function effectKeywordList(text){
   const parts=String(text||'').split('·').map(x=>x.trim()).filter(Boolean),tags=[];
   const add=x=>{if(x&&!tags.includes(x))tags.push(x)};
   for(const p of parts){
-    if(/피해|위력|공격력|타격/.test(p))add(/[+-]?\d/.test(p)&&/-/.test(p)?'화력 조정':'화력 강화');
-    if(/발동간격|재사용|쿨|주기/.test(p))add('발동 주기');
-    if(/범위|반경|거리|사거리/.test(p))add('범위');
+    const plus=/\+\s*\d/.test(p),minus=/-\s*\d/.test(p);
+    if(/피해 감소|감면|받는 피해/.test(p))add('피해 감소');
+    else if(/피해|위력|공격력|타격/.test(p))add(minus?'화력 감소':'화력 강화');
+    if(/발동간격/.test(p))add(plus?'발동 느림':minus?'발동 가속':'발동 주기');
+    else if(/재사용|쿨|주기/.test(p))add(minus?'재사용 단축':plus?'재사용 증가':'발동 주기');
+    if(/범위|반경|사거리/.test(p))add(minus?'범위 축소':plus?'범위 확대':'범위');
+    if(/거리/.test(p)&&!/발동간격/.test(p))add(minus?'거리 감소':plus?'거리 증가':'거리');
     if(/강적|정예|보스|우선/.test(p))add('강적 우선');
     if(/추가|연쇄|다중|분열|도탄|관통/.test(p))add('추가 타격');
-    if(/보호막|호체|피해 감소|감면|무적/.test(p))add('생존');
+    if(/보호막|호체|무적/.test(p))add('생존 강화');
     if(/회복|재생|흡혈/.test(p))add('회복');
-    if(/이동|축지|속도|거리 증가|질주/.test(p))add('기동');
-    if(/확률|치명/.test(p))add('확률');
-    if(/지속/.test(p))add('지속');
-    if(/대상|적 수|타깃/.test(p))add('대상');
+    if(/이동|축지|속도|질주/.test(p))add('기동 강화');
+    if(/확률|치명/.test(p))add('확률 효과');
+    if(/지속/.test(p))add('지속 효과');
+    if(/대상|적 수|타깃/.test(p))add('대상 확장');
   }
   if(!tags.length&&parts.length)add(parts.find(p=>!/[+-]?\d/.test(p))||'특수 효과');
-  return {parts,tags:tags.slice(0,3)};
+  return {parts,tags:tags.slice(0,4)};
 }
 function highlightEffectMetric(text){
   return String(text||'').replace(/([+-]?\d+(?:\.\d+)?(?:%|초|회|개|단계|칸)?|R\d+)/g,'<b>$1</b>');
 }
 function effectPresentation(text){
   const {parts,tags}=effectKeywordList(text);
-  return `<div class="fs49-effect-keywords">${tags.map(x=>`<b>${x}</b>`).join('')}</div>
-    <div class="fs49-effect-metrics">${parts.map(x=>`<span>${highlightEffectMetric(x)}</span>`).join('')}</div>`;
+  return `<div class="fs49-effect-block">
+    <div class="fs49-effect-keywords"><span>핵심</span>${tags.map(x=>`<b>${x}</b>`).join('')}</div>
+    <div class="fs49-effect-metrics"><strong>효과</strong>${parts.map(x=>`<span>${highlightEffectMetric(x)}</span>`).join('')}</div>
+  </div>`;
 }
 function traitPanel(M,s,tier,opt,phase){
   const t=TRAITS[s.id][tier-1],status=traitStatus(M,s,tier-1,opt[0]);
