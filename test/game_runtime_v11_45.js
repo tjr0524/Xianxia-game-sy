@@ -1834,8 +1834,9 @@ function update(dt){
   }
   const pr=autoPickupRange();objects=objects.filter(o=>{if(distance(P,o)<pr+o.r){if(o.type==='h')gainHerb(o.value,o.grade,o.x,o.y);else gainStone(o.value,o.x,o.y);return false}return true});
   if(vein&&vein.stock>0){
-    const nearVein=distance(P,vein)<vein.r+P.r+10,r1=rank('res1'),r2=rank('res2'),r3=rank('res3');
-    const guardsAlive=enemies.some(e=>e.hp>0&&e.mineGuard);
+    const nearVein=distance(P,vein)<vein.r+P.r+18,r1=rank('res1'),r2=rank('res2'),r3=rank('res3');
+    const guardsAlive=enemies.some(e=>e.hp>0&&e.mineGuard),defenseAlive=veinDefenseAlive();
+    vein.near=nearVein?1:0;vein.guardBlocked=guardsAlive?1:0;vein.defenseActive=defenseAlive?1:0;
     if(vein.cleared===0&&!guardsAlive)vein.cleared=1;
     if(r2>=5&&guardsAlive){
       vein.guardPulseTimer-=dt;
@@ -1844,24 +1845,33 @@ function update(dt){
         hazards.push({kind:'vein_pulse',x:vein.x,y:vein.y,r:88,t:.75,ttl:.75,struck:0,reward:0});
       }
     }
+    vein.status=guardsAlive?'guard':defenseAlive?'defense':nearVein?'mining':'approach';
     if(nearVein&&vein.cleared){
       if(r3>=5&&!vein.defenseCleared){
-        if(!veinDefenseAlive()){
-          vein.defenseWait-=dt;
-          if(vein.defenseWave<3&&vein.defenseWait<=0){startNextVeinDefenseWave();vein.defenseWait=.55}
-          else if(vein.defenseWave>=3){vein.defenseCleared=1;pop(vein.x,vein.y-34,'영맥 폭주 진압','#c6f0df',.9)}
+        if(defenseAlive){
+          vein.status='defense';
+        }else{
+          vein.progress+=dt;
+          vein.status='mining';
+          const thresholds=[.20,.50,.80];
+          if(vein.defenseWave<3&&vein.progress>=vein.required*thresholds[vein.defenseWave]){
+            startNextVeinDefenseWave();vein.defenseWait=.35;vein.status='defense';
+          }else if(vein.defenseWave>=3&&vein.progress>=vein.required){
+            vein.defenseCleared=1;vein.status='mining';pop(vein.x,vein.y-34,'영맥 폭주 진압','#c6f0df',.9);
+          }
         }
       }else{
         vein.progress+=dt;
+        vein.status='mining';
         if(r1>=5&&vein.inflowStage<1&&vein.progress>=Math.min(1,vein.required*.34)){vein.inflowStage=1;spawnVeinBeasts(2,false);pop(vein.x,vein.y-30,'채굴 소음 · 요수 유입','#e4b77d',.7)}
         if(r1>=5&&vein.inflowStage<2&&vein.progress>=Math.min(2,vein.required*.68)){vein.inflowStage=2;spawnVeinBeasts(2,false)}
-        if(r3>=3&&vein.waveStage<1&&vein.progress>=Math.min(1,vein.required*.40)){vein.waveStage=1;spawnVeinBeasts(2,false)}
-        if(r3>=3&&vein.waveStage<2&&vein.progress>=Math.min(2,vein.required*.75)){vein.waveStage=2;spawnVeinBeasts(2+(r3>=4?1:0),false)}
-        if(vein.progress>=vein.required){
-          const mined=vein.stock,x=vein.x,y=vein.y,doneVein=vein;run.mined+=mined;run.veinMined=1;run.veinDefenseComplete=doneVein.defenseCleared?1:0;run.largeVein=rank('res3')>=4?1:0;gainStone(mined,x,y);
-          pop(x,y-34,r3>=5?'대형 영맥 확보':'영맥 채굴 완료','#b8d7ef',1.1);
-          if(P.target===doneVein)P.target=null;vein=null;
-        }
+        if(r3>=3&&r3<5&&vein.waveStage<1&&vein.progress>=Math.min(1,vein.required*.40)){vein.waveStage=1;spawnVeinBeasts(2,false)}
+        if(r3>=3&&r3<5&&vein.waveStage<2&&vein.progress>=Math.min(2,vein.required*.75)){vein.waveStage=2;spawnVeinBeasts(2+(r3>=4?1:0),false)}
+      }
+      if(vein&&vein.progress>=vein.required&&(r3<5||vein.defenseCleared)){
+        const mined=vein.stock,x=vein.x,y=vein.y,doneVein=vein;run.mined+=mined;run.veinMined=1;run.veinDefenseComplete=doneVein.defenseCleared?1:0;run.largeVein=rank('res3')>=4?1:0;gainStone(mined,x,y);
+        pop(x,y-34,r3>=5?'대형 영맥 확보':'영맥 채굴 완료','#b8d7ef',1.1);
+        if(P.target===doneVein)P.target=null;vein=null;
       }
     }
   }
@@ -2134,7 +2144,7 @@ function drawVein(){
   for(const [x,y,s] of [[-11,4,12],[2,-4,17],[13,5,10]]){
     g.beginPath();g.moveTo(x,y-s);g.lineTo(x+s*.45,y);g.lineTo(x,y+s*.55);g.lineTo(x-s*.45,y);g.closePath();g.fill();g.stroke();
   }
-  const progress=clamp((vein.progress||0)/3,0,1);
+  const progress=clamp((vein.progress||0)/Math.max(.1,vein.required||3),0,1);
   g.shadowBlur=0;g.textAlign='center';
   g.fillStyle='#081016aa';g.fillRect(-30,30,60,7);
   g.fillStyle='#8bd9d0';g.fillRect(-29,31,58*progress,5);
