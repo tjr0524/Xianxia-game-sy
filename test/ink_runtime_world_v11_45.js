@@ -42,7 +42,7 @@ const ENV_FILES={
   {file:'thunder/items/thunder_22_r5c1_fx.png',kind:'fx'}
  ]
 };
-const S={version:'11.31.2',ready:false,error:null,images:{},envImages:{},envState:{},layer:null,ctx:null,renderScale:1,bufferWidth:0,bufferHeight:0,dprCap:1.5,maxPixels:2600000,assetBindings:'11.49.10'};
+const S={version:'11.50.22-death-assets',ready:false,error:null,images:{},envImages:{},envState:{},layer:null,ctx:null,renderScale:1,bufferWidth:0,bufferHeight:0,dprCap:1.5,maxPixels:2600000,assetBindings:'11.49.10'};
 window.__xianxiaInkRuntime=S;
 const tracks=new Map(),deaths=[],casts=[],impacts=[],pickups=[],floaters=[],veinBursts=[];
 let nextId=1,prevP=null,pFacing=1,prevCooldowns={},lastArea=null,lastPhase=null,prevObjects=[],prevRun=null,prevVein=null,hitStopUntil=0,lastSnapshot=null,activeBounds={x:0,y:0,w:W,h:H};
@@ -283,7 +283,7 @@ function drawSpiritCapture(e,x,y,h,s,t){
   c.restore();
 }
 function drawEnemies(s,t,now){
-  const area=s.M?.area||'qingyun',matched=match(s.enemies||[],now,area);
+  const area=s.M?.area||'qingyun',matched=match((s.enemies||[]).filter(e=>e.visualOwner!=='foundation'),now,area);
   for(const tr of matched){
     const e=tr.e;if(!visible(e.x,e.y,180))continue;
     if(e.visualOwner==='foundation')continue;

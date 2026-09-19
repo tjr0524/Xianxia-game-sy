@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.50.1';
+const VERSION='11.50.22-death-assets';
 if(window.__xianxiaFoundationRenderer?.version===VERSION)return;
 const W=1800,H=2400,BASE='assets/ink_v1/foundation_trial_v1/';
 const areaAssets={
@@ -9,7 +9,7 @@ const areaAssets={
   marsh:{bg:'regions/purple_cloud_marsh/background/purple_cloud_marsh_battlefield_1024x1536.png',decor:'regions/purple_cloud_marsh/decor/purple_cloud_marsh_decor_atlas_2x2.png',ambient:'regions/purple_cloud_marsh/fx/purple_cloud_marsh_fx_atlas_2x2.png',ranged_toad:'enemies/celadon_mist_toad/celadon_mist_toad_sheet_6x3.png',projectile:'enemies/celadon_mist_toad/celadon_qi_projectile_sheet_8x1.png',projectileTarget:'enemies/celadon_mist_toad/ranged_impact_telegraph_256.png',exploding_beetle:'enemies/cracked_stone_beetle/cracked_stone_beetle_sheet_6x3.png',explosion:'enemies/cracked_stone_beetle/circular_burst_sheet_6x1.png',explosionTarget:'enemies/cracked_stone_beetle/explosion_telegraph_256.png',command_ape:'enemies/ink_command_ape/ink_command_ape_sheet_6x3.png',command:'enemies/ink_command_ape/command_buff_marker_sheet_4x1.png',shield_pangolin:'enemies/jade_scale_pangolin/jade_scale_pangolin_sheet_6x3.png',shield:'enemies/jade_scale_pangolin/ally_shield_overlay_sheet_4x1.png',shieldBreak:'fx/common/shield_break/shield_break_sheet_6x1.png'},
   taixu:{bg:'regions/taixu_ruins/background/taixu_ruins_battlefield_1024x1536.png',decor:'regions/taixu_ruins/decor/taixu_ruins_decor_atlas_2x2.png',node:'regions/taixu_ruins/objects/taixu_formation_node_512.png',sword_sentinel:'enemies/taixu_sword_sentinel/taixu_sword_sentinel_sheet_6x3.png',swordTarget:'enemies/taixu_sword_sentinel/sword_zone_telegraph_256.png',swordImpact:'enemies/taixu_sword_sentinel/sword_ground_impact_sheet_6x1.png',formation_warden:'enemies/taixu_formation_warden/taixu_formation_warden_sheet_6x3.png',formationTarget:'enemies/taixu_formation_warden/formation_target_telegraph_256.png',formationBolt:'enemies/taixu_formation_warden/formation_bolt_sheet_6x1.png',taixu_boss:'boss/taixu_formation_sovereign/taixu_formation_sovereign_sheet_6x4.png',portrait:'ui/taixu_formation_sovereign_portrait.png',movingZone:'boss/taixu_formation_sovereign/moving_formation_zone_256.png',grandFloor:'boss/taixu_formation_sovereign/grand_formation_floor_sheet_6x1.png',areaActivation:'fx/common/area_field/area_field_activation_sheet_6x1.png'}
 };
-const state={version:VERSION,canvas:null,ctx:null,images:{},loading:{},area:'',cache:new URL(document.currentScript?.src||location.href).searchParams.get('v')||'dev'};
+const state={version:VERSION,canvas:null,ctx:null,images:{},loading:{},area:'',cache:new URL(document.currentScript?.src||location.href).searchParams.get('v')||'dev',prevFoundation:new Map(),deaths:[],lastArea:''};
 window.__xianxiaFoundationRenderer=state;
 function layer(){
   if(state.canvas?.isConnected)return true;const ink=document.querySelector('#v1131InkLayer'),base=document.querySelector('#cv');if(!ink&&!base)return false;
@@ -35,7 +35,32 @@ function drawEnvironment(area,t){
   if(ambient?.naturalWidth){const sw=ambient.naturalWidth/2,sh=ambient.naturalHeight/2;for(let i=0;i<4;i++){const x=280+i*410,y=520+(i%2)*850;c.save();c.globalAlpha=.13+.05*Math.sin(t+i);c.drawImage(ambient,i%2*sw,Math.floor(i/2)*sh,sw,sh,x-130,y-130,260,260);c.restore()}}
   if(node?.naturalWidth){for(const[x,y]of[[330,720],[1470,760],[380,1800],[1420,1760]]){c.save();c.globalAlpha=.55;c.drawImage(node,x-52,y-72,104,104);c.restore()}}
 }
-function drawEnemy(area,e,t,elapsed){const im=image(area,e.type);if(!im?.naturalWidth)return;const boss=e.boss,rows=boss?4:3,row=e.action==='attack'?1:e.action==='special'?Math.min(2,rows-1):0,index=Math.floor((t*(e.action==='move'?9:6)+e.id*.7))%6,height=boss?(e.type==='taixu_boss'?190:176):92,c=state.ctx;
+function enemyHeight(e){return e.boss?(e.type==='taixu_boss'?190:176):92}
+function syncFoundationDeaths(snapshot,area,now){
+  const current=(snapshot.enemies||[]).filter(e=>e.visualOwner==='foundation');
+  if(state.lastArea!==area){
+    state.prevFoundation.clear();state.deaths.length=0;state.lastArea=area;
+  }
+  const seen=new Set(current.map(e=>e.id));
+  for(const [id,e] of state.prevFoundation){
+    if(!seen.has(id))state.deaths.push({...e,start:now});
+  }
+  state.prevFoundation=new Map(current.map(e=>[e.id,{id:e.id,type:e.type,x:e.x,y:e.y,boss:!!e.boss,facing:e.facing||1,name:e.name||''}]));
+  return current;
+}
+function drawFoundationDeaths(area,now){
+  const c=state.ctx;
+  for(let i=state.deaths.length-1;i>=0;i--){
+    const d=state.deaths[i],age=now-d.start,duration=d.boss?.92:.72;
+    if(age>=duration){state.deaths.splice(i,1);continue}
+    const im=image(area,d.type);if(!im?.naturalWidth)continue;
+    const rows=d.boss?4:3,row=d.boss?3:2,steps=4,step=Math.min(steps-1,Math.floor(age/duration*steps));
+    const index=d.boss?2+step:step,height=enemyHeight(d),fade=age>duration*.68?1-(age-duration*.68)/(duration*.32):1;
+    c.save();c.globalAlpha=.18*fade;c.fillStyle='#111';c.beginPath();c.ellipse(d.x,d.y+18,d.boss?48:27,d.boss?12:7,0,0,Math.PI*2);c.fill();c.restore();
+    frame(im,row,6,index,rows,d.x,d.y+24,height,d.facing<0,Math.max(0,fade));
+  }
+}
+function drawEnemy(area,e,t,elapsed){const im=image(area,e.type);if(!im?.naturalWidth)return;const boss=e.boss,rows=boss?4:3,row=e.action==='attack'?1:e.action==='special'?(boss?2:1):0,index=Math.floor((t*(e.action==='move'?9:6)+e.id*.7))%6,height=enemyHeight(e),c=state.ctx;
   c.save();c.globalAlpha=.25;c.fillStyle='#111';c.beginPath();c.ellipse(e.x,e.y+18,boss?48:27,boss?12:7,0,0,Math.PI*2);c.fill();c.restore();
   if(e.commandedUntil>elapsed){const marker=image('marsh','command');centered(marker,4,Math.floor(t*7)%4,e.x,e.y-height-20,42,.95)}
   if(e.shield>0){const shield=image('marsh','shield');centered(shield,4,Math.floor(t*6)%4,e.x,e.y-height*.48,boss?150:105,.76)}
@@ -44,10 +69,12 @@ function drawEnemy(area,e,t,elapsed){const im=image(area,e.type);if(!im?.natural
 }
 function applyBackground(area,m){const ink=window.__xianxiaInkRuntime?.layer,bg=image(area,'bg');if(!ink||!bg?.src)return;ink.style.backgroundImage=`linear-gradient(rgba(12,20,20,.08),rgba(8,13,16,.16)),url("${bg.src}")`;ink.style.backgroundSize=`100% 100%,${W*m.worldScale}px ${H*m.worldScale}px`;ink.style.backgroundPosition=`0 0,${m.left}px ${m.top}px`;ink.style.backgroundRepeat='no-repeat'}
 function drawBossPlate(area,snapshot,m){const boss=(snapshot.enemies||[]).find(e=>e.visualOwner==='foundation'&&e.boss);if(!boss)return;const c=state.ctx,k=m.renderScale,size=56*k,x=Math.max(8,(m.cssW*.5-85))*k,y=12*k,portrait=image(area,'portrait'),crest=image(area,'crest');c.save();c.setTransform(1,0,0,1,0,0);c.fillStyle='#081311d9';c.strokeStyle='#b79b5c';c.lineWidth=1.5*k;c.beginPath();c.roundRect(x,y,170*k,64*k,9*k);c.fill();c.stroke();if(portrait?.naturalWidth)c.drawImage(portrait,x+4*k,y+4*k,size,size);if(crest?.naturalWidth){c.globalAlpha=.38;c.drawImage(crest,x+136*k,y+8*k,42*k,42*k);c.globalAlpha=1}c.fillStyle='#f4e6bf';c.font=`700 ${11*k}px serif`;c.textAlign='left';c.fillText(boss.name,x+66*k,y+23*k);c.fillStyle='#713b33';c.fillRect(x+66*k,y+33*k,96*k,8*k);c.fillStyle='#d79b70';c.fillRect(x+66*k,y+33*k,96*k*Math.max(0,boss.hp/Math.max(1,boss.max)),8*k);c.restore()}
-function draw(snapshot,meta){if(!layer()||!snapshot)return;const area=snapshot.M?.area||'',supported=!!areaAssets[area],m=metrics(snapshot);resize(m);const c=state.ctx;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,state.canvas.width,state.canvas.height);state.canvas.style.display=supported&&snapshot.phase==='run'?'block':'none';if(!supported||snapshot.phase!=='run')return;ensureArea(area);applyBackground(area,m);const k=m.renderScale;c.setTransform(k*m.worldScale,0,0,k*m.worldScale,k*m.left,k*m.top);const t=(meta?.now||performance.now())/1000;
+function draw(snapshot,meta){if(!layer()||!snapshot)return;const area=snapshot.M?.area||'',supported=!!areaAssets[area],m=metrics(snapshot);resize(m);const c=state.ctx;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,state.canvas.width,state.canvas.height);state.canvas.style.display=supported&&snapshot.phase==='run'?'block':'none';if(!supported||snapshot.phase!=='run'){state.prevFoundation.clear();state.deaths.length=0;state.lastArea=area;return}ensureArea(area);applyBackground(area,m);const k=m.renderScale;c.setTransform(k*m.worldScale,0,0,k*m.worldScale,k*m.left,k*m.top);const t=(meta?.now||performance.now())/1000;
+  const foundationEnemies=syncFoundationDeaths(snapshot,area,t);
   drawEnvironment(area,t);
   for(const h of snapshot.hazards||[])if(h.visualOwner==='foundation')drawHazard(area,h,t);
-  for(const e of snapshot.enemies||[])if(e.visualOwner==='foundation')drawEnemy(area,e,t,snapshot.elapsed||0);
+  drawFoundationDeaths(area,t);
+  for(const e of foundationEnemies)drawEnemy(area,e,t,snapshot.elapsed||0);
   drawBossPlate(area,snapshot,m);
 }
 const boot=()=>{if(!layer())return;const hub=window.__xianxiaFrameHub;if(!hub?.subscribe){console.error('[foundation-render] frame hub unavailable');return}hub.subscribe('foundation-content-render',draw,27);hub.wake?.()};
