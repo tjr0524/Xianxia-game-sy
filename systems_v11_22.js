@@ -40,7 +40,7 @@ function css(){
   .v22-expedition-tab::before{background-position:25% 0!important;filter:sepia(.25) saturate(.8)!important}
   .v22-expedition-tab.active{background:#e6d6ab!important;border-color:#9e8040!important;color:#243a33!important}
   .v22-close-handle{display:none!important}
-  body.v22-expedition-mode:not(.v22-combat-mode) .arena-head{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:start!important;height:auto!important;min-height:0!important;margin:0 2px 12px!important;padding-bottom:4px!important;overflow:visible!important}
+  body.v22-expedition-mode:not(.v22-combat-mode) .arena-head{display:none!important}
   body.v22-expedition-mode:not(.v22-combat-mode) .arena-head>div{min-width:0!important;overflow:visible!important}
   body.v22-expedition-mode:not(.v22-combat-mode) .arena-head p{display:block!important;height:auto!important;margin:0!important;padding-bottom:2px!important;white-space:normal!important;overflow:visible!important;line-height:1.45!important}
   body.v22-expedition-mode:not(.v22-combat-mode) .game{border:0!important;border-radius:0!important;overflow:visible!important;background:transparent!important;box-shadow:none!important}
