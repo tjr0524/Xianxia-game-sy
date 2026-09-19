@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.50.23-late-map';
+const VERSION='11.51.5-pointer-recovery';
 if(window.__xianxiaTreeCameraGesture?.version===VERSION)return;
 window.__xianxiaTreeCameraGesture={version:VERSION};
 
@@ -115,6 +115,15 @@ function setBaseline(c){
 function clearPointers(c){
   c.pointers.clear();c.base=null;c.moved=false;
 }
+function recoverStalePointers(c,reason){
+  const count=c.pointers.size;
+  if(!count)return;
+  clearPointers(c);
+  c.dragUntil=0;
+  const d=window.__xianxiaInputDiagnostics||(window.__xianxiaInputDiagnostics={});
+  d.stalePointerRecoveries=(+d.stalePointerRecoveries||0)+1;
+  d.lastRecovery={kind:c.kind,reason,count,at:Date.now()};
+}
 function cameraForTarget(target){
   if(target?.closest?.('#ascViewport'))return makeCam('asc');
   if(target?.closest?.('#mapViewport'))return makeCam('map');
@@ -129,10 +138,15 @@ function interactiveInside(target){return !!target?.closest?.('.camera,.v17float
 // believing a finger is still down while another has already ended the gesture.
 document.addEventListener('pointerdown',e=>{
   const c=cameraForTarget(e.target);if(!c||interactiveInside(e.target))return;
+  // Safari can occasionally omit the terminating pointer event. A new primary
+  // pointer means any older pointer still stored here is stale, not a real pinch.
+  if(e.isPrimary!==false&&c.pointers.size&&!c.pointers.has(e.pointerId)){
+    recoverStalePointers(c,'new-primary-pointer');
+  }
   syncFromDom(c,true);
   const p=localPoint(c,e);
   const startedOnNode=!!e.target.closest?.('.asc-node,.map-node');
-  c.pointers.set(e.pointerId,{x:p.x,y:p.y,startX:p.x,startY:p.y,startedOnNode,captured:false});
+  c.pointers.set(e.pointerId,{x:p.x,y:p.y,startX:p.x,startY:p.y,startedOnNode,captured:false,downAt:performance.now()});
   c.moved=false;
   setBaseline(c);
   // A plain node tap must reach the native button. Own background drags immediately,
@@ -211,6 +225,9 @@ document.addEventListener('click',e=>{
 // centre the current training realm at a useful close scale instead of fitting all tiers.
 document.addEventListener('click',e=>{
   const tab=e.target.closest?.('.tab-btn[data-tab="train"],.tab-btn[data-tab="tree"]');if(!tab)return;
+  // A tab change cannot be part of an in-viewport gesture; clear any orphaned
+  // pointer state before the viewport becomes interactive again.
+  resetAllPointers();
   blockAutoFitUntil=performance.now()+900;
   const c=tab.dataset.tab==='train'?makeCam('asc'):makeCam('map');
   syncFromDom(c,true);
@@ -232,6 +249,7 @@ function resetAllPointers(){for(const c of Object.values(cams))clearPointers(c)}
 window.addEventListener('blur',resetAllPointers,true);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)resetAllPointers()},true);
 window.addEventListener('pagehide',resetAllPointers,true);
+window.addEventListener('pageshow',resetAllPointers,true);
 
 const style=document.createElement('style');
 style.id='tree-camera-gesture-v11-45';
