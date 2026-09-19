@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 if(window.__xianxiaTreeTouchFix)return;
-window.__xianxiaTreeTouchFix={version:'11.37.4-devmodal'};
+window.__xianxiaTreeTouchFix={version:'11.51.5-single-camera-owner'};
 
 const NODE_SELECTOR='.asc-node,.map-node,.s17node';
 const VIEW_SELECTOR='#ascViewport,#mapViewport,#skillTreeViewport';
@@ -14,6 +14,9 @@ function closest(el,selector){return el&&typeof el.closest==='function'?el.close
 function dist(a,x,y){return Math.hypot(x-a.x,y-a.y)}
 
 document.addEventListener('pointerdown',event=>{
+  // asc/map gestures are owned exclusively by tree_camera_gesture_v11_44.js.
+  // Keeping a second pointer map for them can retain a different Safari state.
+  if(closest(event.target,'#ascViewport,#mapViewport'))return;
   const node=closest(event.target,NODE_SELECTOR);
   if(node){
     pointers.set(event.pointerId,{kind:'node',node,x:event.clientX,y:event.clientY,moved:false});
