@@ -198,7 +198,7 @@ function visible(x,y,pad=120){
 function drawGatherRings(s,t){const c=S.ctx;for(const o of s.objects||[]){if(o.type!=='h'||!visible(o.x,o.y,40))continue;const g=Math.max(0,Math.min(2,o.grade||0)),r=[16,18,20][g],pulse=1+Math.sin(t*3+o.x*.04+o.y*.03)*.04;c.save();c.globalAlpha=[.65,.72,.82][g];c.strokeStyle=['#4e8068','#4f7899','#8a609f'][g];c.lineWidth=[1.6,1.9,2.2][g];c.beginPath();c.ellipse(o.x,o.y+17,r*pulse,r*.42*pulse,0,0,Math.PI*2);c.stroke();c.globalAlpha=[.10,.13,.17][g];c.fillStyle=c.strokeStyle;c.fill();c.restore()}}
 function drawPortal(t){if(!visible(EXIT.x,EXIT.y,90))return;shadow(EXIT.x,EXIT.y+2,32,6,.18);centered('objects',3,6,frame(t,7,6),EXIT.x,EXIT.y-12,74,false,.9)}
 function drawMortalHerbGuide(s,t){
-  if((s.M?.realm?.major??-1)>=0||s.phase!=='run'||25-(+s.elapsed||0)<=10)return;
+  if((s.M?.realm?.major??-1)>=0||s.phase!=='run'||(s.run?.limit||25)-(+s.elapsed||0)<=10)return;
   const p=s.P,herbs=(s.objects||[]).filter(o=>o.type==='h');
   if(!p||!herbs.length)return;
   let target=null,best=Infinity;
@@ -213,7 +213,7 @@ function drawMortalHerbGuide(s,t){
   c.strokeStyle='rgba(20,48,34,.88)';c.lineWidth=3.2;c.fillStyle='#efffe9';c.strokeText('영초',x,y-17);c.fillText('영초',x,y-17);c.restore();
 }
 function drawReturnGuide(s,t){
-  if(s.phase!=='run'||25-(+s.elapsed||0)>10)return;
+  if(s.phase!=='run'||(s.run?.limit||25)-(+s.elapsed||0)>10)return;
   const p=s.P;if(!p)return;
   const target=EXIT,best=Math.hypot(target.x-p.x,target.y-p.y);
   if(best<34)return;
@@ -252,7 +252,7 @@ function drawVeinProgress(s,t){
   c.strokeText('매장 영석 '+Math.max(0,+v.stock||0),v.x,barY+20);c.fillText('매장 영석 '+Math.max(0,+v.stock||0),v.x,barY+20);
   c.restore();
 }
-function drawHazards(s){const c=S.ctx;for(const h of s.hazards||[]){if(!visible(h.x,h.y,(h.r||0)+80))continue;c.save();const p=h.struck?1:1-Math.max(0,h.t)/(h.ttl||1);c.globalAlpha=h.struck?.8:.25+p*.45;c.strokeStyle=h.struck?'#eaf4ff':'#495b82';c.lineWidth=h.struck?4:2;c.setLineDash(h.struck?[]:[6,6]);c.beginPath();c.arc(h.x,h.y,h.r*(.82+p*.18),0,Math.PI*2);c.stroke();if(h.struck){c.beginPath();c.moveTo(h.x-7,h.y-60);c.lineTo(h.x+5,h.y-24);c.lineTo(h.x-3,h.y-24);c.lineTo(h.x+9,h.y);c.stroke()}c.restore()}}
+function drawHazards(s){const c=S.ctx;for(const h of s.hazards||[]){if(h.visualOwner==='foundation')continue;if(!visible(h.x,h.y,(h.r||0)+80))continue;c.save();const p=h.struck?1:1-Math.max(0,h.t)/(h.ttl||1);c.globalAlpha=h.struck?.8:.25+p*.45;c.strokeStyle=h.struck?'#eaf4ff':'#495b82';c.lineWidth=h.struck?4:2;c.setLineDash(h.struck?[]:[6,6]);c.beginPath();c.arc(h.x,h.y,h.r*(.82+p*.18),0,Math.PI*2);c.stroke();if(h.struck){c.beginPath();c.moveTo(h.x-7,h.y-60);c.lineTo(h.x+5,h.y-24);c.lineTo(h.x-3,h.y-24);c.lineTo(h.x+9,h.y);c.stroke()}c.restore()}}
 const enemyAssets={
   qingyun:{basic:'qingyun_basic',guard:'qingyun_guard',chaser:'qingyun_chaser',attacker:'qingyun_chaser',elite:'qingyun_guard'},
   blackwind:{basic:'blackwind_basic',guard:'blackwind_guard',chaser:'blackwind_chaser',attacker:'blackwind_attacker',elite:'blackwind_guard'},
@@ -286,6 +286,7 @@ function drawEnemies(s,t,now){
   const area=s.M?.area||'qingyun',matched=match(s.enemies||[],now,area);
   for(const tr of matched){
     const e=tr.e;if(!visible(e.x,e.y,180))continue;
+    if(e.visualOwner==='foundation')continue;
     const special=e.type==='spirit'||e.type==='rat'||e.type==='rogue';
     const canAttack=!special;
     const near=canAttack&&dist(e,s.P)<(e.type==='elite'?70:48);

@@ -167,7 +167,7 @@ function updateHud(s){
   if(herbs)herbs.textContent=`영초 下${r.h0||0} · 中${r.h1||0} · 上${r.h2||0}`;
   if(hpText)hpText.textContent=`${Math.max(0,Math.ceil(p.hp||0))} / ${Math.max(1,Math.ceil(p.max||1))}`;
   if(hpFill)hpFill.style.width=`${clamp((p.hp||0)/Math.max(1,p.max||1)*100,0,100)}%`;
-  const total=window.__xianxiaDebug?.constants?.RUN_TIME||25,remaining=Math.max(0,total-(s.elapsed||0));
+  const total=s.run?.limit||window.__xianxiaDebug?.constants?.RUN_TIME||25,remaining=Math.max(0,total-(s.elapsed||0));
   if(timer){timer.textContent=`${remaining.toFixed(1)}초`;timer.classList.toggle('warn',remaining<=10)}
   if(objective){const source=$('#objective');objective.textContent=(source?.textContent||'').replace(/\s+/g,' ').trim()}
   updateReturnGuide(s,remaining);
