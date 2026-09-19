@@ -16,6 +16,22 @@ const MAJORS=['연기','축기','결단','원영'];
 const HN=['하급','중급','상급'];
 const VERSION='11';
 const foundationContent=()=>window.__xianxiaFoundationContent||null;
+const SPATIAL={
+  Rview:320,
+  sense:{specialTarget:750,threatWarning:600},
+  movement:{afterimageLossRelief:.15,shadowlessLossRelief:.25},
+  foundation:{envSlowRelief:.10,recoveryStartRelief:.20,castMoveLockRelief:.30}
+};
+const STORM_BAL={
+  period:[6.5,6.0,5.2,5.2,4.8,4.5],
+  chain:[1,1,1,2,2,2],
+  chainDelay:.22,
+  focusRadius:220,
+  reward:[0,6,8,10,12,15],
+  rewardCap:3,
+  r5ZoneChance:.25,
+  r5ZoneDuration:1.8
+};
 
 const UI={
   game:$('#game'),controls:$('.controls'),ov:$('#ov'),ot:$('#ot'),ox:$('#ox'),start:$('#start'),ret:$('#ret'),
@@ -58,7 +74,7 @@ const TREE={
     {id:'res3',n:'대형 영맥',d:'R1 대형 영맥 · R3 채굴 파동 · R5 영맥 폭주 미니 디펜스',tier:3,p:'res2',c:{s:1,h:0}}
   ],
   storm:[
-    {id:'storm1',n:'뢰흔 개방',d:'낙뢰 출현과 빈도 상승 · R3부터 연속 낙뢰',tier:1,c:{s:1,h:0}},
+    {id:'storm1',n:'뢰흔 개방',d:'R1 6.0초 단발 · R2 5.2초 · R3 2연속(0.22초) · R4 집중 낙뢰 · R5 이동 위험구역',tier:1,c:{s:1,h:0}},
     {id:'storm2',n:'천뢰 예지',d:'낙뢰 전조와 연쇄 방향 정보를 강화한다.',tier:2,p:'storm1',c:{s:1,h:0}},
     {id:'storm3',n:'뇌정 응축',d:'복합 낙뢰 패턴을 개방한다. 보상 구조는 후속 튜닝.',tier:3,p:'storm2',c:{s:1,h:0}}
   ]
@@ -104,11 +120,11 @@ const BAL={
     chainRadius:[0,0,0,720,900,1100]
   },
   skill:{
-    sword:{mult:[0,2.4,3.8,5.2,6.5,7.8],cd:[4.8,4.8,4.5,4.2,4.1,4.0],range:[115,130,145,160,178,198]},
-    wave:{mult:[0,1.2,1.6,2.1,2.7,3.8],cd:[5.5,5.5,5.2,5.0,4.8,4.6],radius:[55,65,75,85,95,108],acquire:[145,165,185,205,225,248]},
-    chain:{mult:[0,1.0,1.35,1.8,2.7,4.0],cd:[6.0,6.0,5.8,5.6,5.4,5.0],count:[3,3,4,4,5,6],jump:[55,62,70,78,86,96],acquire:[150,170,190,210,230,255]},
-    thunder:{mult:[0,1.8,3.0,5.0,6.3,8.0],cd:[7.0,7.0,6.7,6.4,6.1,5.8],radius:[52,62,72,82,92,105],acquire:[210,230,250,270,295,320]},
-    array:{mult:[0,3.0,4.4,6.0,8.0,10.5],cd:[10.0,10.0,9.6,9.2,8.8,8.4],radius:[82,94,106,118,134,150],acquire:[170,195,220,245,275,305]}
+    sword:{mult:[0,2.4,3.8,5.2,6.5,7.8],cd:[4.8,4.8,4.5,4.2,4.1,4.0],range:[0,134.4,150.4,166.4,182.4,198.4]},
+    wave:{mult:[0,1.2,1.6,2.1,2.7,3.8],cd:[5.5,5.5,5.2,5.0,4.8,4.6],radius:[0,57.6,67.2,76.8,86.4,96.0],acquire:[0,145,165,185,205,225]},
+    chain:{mult:[0,1.0,1.35,1.8,2.7,4.0],cd:[6.0,6.0,5.8,5.6,5.4,5.0],count:[3,3,4,4,5,6],jump:[0,57.6,64.0,70.4,76.8,83.2],acquire:[0,150,166,182,200,216]},
+    thunder:{mult:[0,1.8,3.0,5.0,6.3,8.0],cd:[7.0,7.0,6.7,6.4,6.1,5.8],radius:[0,51.2,60.8,70.4,80.0,89.6],acquire:[0,210,230,250,270,295]},
+    array:{mult:[0,3.0,4.4,6.0,8.0,10.5],cd:[10.0,10.0,9.6,9.2,8.8,8.4],radius:[0,121.6,134.4,147.2,160.0,176.0],acquire:[0,170,195,220,245,275]}
   }
 };
 const KEY='xianxia_proto_v11';
@@ -1032,21 +1048,21 @@ function bestClusterTarget(acquire,radius){
   return target;
 }
 function cast(skill){
-  const st=skillState(skill.id),r=skillRank(skill.id),rr=skillRangeRank(skill.id),b=BAL.skill[skill.id];if(!st.u||!r||!b)return false;const B=basicDamage(),damage=B*b.mult[r];
+  const st=skillState(skill.id),r=skillRank(skill.id),rr=skillRangeRank(skill.id),b=BAL.skill[skill.id];if(!st.u||!r||!b)return false;const sr=r,B=basicDamage(),damage=B*b.mult[r];
   if(skill.id==='sword'){
-    const range=b.range[rr];let target=null,nearest=Infinity;for(const e of enemies){if(e.type==='spirit'||e.hp<=0)continue;const d=distance(P,e);if(d<range&&d<nearest){nearest=d;target=e}}if(!target)return false;dealEnemyDamage(target,damage,'sword');slash(P.x,P.y,target.x,target.y,'#eef6ff');pop(target.x,target.y,'어검 '+Math.round(damage),'#f4f6ff');return true;
+    const range=b.range[sr];let target=null,nearest=Infinity;for(const e of enemies){if(e.type==='spirit'||e.hp<=0)continue;const d=distance(P,e);if(d<range&&d<nearest){nearest=d;target=e}}if(!target)return false;dealEnemyDamage(target,damage,'sword');slash(P.x,P.y,target.x,target.y,'#eef6ff');pop(target.x,target.y,'어검 '+Math.round(damage),'#f4f6ff');return true;
   }
   if(skill.id==='wave'){
-    const radius=b.radius[rr],target=bestClusterTarget(b.acquire[rr],radius);if(!target)return false;let hits=0;for(const e of enemies){if(e.type==='spirit'||e.hp<=0||distance(target,e)>=radius)continue;dealEnemyDamage(e,damage,'wave');hits++}if(!hits)return false;pop(target.x,target.y,'검풍 ×'+hits,'#9fdfff');ring(target.x,target.y,radius,'#9fdfff');return true;
+    const radius=b.radius[sr],target=bestClusterTarget(b.acquire[sr],radius);if(!target)return false;let hits=0;for(const e of enemies){if(e.type==='spirit'||e.hp<=0||distance(target,e)>=radius)continue;dealEnemyDamage(e,damage,'wave');hits++}if(!hits)return false;pop(target.x,target.y,'검풍 ×'+hits,'#9fdfff');ring(target.x,target.y,radius,'#9fdfff');return true;
   }
   if(skill.id==='chain'){
-    const candidates=enemies.filter(e=>e.type!=='spirit'&&e.hp>0),max=b.count[rr],jump=b.jump[rr],acquire=b.acquire[rr];let current=P,used=new Set(),hits=0;for(let i=0;i<max;i++){let target=null,near=Infinity;for(const e of candidates){if(used.has(e))continue;const d=distance(current,e),allowed=i===0?acquire:jump;if(d<allowed&&d<near){near=d;target=e}}if(!target)break;dealEnemyDamage(target,damage,'chain');slash(current.x,current.y,target.x,target.y,'#c6d6ff');used.add(target);current=target;hits++}return hits>0;
+    const candidates=enemies.filter(e=>e.type!=='spirit'&&e.hp>0),max=b.count[rr],jump=b.jump[sr],acquire=b.acquire[sr];let current=P,used=new Set(),hits=0;for(let i=0;i<max;i++){let target=null,near=Infinity;for(const e of candidates){if(used.has(e))continue;const d=distance(current,e),allowed=i===0?acquire:jump;if(d<allowed&&d<near){near=d;target=e}}if(!target)break;dealEnemyDamage(target,damage,'chain');slash(current.x,current.y,target.x,target.y,'#c6d6ff');used.add(target);current=target;hits++}return hits>0;
   }
   if(skill.id==='thunder'){
-    const radius=b.radius[rr],target=bestClusterTarget(b.acquire[rr],radius);if(!target)return false;let hits=0;for(const e of enemies){if(e.type!=='spirit'&&e.hp>0&&distance(target,e)<radius){dealEnemyDamage(e,damage,'thunder');hits++}}if(!hits)return false;pop(target.x,target.y,'낙뢰 ×'+hits,'#d7c8ff');ring(target.x,target.y,radius,'#d7c8ff',.4);return true;
+    const radius=b.radius[sr],target=bestClusterTarget(b.acquire[sr],radius);if(!target)return false;let hits=0;for(const e of enemies){if(e.type!=='spirit'&&e.hp>0&&distance(target,e)<radius){dealEnemyDamage(e,damage,'thunder');hits++}}if(!hits)return false;pop(target.x,target.y,'낙뢰 ×'+hits,'#d7c8ff');ring(target.x,target.y,radius,'#d7c8ff',.4);return true;
   }
   if(skill.id==='array'){
-    const radius=b.radius[rr],target=bestClusterTarget(b.acquire[rr],radius);if(!target)return false;const pulse=damage/3;run.scheduledHits.push({kind:'array',t:0.02,x:target.x,y:target.y,r:radius,damage:pulse},{kind:'array',t:.36,x:target.x,y:target.y,r:radius,damage:pulse},{kind:'array',t:.70,x:target.x,y:target.y,r:radius,damage:pulse});pop(target.x,target.y,'만검진','#ffe9a8');ring(target.x,target.y,radius,'#ffe9a8',.24);return true;
+    const radius=b.radius[sr],target=bestClusterTarget(b.acquire[sr],radius);if(!target)return false;const pulse=damage/3;run.scheduledHits.push({kind:'array',t:0.02,x:target.x,y:target.y,r:radius,damage:pulse},{kind:'array',t:.36,x:target.x,y:target.y,r:radius,damage:pulse},{kind:'array',t:.70,x:target.x,y:target.y,r:radius,damage:pulse});pop(target.x,target.y,'만검진','#ffe9a8');ring(target.x,target.y,radius,'#ffe9a8',.24);return true;
   }
   return false;
 }
@@ -1070,14 +1086,14 @@ function spawnLightning(){
     t:.82+foresight*.075,
     ttl:.82+foresight*.075,
     struck:0,
-    reward:4+level*2
+    reward:STORM_BAL.reward[level]||0
   });
 }
 
 function updateHazards(dt){
   foundationContent()?.updateHazards?.(dt,foundationApi());
-  if(M.area==='thunder'&&M.realm.major>=1&&(M.realm.stage||0)>=3){run.lightningTimer-=dt;if(run.lightningTimer<=0){const chain=rank('storm1')>=3?2+(rank('storm1')>=5?1:0):1;for(let i=0;i<chain;i++)setTimeout(()=>{if(phase==='run')spawnLightning()},i*180);run.lightningTimer=Math.max(2.7,5.0-rank('storm1')*.32)}}
-  for(const h of hazards){if(h.visualOwner==='foundation')continue;h.t-=dt;if(h.t<=0&&!h.struck){h.struck=1;h.t=.28;h.ttl=.28;if(distance(P,h)<h.r){let dmg=Math.ceil(beastConfig().hit*.55);takePlayerDamage(dmg,false,'lightning');pop(P.x,P.y,'천뢰 -'+dmg,'#ff9fa0',1)}else{run.dodges++;drop('s',h.x,h.y,h.reward);pop(h.x,h.y,'천뢰 회피','#bfc5ff',.9)}ring(h.x,h.y,h.r,'#d6d5ff',.3)}}hazards=hazards.filter(h=>h.t>0)
+  if(M.area==='thunder'&&M.realm.major>=1&&(M.realm.stage||0)>=3){run.lightningTimer-=dt;if(run.lightningTimer<=0){const level=rank('storm1'),chain=STORM_BAL.chain[level]||1;for(let i=0;i<chain;i++)setTimeout(()=>{if(phase==='run')spawnLightning()},i*STORM_BAL.chainDelay*1000);run.lightningTimer=STORM_BAL.period[level]||6.5}}
+  for(const h of hazards){if(h.visualOwner==='foundation')continue;h.t-=dt;if(h.t<=0&&!h.struck){h.struck=1;h.t=.28;h.ttl=.28;if(distance(P,h)<h.r){let dmg=Math.ceil(beastConfig().hit*.55);takePlayerDamage(dmg,false,'lightning');pop(P.x,P.y,'천뢰 -'+dmg,'#ff9fa0',1)}else{run.dodges++;if((run.stormRewardCount||0)<STORM_BAL.rewardCap&&h.reward>0){run.stormRewardCount=(run.stormRewardCount||0)+1;drop('s',h.x,h.y,h.reward)}pop(h.x,h.y,'천뢰 회피','#bfc5ff',.9)}ring(h.x,h.y,h.r,'#d6d5ff',.3)}}hazards=hazards.filter(h=>h.t>0)
 }
 
 function update(dt){
