@@ -1480,7 +1480,7 @@ function cast(skill,options={}){
   }
   if(skill.id==='chain'){
     const candidates=enemies.filter(e=>e.type!=='spirit'&&e.hp>0),jump=b.jump[sr],acquire=b.acquire[sr],t1=selectedFormationTrait('chain',1);
-    let limit=b.count[rr]+(t1==='spread'?2:0),current=P,used=new Set(),hits=0,first=null,last=null,killExtra=0;
+    let limit=b.count[sr]+(t1==='spread'?2:0),current=P,used=new Set(),hits=0,first=null,last=null,killExtra=0;
     const scale=t1==='spread'?.75:1;
     for(let i=0;i<limit;i++){
       let target=null,near=Infinity;
@@ -1525,7 +1525,7 @@ function cast(skill,options={}){
     let radius=b.radius[sr],t1=selectedFormationTrait('array',1),target=t1==='focus'?strongestLivingEnemy(P,b.acquire[sr]):bestClusterTarget(b.acquire[sr],radius);if(!target)return false;
     if(t1==='focus')radius*=.65;if(t1==='wide')radius*=1.50;
     const follow=t1==='follow',center=follow?{x:P.x,y:P.y}:{x:target.x,y:target.y},base=currentArrayBaseDamage()*powerScale,pulse=base/3,pull=hasFormationTrait('array','pull')?100/3:0;
-    for(const t of [0.02,.36,follow?.84:.70])scheduleAreaHit({t,x:center.x,y:center.y,r:radius,damage:pulse,source,family:'array',meta,pull,followPlayer:follow,color:'#ffe9a8'});
+    for(const t of [0.02,.36,follow ? .84 : .70])scheduleAreaHit({t,x:center.x,y:center.y,r:radius,damage:pulse,source,family:'array',meta,pull,followPlayer:follow,color:'#ffe9a8'});
     const tr=traitRuntime();tr.arrayZone={x:center.x,y:center.y,r:radius,follow,until:elapsed+effectiveSkillCooldown('array'),nextReturn:elapsed+3};
     pop(center.x,center.y,'만검진','#ffe9a8');ring(center.x,center.y,radius,'#ffe9a8',.24);return done({target,hits:1});
   }
