@@ -287,29 +287,33 @@ function skillRank(id){return clamp(Math.round(+M.skills?.[id]?.pow||0),0,5)}
 function skillRangeRank(id){return clamp(Math.round(+M.skills?.[id]?.range||0),0,5)}
 function skillCycleRank(id){return clamp(Math.round(+M.skills?.[id]?.cycle||0),0,5)}
 const SKILL_RANGE_SCALE=[1,1.08,1.16,1.24,1.32,1.40];
+const SKILL_CYCLE_SCALE=[1,.96,.92,.88,.84,.80];
 const CHAIN_COUNT_BONUS=[0,0,1,1,2,2];
 function skillRangeScale(id){return SKILL_RANGE_SCALE[skillRangeRank(id)]||1}
 function skillRadiusValue(id){
-  const b=BAL.skill[id],r=skillRank(id);
-  return (b?.radius?.[r]||0)*skillRangeScale(id);
+  const b=BAL.skill[id];
+  return (b?.radius?.[1]||0)*skillRangeScale(id);
 }
 function skillAcquireValue(id){
-  const b=BAL.skill[id],r=skillRank(id);
-  return (b?.acquire?.[r]||0)*skillRangeScale(id);
+  const b=BAL.skill[id];
+  return (b?.acquire?.[1]||0)*skillRangeScale(id);
 }
 function skillLinearRangeValue(id){
-  const b=BAL.skill[id],r=skillRank(id);
-  return (b?.range?.[r]||0)*skillRangeScale(id);
+  const b=BAL.skill[id];
+  return (b?.range?.[1]||0)*skillRangeScale(id);
 }
 function skillChainJumpValue(){
-  const b=BAL.skill.chain,r=skillRank('chain');
-  return (b.jump[r]||0)*skillRangeScale('chain');
+  const b=BAL.skill.chain;
+  return (b.jump[1]||0)*skillRangeScale('chain');
 }
 function skillChainCountValue(){
-  const b=BAL.skill.chain,r=skillRank('chain'),rr=skillRangeRank('chain');
-  return (b.count[r]||0)+(CHAIN_COUNT_BONUS[rr]||0);
+  const b=BAL.skill.chain,rr=skillRangeRank('chain');
+  return (b.count[1]||0)+(CHAIN_COUNT_BONUS[rr]||0);
 }
-function skillCooldown(id){const b=BAL.skill[id];return b?b.cd[skillRank(id)]??99:99}
+function skillCooldown(id){
+  const b=BAL.skill[id],base=b?.cd?.[1]??99;
+  return base*(SKILL_CYCLE_SCALE[skillCycleRank(id)]||1);
+}
 const TRIGGER_MAX_DEPTH=2;
 const SCHEDULED_HIT_CAP=64;
 const FX_CAP=128;
@@ -428,7 +432,7 @@ function swordTraitMeta(parent,traitId,source){
   return childTriggerMeta(parent||{},{originTrait:`sword:${traitId}`,source:source||`sword:${traitId}`});
 }
 function swordVolleyFrom(origin,count,scale,source,meta,range=null,preferDirection=null){
-  const r=range||BAL.skill.sword.range[skillRank('sword')]||160;
+  const r=range||skillLinearRangeValue('sword')||160;
   let pool=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&distance(origin,e)<r*1.45);
   if(preferDirection){
     const n=Math.hypot(preferDirection.x,preferDirection.y)||1,dx=preferDirection.x/n,dy=preferDirection.y/n;
@@ -519,6 +523,7 @@ function currentWaveBaseDamage(){
   let d=basicDamage()*BAL.skill.wave.mult[skillRank('wave')];
   if(hasFormationTrait('wave','wide'))d*=.85;
   if(hasFormationTrait('wave','weak'))d*=.90;
+  if(hasFormationTrait('wave','pull'))d*=.90;
   return d;
 }
 function waveDamage(enemy,amount,source,meta,center=null){
@@ -543,7 +548,7 @@ function thunderDamage(enemy,amount,source,meta,center=null){
       enemy._thunderChargeCount=0;enemy._thunderChargeIcd=elapsed+2;
       const cmeta=systemTraitMeta(meta,'thunder','charge','thunder:charge'),radius=skillRadiusValue('thunder')*.75,boom=currentThunderBaseDamage()*.40;
       for(const other of enemies)if(other.type!=='spirit'&&other.hp>0&&distance(enemy,other)<radius)dealEnemyDamage(other,boom,'thunder:charge',cmeta);
-      ring(enemy.x,enemy.y,radius,'#d8ccff',.28);
+      ring(enemy.x,enemy.y,radius,'#d8ccff',.28);emitSkillVisual('thunder',enemy.x,enemy.y,{r:radius,duration:.48});
     }
   }
   return dealt;
@@ -572,32 +577,54 @@ function enqueueScheduledHit(hit){
 function scheduleAreaHit({t,x,y,r,damage,source,family,meta,pull=0,followPlayer=false,color='#d7eaff'}){
   return enqueueScheduledHit({kind:'trait-area',t,x,y,r,damage,source,family,triggerMeta:copyTriggerMeta(meta||{}),pull,followPlayer,color});
 }
-function scheduleDirectHit({t,target,damage,source,family,meta,color='#d7eaff'}){
-  if(!target)return false;return enqueueScheduledHit({kind:'trait-direct',t,targetId:target.id,damage,source,family,triggerMeta:copyTriggerMeta(meta||{}),color});
+function scheduleDirectHit({t,target,damage,source,family,meta,color='#d7eaff',chainState=null}){
+  if(!target)return false;
+  if(chainState)chainState.pending=(chainState.pending||0)+1;
+  return enqueueScheduledHit({kind:'trait-direct',t,targetId:target.id,damage,source,family,triggerMeta:copyTriggerMeta(meta||{}),color,chainState});
 }
 function processScheduledTraitHit(h){
   const center=h.followPlayer?{x:P.x,y:P.y}:{x:h.x,y:h.y};
   const hitOne=e=>{
-    if(!e||e.type==='spirit'||e.hp<=0)return;
+    if(!e||e.type==='spirit'||e.hp<=0)return 0;
     if(h.pull)pullEnemyToward(e,center,h.pull);
-    if(h.family==='wave')waveDamage(e,h.damage,h.source,h.triggerMeta,center);
-    else if(h.family==='thunder')thunderDamage(e,h.damage,h.source,h.triggerMeta,center);
-    else if(h.family==='array')arrayDamage(e,h.damage,h.source,h.triggerMeta);
-    else dealEnemyDamage(e,h.damage,h.source,h.triggerMeta);
+    if(h.family==='wave')return waveDamage(e,h.damage,h.source,h.triggerMeta,center);
+    if(h.family==='thunder')return thunderDamage(e,h.damage,h.source,h.triggerMeta,center);
+    if(h.family==='array')return arrayDamage(e,h.damage,h.source,h.triggerMeta);
+    return dealEnemyDamage(e,h.damage,h.source,h.triggerMeta);
   };
-  if(h.targetId){hitOne(enemies.find(e=>e.id===h.targetId));return}
+  if(h.targetId){
+    const target=enemies.find(e=>e.id===h.targetId),dealt=hitOne(target),state=h.chainState;
+    if(state){
+      if(dealt>0)state.lastTarget=target;
+      if(dealt>0&&target?.hp<=0&&state.endlessLeft>0){
+        const next=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&!state.used.has(e.id)&&distance(target,e)<state.jump)
+          .sort((a,b)=>distance(target,a)-distance(target,b))[0];
+        if(next){
+          state.endlessLeft--;state.used.add(next.id);
+          scheduleDirectHit({t:.14,target:next,damage:state.damage,source:state.source,family:'chain',meta:state.meta,color:'#c6d6ff',chainState:state});
+          emitProjectileVisual('chain',target,next,{delay:.04,duration:.10,color:'#c6d6ff'});
+        }
+      }
+      state.pending=Math.max(0,(state.pending||1)-1);
+      if(state.pending===0&&state.seal&&state.lastTarget?.hp>0)state.lastTarget._chainSealUntil=elapsed+5;
+    }
+    return;
+  }
   for(const e of enemies)if(e.type!=='spirit'&&e.hp>0&&distance(center,e)<h.r)hitOne(e);
   ring(center.x,center.y,h.r,h.color||'#d7eaff',.24);
 }
 function spawnSmallWave(origin,scale,source,meta){
   const tr=traitRuntime();tr.waveAfter=tr.waveAfter.filter(t=>t>elapsed);if(tr.waveAfter.length>=3)return false;
   tr.waveAfter.push(elapsed+.7);
-  scheduleAreaHit({t:.06,x:origin.x,y:origin.y,r:skillRadiusValue('wave')*.68,damage:currentWaveBaseDamage()*scale,source,family:'wave',meta,color:'#9fdfff'});
+  const r=skillRadiusValue('wave')*.68;
+  scheduleAreaHit({t:.06,x:origin.x,y:origin.y,r,damage:currentWaveBaseDamage()*scale,source,family:'wave',meta,color:'#9fdfff'});
+  emitSkillVisual('wave',origin.x,origin.y,{r,duration:.46});
   return true;
 }
 function spawnMiniArray(origin,totalScale,duration,source,meta,radiusScale=.62){
-  const r=skillRadiusValue('array')*radiusScale,base=currentArrayBaseDamage()*totalScale/3;
-  for(let i=0;i<3;i++)scheduleAreaHit({t:.04+i*(duration/3),x:origin.x,y:origin.y,r,damage:base,source,family:'array',meta,color:'#ffe9a8'});
+  const r=skillRadiusValue('array')*radiusScale,base=currentArrayBaseDamage()*totalScale/3,times=[.04,Math.max(.08,duration*.50),Math.max(.12,duration-.04)];
+  for(const t of times)scheduleAreaHit({t,x:origin.x,y:origin.y,r,damage:base,source,family:'array',meta,color:'#ffe9a8'});
+  emitSkillVisual('array',origin.x,origin.y,{r,duration,kind:'field'});
 }
 function handleWaveTraits(payload,ctx){
   if(ctx.event==='onKill'&&payload?.source==='wave'&&hasFormationTrait('wave','after')&&Math.random()<.25){
@@ -608,7 +635,7 @@ function handleWaveTraits(payload,ctx){
   }
   if(ctx.event==='onDash'&&hasFormationTrait('wave','dashtrail')){
     const from=payload.from||P,to=payload.to||P,meta=systemTraitMeta(ctx,'wave','dashtrail','wave:dashtrail'),base=currentWaveBaseDamage()*.15*(payload?.derivedScale||1),r=skillRadiusValue('wave')*.55;
-    for(let i=1;i<=4;i++){const q=i/5;scheduleAreaHit({t:.08+(i-1)*.30,x:from.x+(to.x-from.x)*q,y:from.y+(to.y-from.y)*q,r,damage:base,source:'wave:dashtrail',family:'wave',meta,color:'#9fdfff'})}
+    for(let i=1;i<=4;i++){const q=i/5,x=from.x+(to.x-from.x)*q,y=from.y+(to.y-from.y)*q,t=.08+(i-1)*.30;scheduleAreaHit({t,x,y,r,damage:base,source:'wave:dashtrail',family:'wave',meta,color:'#9fdfff'});emitSkillVisual('wave',x,y,{r,duration:.42})}
   }
 }
 function handleChainTraits(payload,ctx,api){
@@ -627,7 +654,8 @@ function handleChainTraits(payload,ctx,api){
 function thunderAt(origin,scale,source,meta,radiusScale=1){
   const r=skillRadiusValue('thunder')*radiusScale,d=currentThunderBaseDamage()*scale;
   let hits=0;for(const e of enemies)if(e.type!=='spirit'&&e.hp>0&&distance(origin,e)<r){thunderDamage(e,d,source,meta,origin);hits++}
-  if(hits)ring(origin.x,origin.y,r,'#d7c8ff',.34);return hits;
+  if(hits){ring(origin.x,origin.y,r,'#d7c8ff',.34);emitSkillVisual('thunder',origin.x,origin.y,{r,duration:.52})}
+  return hits;
 }
 function handleThunderTraits(payload,ctx){
   const tr=traitRuntime();
@@ -641,7 +669,7 @@ function handleThunderTraits(payload,ctx){
     }
   }
   if(ctx.event==='onBurstStart'&&hasFormationTrait('thunder','burst')){
-    const target=strongestLivingEnemy(P,BAL.skill.thunder.acquire[skillRank('thunder')]||300);
+    const target=strongestLivingEnemy(P,skillAcquireValue('thunder')||300);
     if(target)thunderAt(target,.70,'thunder:burst',systemTraitMeta(ctx,'thunder','burst','thunder:burst'),.85);
   }
 }
@@ -660,7 +688,7 @@ function handleArrayTraits(payload,ctx){
       const center=z.follow?P:z;if(distance(P,center)<=z.r){
         const meta=systemTraitMeta(ctx,'array','resonate','array:resonate'),d=currentArrayBaseDamage()*.15;
         for(const e of enemies)if(e.type!=='spirit'&&e.hp>0&&distance(center,e)<z.r)arrayDamage(e,d,'array:resonate',meta);
-        ring(center.x,center.y,z.r,'#ffe9a8',.18);
+        ring(center.x,center.y,z.r,'#ffe9a8',.18);emitSkillVisual('array',center.x,center.y,{r:z.r,duration:.32});
       }
     }
   }
@@ -678,7 +706,7 @@ function updateFormationTraitRuntime(dt){
     tr.cloudTimer=(tr.cloudTimer??4)-dt;
     if(tr.cloudTimer<=0){
       tr.cloudTimer=4;
-      const target=strongestLivingEnemy(P,BAL.skill.thunder.acquire[skillRank('thunder')]||300);
+      const target=strongestLivingEnemy(P,skillAcquireValue('thunder')||300);
       if(target)thunderAt(target,.35,'thunder:cloud',systemTraitMeta({},'thunder','cloud','thunder:cloud'),.72);
     }
   }else tr.cloudTimer=4;
@@ -691,7 +719,7 @@ function updateFormationTraitRuntime(dt){
     if(elapsed>=z.nextReturn){
       z.nextReturn+=3;
       const center=z.follow?P:z,target=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&distance(center,e)<z.r).sort((a,b)=>enemyStrengthScore(b)-enemyStrengthScore(a))[0];
-      if(target)arrayDamage(target,currentArrayBaseDamage()*.60,'array:return',systemTraitMeta({},'array','return','array:return'));
+      if(target){arrayDamage(target,currentArrayBaseDamage()*.60,'array:return',systemTraitMeta({},'array','return','array:return'));emitProjectileVisual('sword',center,target,{duration:.12,color:'#ffe9a8'});emitSkillVisual('array',target.x,target.y,{r:20,duration:.36})}
     }
   }
 }
@@ -1783,32 +1811,33 @@ function cast(skill,options={}){
   }
   if(skill.id==='chain'){
     const candidates=enemies.filter(e=>e.type!=='spirit'&&e.hp>0),jump=skillChainJumpValue(),acquire=skillAcquireValue('chain'),t1=selectedFormationTrait('chain',1);
-    let limit=skillChainCountValue()+(t1==='spread'?2:0),current=P,used=new Set(),hits=0,first=null,last=null,killExtra=0,step=0;
+    let limit=skillChainCountValue()+(t1==='spread'?2:0),current=P,used=new Set(),hits=0,first=null,last=null,step=0;
     const scale=t1==='spread'?.75:1,linkDelay=.14,flight=.10;
+    const chainState={
+      used,pending:0,endlessLeft:hasFormationTrait('chain','endless')?4:0,jump,
+      damage:damage*scale,source,meta:copyTriggerMeta(meta),seal:hasFormationTrait('chain','seal'),lastTarget:null
+    };
     const queue=(target,hitScale,hitSource=source,hitMeta=meta,color='#c6d6ff')=>{
       const hitAt=.08+step*linkDelay,from={x:current.x,y:current.y};
-      scheduleDirectHit({t:hitAt,target,damage:damage*hitScale,source:hitSource,family:'chain',meta:hitMeta,color});
+      scheduleDirectHit({t:hitAt,target,damage:damage*hitScale,source:hitSource,family:'chain',meta:hitMeta,color,chainState});
       emitProjectileVisual('chain',from,target,{delay:Math.max(0,hitAt-flight),duration:flight,color});
-      current=target;last=target;hits++;step++;
+      current=target;last=target;hits++;step++;used.add(target.id);
       return hitAt;
     };
     for(let i=0;i<limit;i++){
       let target=null,near=Infinity;
       if(i===0&&options.startTarget&&options.startTarget.hp>0&&distance(current,options.startTarget)<acquire){target=options.startTarget}
-      if(!target)for(const e of candidates){if(used.has(e)||e.hp<=0)continue;const d=distance(current,e),allowed=i===0?acquire:jump;if(d<allowed&&d<near){near=d;target=e}}
+      if(!target)for(const e of candidates){if(used.has(e.id)||e.hp<=0)continue;const d=distance(current,e),allowed=i===0?acquire:jump;if(d<allowed&&d<near){near=d;target=e}}
       if(!target)break;
-      const predictedLethal=target.hp<=damage*scale;
       const hitAt=queue(target,scale);
-      if(!first)first=target;used.add(target);
+      if(!first)first=target;
       if(hasFormationTrait('chain','ghost')&&hits<=4)scheduleDirectHit({t:hitAt+.60,target,damage:damage*.20,source:'chain:ghost',family:'chain',meta:systemTraitMeta(meta,'chain','ghost','chain:ghost'),color:'#c6d6ff'});
-      if(hasFormationTrait('chain','endless')&&predictedLethal&&killExtra<4){killExtra++;limit++}
     }
     if(t1==='boss'){
       const strong=candidates.filter(e=>e.hp>0&&distance(current,e)<jump*1.35).sort((a,b)=>enemyStrengthScore(b)-enemyStrengthScore(a))[0]||first;
       if(strong&&strong.hp>0)for(let re=1;re<=3;re++)queue(strong,1+.15*re);
     }
     if(t1==='back'&&first&&first.hp>0)queue(first,.50,source,meta,'#dce5ff');
-    if(last&&hasFormationTrait('chain','seal'))last._chainSealUntil=elapsed+5+step*linkDelay;
     if(!hits)return false;
     if(last)emitSkillVisual('chain',last.x,last.y,{r:24,duration:.62+step*linkDelay});
     const result=done({target:last,hits});
@@ -1848,7 +1877,8 @@ function cast(skill,options={}){
     const follow=t1==='follow',center=follow?{x:P.x,y:P.y}:{x:target.x,y:target.y},base=currentArrayBaseDamage()*powerScale,pulse=base/3,pull=hasFormationTrait('array','pull')?100/3:0;
     for(const t of [0.02,.36,follow ? .84 : .70])scheduleAreaHit({t,x:center.x,y:center.y,r:radius,damage:pulse,source,family:'array',meta,pull,followPlayer:follow,color:'#ffe9a8'});
     const tr=traitRuntime();tr.arrayZone={x:center.x,y:center.y,r:radius,follow,until:elapsed+effectiveSkillCooldown('array'),nextReturn:elapsed+3};
-    pop(center.x,center.y,'만검진','#ffe9a8');ring(center.x,center.y,radius,'#ffe9a8',.24);emitSkillVisual('array',center.x,center.y,{r:radius,duration:.90});return done({target,hits:1});
+    const pulseWindow=follow?.84:.70;
+    pop(center.x,center.y,'만검진','#ffe9a8');ring(center.x,center.y,radius,'#ffe9a8',.24);emitSkillVisual('array',center.x,center.y,{r:radius,duration:pulseWindow+.20});return done({target,hits:1});
   }
   return false;
 }
