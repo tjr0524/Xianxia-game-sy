@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.51.7-damage-floats';
+const VERSION='11.51.10-damage-floats';
 if(window.__xianxiaFoundationRenderer?.version===VERSION)return;
 const W=1800,H=2400,BASE='assets/ink_v1/foundation_trial_v1/';
 const areaAssets={
@@ -77,12 +77,12 @@ function drawEnemy(area,e,t,elapsed){const im=image(area,e.type);if(!im?.natural
 function drawFoundationDamage(now){
   const c=state.ctx;
   for(let i=state.damageFloats.length-1;i>=0;i--){
-    const q=state.damageFloats[i],age=now-q.start,d=.52;
+    const q=state.damageFloats[i],age=now-q.start,d=.68;
     if(age>=d){state.damageFloats.splice(i,1);continue}
-    const u=age/d,fade=1-u,y=q.y-(q.boss?112:58)-u*24;
+    const u=age/d,fade=1-u,y=q.y-(q.boss?116:62)-u*28;
     c.save();c.globalAlpha=Math.min(1,age/.06)*fade;c.textAlign='center';c.textBaseline='middle';
-    c.strokeStyle='rgba(248,241,220,.95)';c.lineWidth=q.boss?4.5:3.5;
-    c.fillStyle='#8b352d';c.font='800 '+(q.boss?16:13)+'px sans-serif';
+    c.strokeStyle='rgba(248,241,220,.95)';c.lineWidth=q.boss?5:4;
+    c.fillStyle='#8b352d';c.font='900 '+(q.boss?20:17)+'px sans-serif';
     const text='-'+Math.max(1,Math.round(q.damage));
     c.strokeText(text,q.x,y);c.fillText(text,q.x,y);c.restore();
   }
