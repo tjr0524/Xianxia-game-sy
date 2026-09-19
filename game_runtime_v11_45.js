@@ -207,6 +207,7 @@ function areaMoveScale(){
   else if(M.area==='blood'){const d=M.realm.major>0?3:clamp((M.realm.stage||6)-6,0,3);s=.77+.03*d}
   else if(M.area==='thunder'){const d=M.realm.major>1?4:M.realm.major===1?clamp((M.realm.stage||1)-1,0,4):0;s=.68+.04*d}
   if(M.trainingNodes?.q3_shadow)s+=(1-s)*.05;
+  if(M.trainingNodes?.q8_shadow)s+=(1-s)*.25;
   if(M.trainingNodes?.q9_harmony)s+=(1-s)*.03;
   if(M.trainingNodes?.f1_harmony)s+=(1-s)*.10;
   return Math.min(1,s);
