@@ -51,13 +51,6 @@
   position:absolute;right:-1px;top:0;min-width:18px;padding:2px 3px;border-radius:8px;
   border:1px solid #7d71535c;background:#f4eddde8;color:#625538;font:800 6px/1 sans-serif;font-style:normal
 }
-.fs49-rankring{
-  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:56px;height:56px;z-index:8;overflow:visible;pointer-events:none
-}
-.fs49-rankring circle{fill:none;stroke:#79807858;stroke-width:3.4;stroke-linecap:round}
-.fs49-rankring circle.on{stroke:#477f69;filter:drop-shadow(0 0 1.5px #5b9b7f80)}
-.fs49-rankring circle.cap{stroke:#777b7560;opacity:.20}
 .fs49-trait{
   width:18px;height:18px;border-radius:50%;z-index:7;border:1px solid #585e5866;
   background:#60686355;box-shadow:0 1px 2px #29342e26
@@ -111,7 +104,6 @@
   .fs49-main{width:45px;height:45px}
   .fs49-main img{width:40px;height:40px}
   .fs49-main>b{top:40px;font-size:6.6px}
-  .fs49-rankring{width:53px;height:53px}
   .fs49-main>em{font-size:5.5px;min-width:16px}
   .fs49-trait{width:16px;height:16px}
   .fs49-trait.selected{width:19px;height:19px}

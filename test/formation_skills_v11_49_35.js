@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.50.19';
+const VERSION='11.50.20';
 if(window.__xianxiaFormationSkillsVersion===VERSION)return;
 window.__xianxiaFormationSkillsVersion=VERSION;
 
@@ -381,15 +381,6 @@ function linePath(){
   }
   return h;
 }
-function rankRing(rank,cap){
-  const r=Math.max(0,Math.min(5,+rank||0)),c=Math.max(0,Math.min(5,+cap||0));
-  let h='<svg class="fs49-rankring" viewBox="0 0 60 60" aria-hidden="true">';
-  for(let i=0;i<5;i++){
-    const cls=i<r?'on':i>=c?'cap':'';
-    h+=`<circle class="${cls}" cx="30" cy="30" r="26" pathLength="100" stroke-dasharray="16 84" transform="rotate(${i*72-90} 30 30)"></circle>`;
-  }
-  return h+'</svg>';
-}
 function nodeClass(M,s){
   if(mainUnlocked(M,s))return'mastered';
   return baseReady(M,s)?'available':'locked';
@@ -406,7 +397,6 @@ function mainNode(M,s,index){
   const r=mainRank(M,s),cap=mainCap(M,s);
   return `<button type="button" class="fs49-main ${nodeClass(M,s)} ${active.type==='main'&&active.id===s.id?'active':''}"
       style="left:${p.x/10}%;top:${p.y/10}%" data-act="main" data-id="${s.id}" aria-label="${s.name} Rank ${r}">
-    ${rankRing(r,cap)}
     <img src="${s.icon}" alt="">
     <b>${s.short}</b>
     <em>R${r}</em>
