@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.51.0';
+const VERSION='11.51.20';
 const AREAS=['qingyun','blackwind','blood','thunder','marsh','taixu'];
 const AREA_NAME={qingyun:'청운산 후산',blackwind:'흑풍곡',blood:'적혈비경',thunder:'천뢰봉',marsh:'자운택',taixu:'태허유적'};
 const TYPE_NAME={charging_boar:'돌진형',ranged_toad:'원거리형',exploding_beetle:'폭렬형',command_ape:'호령형',shield_pangolin:'호체형',sword_sentinel:'검위',formation_warden:'진위',taixu_boss:'태허진령'};
@@ -11,7 +11,7 @@ const OBJECTIVES={
   blood:['영맥을 발견하고 귀환','영맥 하나를 완전 채굴','영맥 3단계 수호전 완수','영맥 4단계 대형 영맥 확보','영맥 5단계 다중 방어전 완수'],
   thunder:['천뢰에 1회 직격하고 귀환','한 원정에서 천뢰에 2회 직격','낙뢰 3단계에서 천뢰 직격 2회 후 귀환','낙뢰 4단계 연속 천뢰 직격 3회','낙뢰 5단계에서 천뢰 직격 3회와 정예 무리 돌파'],
   marsh:['폭렬형 격파','폭발 피해 없이 폭렬형 무리 격파','폭렬형·호령형 혼합 무리 격파','호체형이 포함된 특수 조합 격파','특수 3종 정예 무리를 돌파하고 생환'],
-  taixu:['검위 또는 진위 격파','장판을 견디고 무리 격파','진법 결절 파괴 후 귀환','진법 4단계에서 결절과 대형 무리 돌파','태허진령 격파']
+  taixu:['진안 수성 1회 완수','진안 수성 중 수호령 5체 이상 격파','진법 결절 1개 이상 파괴 후 수성 완수','모든 결절을 파괴하고 진법 완전 해체','태허대진 파훼 후 태허진령 격파']
 };
 
 const rank=(api,id,area=api.state.area)=>Math.max(0,Math.min(5,Math.round(+api.state.zones?.[area]?.tree?.[id]||0)));
@@ -35,7 +35,10 @@ function predicates(area,api){
   if(area==='blood')return[!!run.veinSeen,!!run.veinMined,rank(api,'res1')>=3&&!!run.veinMined,rank(api,'res2')>=4&&!!run.largeVein,rank(api,'res3')>=5&&!!run.veinDefenseComplete];
   if(area==='thunder')return[(run.lightningHits||0)>=1,(run.lightningHits||0)>=2,rank(api,'storm1')>=3&&(run.lightningHits||0)>=2,rank(api,'storm2')>=4&&(run.lightningHits||0)>=3,rank(api,'storm3')>=5&&(run.lightningHits||0)>=3&&anyRare(run)&&m.specialKinds>=2];
   if(area==='marsh')return[killed(run,'exploding_beetle')>0,killed(run,'exploding_beetle')>=2&&!explosionDamage,killed(run,'exploding_beetle')>0&&killed(run,'command_ape')>0,killed(run,'shield_pangolin')>0&&m.specialKinds>=2,killed(run,'exploding_beetle')>0&&killed(run,'command_ape')>0&&killed(run,'shield_pangolin')>0&&anyRare(run)];
-  if(area==='taixu')return[killed(run,'sword_sentinel')+killed(run,'formation_warden')>0,m.zoneExperienced&&kills>=3,m.formationNodes>0,rank(api,'formation2')>=4&&m.formationNodes>=2&&kills>=5,killed(run,'taixu_boss')>0];
+  if(area==='taixu'){
+    const trial=run.foundation?.taixuTrial,complete=(run.taixuTrials||0)>=1,allNodes=(trial?.nodesTotal||0)>0&&(trial?.nodesDestroyed||0)>=(trial?.nodesTotal||0);
+    return[complete,complete&&kills>=5,complete&&m.formationNodes>=1,complete&&allNodes&&kills>=6,complete&&allNodes&&killed(run,'taixu_boss')>0];
+  }
   return[false,false,false,false,false];
 }
 function onBegin(api){
