@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.50.0';
+const VERSION='11.50.1';
 if(window.__xianxiaFormationSkillsVersion===VERSION)return;
 window.__xianxiaFormationSkillsVersion=VERSION;
 
