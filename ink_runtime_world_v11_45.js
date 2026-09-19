@@ -45,7 +45,7 @@ const ENV_FILES={
 const S={version:'11.50.22-death-assets',ready:false,error:null,images:{},envImages:{},envState:{},layer:null,ctx:null,renderScale:1,bufferWidth:0,bufferHeight:0,dprCap:1.5,maxPixels:2600000,assetBindings:'11.49.10'};
 window.__xianxiaInkRuntime=S;
 const tracks=new Map(),deaths=[],casts=[],impacts=[],pickups=[],floaters=[],veinBursts=[];
-let nextId=1,prevP=null,pFacing=1,prevCooldowns={},lastArea=null,lastPhase=null,prevObjects=[],prevRun=null,prevVein=null,hitStopUntil=0,lastSnapshot=null,activeBounds={x:0,y:0,w:W,h:H};
+let nextId=1,prevP=null,pFacing=1,prevCooldowns={},lastVisualCastSeq=0,lastArea=null,lastPhase=null,prevObjects=[],prevRun=null,prevVein=null,hitStopUntil=0,lastSnapshot=null,activeBounds={x:0,y:0,w:W,h:H};
 const bounds=new Map(),refs=new Map(),frameCanvases=new Map();
 function load(path){return new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('image failed: '+path));im.src=BASE+path+'?v='+encodeURIComponent(CACHE)})}
 function loadEnv(path){return new Promise((resolve,reject)=>{const im=new Image();im.decoding='async';im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('env image failed: '+path));im.src=ENV_BASE+path+'?v='+encodeURIComponent(CACHE)})}
@@ -324,8 +324,50 @@ function drawEnemies(s,t,now){
 }
 function drawPlayer(s,t){const p=s.P;if(!p)return;let moving=false,dx=0;if(prevP){dx=p.x-prevP.x;moving=Math.hypot(dx,p.y-prevP.y)>.16}if(Math.abs(dx)>.12)pFacing=dx<0?-1:1;if(p.tx!==undefined&&Math.abs(p.tx-p.x)>2)pFacing=p.tx<p.x?-1:1;const mortal=(s.M?.realm?.major??-1)<0,atk=s.M?.cult?.atk||1,maxCd=Math.max(.2,.55-(atk-1)*.02),att=!mortal&&p.cd>0.01,attackPhase=att?1-Math.min(maxCd,p.cd)/maxCd:0;let row=0,cols=4,idx=frame(t,4,4);if(att){row=2;cols=6;idx=attackPhase<.36?0:attackPhase<.72?1:0}else if(moving){row=1;cols=6;idx=frame(t,10,6)}const ground=p.y+23;shadow(p.x,ground,11,3,.19);anchored('player',row,cols,idx,p.x,ground,100,pFacing<0);if(att)drawPlayerSlash(p.x,ground,attackPhase,pFacing<0);prevP={x:p.x,y:p.y}}
 const effectRow={sword:0,wave:1,chain:2,thunder:3,array:4};
-function detectCasts(s,now){const cds=s.run?.skillCooldowns||{};for(const[id,value]of Object.entries(cds)){const before=prevCooldowns[id]??value;if(value>before+.12){let x=s.P?.x||350,y=s.P?.y||230;if(id==='sword')x+=pFacing*48;else if(id==='thunder'&&s.enemies?.length){x=s.enemies[0].x;y=s.enemies[0].y}casts.push({id,x,y,start:now,facing:pFacing})}prevCooldowns[id]=value}}
-function drawCasts(now){for(let i=casts.length-1;i>=0;i--){const e=casts[i],age=now-e.start;if(age>.64){casts.splice(i,1);continue}if(!visible(e.x,e.y,180))continue;const row=effectRow[e.id];if(row===undefined)continue;const size=e.id==='array'?140:e.id==='wave'?116:e.id==='thunder'?102:86;centered('effects',row,4,progress(age/.64,4),e.x,e.y+8,size,e.facing<0,1-age*.35)}}
+function detectCasts(s,now){
+  const visual=s.run?.visualCasts;
+  if(Array.isArray(visual)){
+    for(const event of visual){
+      const seq=+event.seq||0;if(seq<=lastVisualCastSeq)continue;
+      const lag=Math.max(0,(+s.elapsed||0)-(+event.at||0));
+      casts.push({
+        id:event.id,x:+event.x||0,y:+event.y||0,r:+event.r||0,
+        kind:event.kind||'burst',duration:Math.max(.18,+event.duration||.64),
+        start:now-lag,facing:pFacing,seq
+      });
+      lastVisualCastSeq=Math.max(lastVisualCastSeq,seq);
+    }
+    if(casts.length>36)casts.splice(0,casts.length-36);
+    return;
+  }
+  // Legacy fallback only for old saves/runtimes that do not expose visual events.
+  const cds=s.run?.skillCooldowns||{};
+  for(const[id,value]of Object.entries(cds)){
+    const before=prevCooldowns[id]??value;
+    if(value>before+.12)casts.push({id,x:s.P?.x||350,y:s.P?.y||230,r:0,kind:'burst',duration:.64,start:now,facing:pFacing});
+    prevCooldowns[id]=value;
+  }
+}
+function drawCasts(now){
+  for(let i=casts.length-1;i>=0;i--){
+    const e=casts[i],life=e.duration||.64,age=now-e.start;
+    if(age>life){casts.splice(i,1);continue}
+    if(age<0||!visible(e.x,e.y,Math.max(180,e.r+60)))continue;
+    const row=effectRow[e.id];if(row===undefined)continue;
+    const baseSize=e.id==='array'?140:e.id==='wave'?116:e.id==='thunder'?102:86;
+    if(e.kind==='field'){
+      const u=Math.max(0,Math.min(1,age/life)),pulse=.5+.5*Math.sin(age*10),color=e.id==='wave'?'#9fdfff':'#d7c8ff',radius=Math.max(26,e.r||baseSize*.45),ctx=S.ctx;
+      ctx.save();
+      ctx.globalAlpha=.18+.08*pulse;ctx.fillStyle=color;ctx.beginPath();ctx.arc(e.x,e.y,radius,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=.72;ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(e.x,e.y,radius,0,Math.PI*2);ctx.stroke();
+      ctx.globalAlpha=.42+.18*pulse;ctx.setLineDash([9,7]);ctx.beginPath();ctx.arc(e.x,e.y,radius*.78,0,Math.PI*2);ctx.stroke();ctx.restore();
+      centered('effects',row,4,Math.floor(age*6)%4,e.x,e.y+8,Math.max(baseSize,radius*1.85),e.facing<0,.34+.18*pulse);
+      continue;
+    }
+    const u=Math.max(0,Math.min(.999,age/life)),size=Math.max(baseSize,e.r?e.r*1.8:0);
+    centered('effects',row,4,progress(u,4),e.x,e.y+8,size,e.facing<0,1-u*.45);
+  }
+}
 function objectKey(o){return `${o.type}:${o.grade??'-'}:${Math.round(o.x)}:${Math.round(o.y)}`}
 function detectRewards(s,now){if(s.phase!=='run'||!s.run){prevObjects=(s.objects||[]).map(o=>({...o}));prevRun=s.run?{...s.run}:null;return}const prev=prevRun||s.run,ds=Math.max(0,(s.run.s||0)-(prev.s||0)),dh=[0,1,2].map(i=>Math.max(0,(s.run['h'+i]||0)-(prev['h'+i]||0)));const curKeys=new Set((s.objects||[]).map(objectKey)),gone=prevObjects.filter(o=>!curKeys.has(objectKey(o)));const recentDeath=deaths.length?deaths[deaths.length-1]:null;const takeOrigin=(kind,grade)=>{const ix=gone.findIndex(o=>o.type===kind&&(grade==null||o.grade===grade));if(ix>=0)return gone.splice(ix,1)[0];if(recentDeath)return {x:recentDeath.x,y:recentDeath.y};if(s.vein)return {x:s.vein.x,y:s.vein.y};return {x:s.P?.x||350,y:s.P?.y||230}};if(ds>0){const o=takeOrigin('s');pickups.push({kind:'s',x:o.x,y:o.y,start:now,d:.3,amount:ds});floaters.push({text:`+${ds} 영석`,color:'#9e792f',start:now+.18,d:.8})}for(let g=0;g<3;g++)if(dh[g]>0){const o=takeOrigin('h',g);pickups.push({kind:'h',grade:g,x:o.x,y:o.y,start:now,d:.28,amount:dh[g]});floaters.push({text:`+${dh[g]} ${['하급','중급','상급'][g]} 영초`,color:['#477d53','#397d6b','#76549a'][g],start:now+.16,d:.82})}prevObjects=(s.objects||[]).map(o=>({...o}));prevRun={s:s.run.s||0,h0:s.run.h0||0,h1:s.run.h1||0,h2:s.run.h2||0}}
 function detectVeinFx(s,now){
@@ -354,7 +396,7 @@ function drawPickupFx(s,t,now){const c=S.ctx,p=s.P||{x:350,y:230};for(let i=pick
 function drawImpacts(now){const c=S.ctx;for(let i=impacts.length-1;i>=0;i--){const q=impacts[i],age=now-q.start;if(age>.42){impacts.splice(i,1);continue}const u=age/.42;c.save();if(age<.14){const beamU=Math.min(1,age/.1),tx=q.fromX+(q.x-q.fromX)*beamU,ty=q.fromY+(q.y-q.fromY)*beamU;c.globalAlpha=1-age/.16;c.strokeStyle='#f6efd3';c.shadowColor='#fff7d6';c.shadowBlur=9;c.lineWidth=4;c.beginPath();c.moveTo(q.fromX,q.fromY);c.lineTo(tx,ty);c.stroke();c.strokeStyle='#8caea3';c.lineWidth=1.4;c.beginPath();c.moveTo(q.fromX,q.fromY+2);c.lineTo(tx,ty+2);c.stroke()}c.globalAlpha=(1-u)*.9;c.strokeStyle='#fff7df';c.lineWidth=2.5;c.beginPath();c.arc(q.x,q.y,7+u*18,0,Math.PI*2);c.stroke();c.beginPath();c.moveTo(q.x-11-u*6,q.y+8);c.lineTo(q.x+12+u*8,q.y-10);c.moveTo(q.x-7,q.y-12-u*4);c.lineTo(q.x+8,q.y+10+u*5);c.stroke();c.globalAlpha=1-u;c.fillStyle='#8b352d';c.strokeStyle='#f8f1dc';c.lineWidth=3;c.font='800 13px sans-serif';c.textAlign='center';const text=`-${Math.max(1,Math.round(q.damage))}`;c.strokeText(text,q.x,q.y-28-u*18);c.fillText(text,q.x,q.y-28-u*18);c.restore()}}
 function resetRunVisuals(){
   tracks.clear();deaths.length=0;casts.length=0;impacts.length=0;pickups.length=0;floaters.length=0;veinBursts.length=0;
-  prevP=null;prevCooldowns={};prevObjects=[];prevRun=null;prevVein=null;hitStopUntil=0;lastSnapshot=null;
+  prevP=null;prevCooldowns={};lastVisualCastSeq=0;prevObjects=[];prevRun=null;prevVein=null;hitStopUntil=0;lastSnapshot=null;
   if(S.ctx&&S.layer)clearViewport();
 }
 function drawFrame(s,meta){
