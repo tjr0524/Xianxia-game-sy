@@ -361,16 +361,26 @@ function trainCost(key){
 }
 function breakthroughCost(){
   if(isMortal())return {s:0,h:8,hg:0,init:1};
-  const major=M.realm.major;
-  const stage=M.realm.stage;
-  if(stage<9){
-    return {
-      s:Math.ceil(120*(1+major*5)*1.62**(stage-1)),
-      h:Math.ceil(16*(1+major*1.4)*1.27**(stage-1)),
-      hg:Math.min(2,Math.floor((stage-1)/3))
-    };
-  }
-  return {s:Math.ceil(4800*(1+major*3.5)),h:Math.ceil(75*(1+major*1.8)),hg:2,major:1};
+  const costs={
+    '0:1':{s:80,h:10,hg:0},
+    '0:2':{s:180,h:14,hg:0},
+    '0:3':{s:300,h:10,hg:1},
+    '0:4':{s:450,h:14,hg:1},
+    '0:5':{s:800,h:18,hg:1},
+    '0:6':{s:1300,h:15,hg:2},
+    '0:7':{s:1800,h:20,hg:2},
+    '0:8':{s:2600,h:28,hg:2},
+    '0:9':{s:4500,h:40,hg:2,major:1},
+    '1:1':{s:5400,h:50,hg:2},
+    '1:2':{s:6800,h:60,hg:2},
+    '1:3':{s:8400,h:75,hg:2},
+    '1:4':{s:11000,h:100,hg:2},
+    '1:5':{s:13400,h:120,hg:2},
+    '1:6':{s:16300,h:145,hg:2},
+    '1:7':{s:21100,h:190,hg:2},
+    '1:8':{s:27200,h:240,hg:2}
+  };
+  return costs[`${M.realm.major}:${M.realm.stage}`]||{s:999999999,h:999999,hg:2};
 }
 
 function planAvailable(id){
