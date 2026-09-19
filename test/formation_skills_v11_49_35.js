@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.49.36';
+const VERSION='11.49.38';
 if(window.__xianxiaFormationSkillsVersion===VERSION)return;
 window.__xianxiaFormationSkillsVersion=VERSION;
 
@@ -468,7 +468,7 @@ function traitIcon(id,name){
   return sys(id)?.icon||F+'formation_core.png';
 }
 function traitPanel(M,s,tier,opt,phase){
-  const t=TRAITS[s.id][tier-1],status=traitStatus(M,s,tier,opt[0]);
+  const t=TRAITS[s.id][tier-1],status=traitStatus(M,s,tier-1,opt[0]);
   const st=traitState(M,s.id,tier);
   const owned=st.owned?.includes(opt[0]);
   const lockReason=traitLockReason(M,s,tier-1);
