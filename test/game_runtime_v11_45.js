@@ -29,8 +29,12 @@ const STORM_BAL={
   focusRadius:220,
   reward:[0,6,8,10,12,15],
   rewardCap:3,
+  foresightWarn:[0,.10,.18,.26,.34,.42],
+  foresightRadius:[0,2,4,6,7,8],
   r5ZoneChance:.25,
-  r5ZoneDuration:1.8
+  r5ZoneDuration:1.8,
+  storm3HerbChance:[0,.08,.12,.18,.24,.30],
+  storm3ExtraChance:[0,0,.10,.20,.28,.35]
 };
 
 const UI={
@@ -76,7 +80,7 @@ const TREE={
   storm:[
     {id:'storm1',n:'뢰흔 개방',d:'R1 6.0초 단발 · R2 5.2초 · R3 2연속(0.22초) · R4 집중 낙뢰 · R5 이동 위험구역',tier:1,c:{s:1,h:0}},
     {id:'storm2',n:'천뢰 예지',d:'낙뢰 전조와 연쇄 방향 정보를 강화한다.',tier:2,p:'storm1',c:{s:1,h:0}},
-    {id:'storm3',n:'뇌정 응축',d:'복합 낙뢰 패턴을 개방한다. 보상 구조는 후속 튜닝.',tier:3,p:'storm2',c:{s:1,h:0}}
+    {id:'storm3',n:'뇌정 응축',d:'R1 회피 시 상급 영초 기회 · R3 추가 낙뢰 패턴 · R5 고확률 복합 낙뢰',tier:3,p:'storm2',c:{s:1,h:0}}
   ]
 };
 
@@ -1289,7 +1293,16 @@ function actor(type,options={}){
     if(er>=4){enemy.hp*=1.10;enemy.max=enemy.hp;enemy.attack*=1.08}
     if(er>=3){const traits=er>=5?['frenzy','iron','howl','devour']:['frenzy','iron','howl'];enemy.rareTrait=traits[Math.floor(Math.random()*traits.length)];if(enemy.rareTrait==='iron'){enemy.hp*=1.18;enemy.max=enemy.hp}}
   }
-  if(type==='rogue')enemy.treasure=Math.random()<.18+rank('fate2')*.10;
+  if(type==='rogue'){
+    enemy.treasure=options.treasure===1||Math.random()<.18+rank('fate2')*.10;
+    enemy.contest=options.contest?1:0;
+    if(enemy.contest){enemy.hp*=1.60;enemy.max=enemy.hp;enemy.speed*=1.18;enemy.rewardMult*=1.50}
+  }
+  if(type==='spirit'){
+    enemy.lucky=options.lucky?1:0;
+    enemy.expireAt=options.expireAt||0;
+    if(enemy.lucky){enemy.speed*=1.12;enemy.r+=2}
+  }
   foundationContent()?.configureEnemy?.(enemy,type,options,foundationApi());
   enemies.push(enemy);
   return enemy;
@@ -1330,12 +1343,65 @@ function updateEncounterPacks(dt){
 }
 function attackStrikeSet(){const cap=attackSlotCap(),list=enemies.filter(e=>encounterBeast(e)&&e.aggressive).sort((a,b)=>distance(P,a)-distance(P,b));return new Set(list.slice(0,cap))}
 
+function lootValueScore(o){
+  if(!o)return 0;
+  if(o.type==='h')return (o.value||1)*(5+(o.grade||0)*7);
+  return Math.max(1,o.value||1);
+}
+function spawnFateContest(){
+  if(rank('fate2')<5||run.fateContestDone)return;
+  run.fateContestDone=1;
+  const rogue=actor('rogue',{treasure:1,contest:1});
+  rogue.escape=0;rogue.stealCd=.6;
+  pop(rogue.x,rogue.y-28,'비보 쟁탈 사건','#ffe59a',1.1);
+  ring(rogue.x,rogue.y,42,'#ffe59a',.45);
+}
+function spawnLuckySpirit(){
+  if(rank('fate3')<5||run.luckySpiritDone)return;
+  run.luckySpiritDone=1;
+  const spirit=actor('spirit',{lucky:1,expireAt:elapsed+9});
+  pop(spirit.x,spirit.y-26,'기연 영수 · 9초','#91efe4',1.1);
+  ring(spirit.x,spirit.y,38,'#91efe4',.4);
+}
+function spawnVeinBeasts(count,defense=false){
+  if(!vein)return;
+  for(let i=0;i<count;i++){
+    const a=Math.random()*Math.PI*2,d=125+Math.random()*65,p={x:clamp(vein.x+Math.cos(a)*d,55,W-55),y:clamp(vein.y+Math.sin(a)*d,55,H-55)};
+    const e=actor(i%3===0?'attacker':i%2?'chaser':'guard',{p,homeX:p.x,homeY:p.y});
+    if(defense)e.veinDefense=1;
+  }
+}
+function veinDefenseAlive(){return enemies.some(e=>e.hp>0&&e.veinDefense)}
+function startNextVeinDefenseWave(){
+  if(!vein||rank('res3')<5)return false;
+  if(vein.defenseWave>=3)return false;
+  vein.defenseWave++;
+  spawnVeinBeasts(1+vein.defenseWave,true);
+  pop(vein.x,vein.y-34,`영맥 폭주 ${vein.defenseWave}/3`,'#d6b5ff',.85);
+  ring(vein.x,vein.y,92,'#d6b5ff',.36);
+  return true;
+}
 function setupVein(){
   if(!branches().includes('res')||rank('res1')<=0)return;
   const point={x:W*.15+Math.random()*W*.70,y:H*.15+Math.random()*H*.70};
-  const r1=rank('res1'),r2=rank('res2'),r3=rank('res3');
-  vein={x:point.x,y:point.y,r:26,stock:Math.round((55+r1*15+r3*30)*currentPlan().vein),progress:0,cleared:r2?0:1,waveStage:0};
-  if(r2>0){const angle=Math.random()*6.28,guardPoint={x:point.x+Math.cos(angle)*90,y:point.y+Math.sin(angle)*90};const elite=actor('elite',{p:guardPoint,homeX:guardPoint.x,homeY:guardPoint.y});elite.mineGuard=1;if(r2>=3){for(let i=0;i<2+(r2>=5?1:0);i++){const a=Math.random()*6.28,p={x:point.x+Math.cos(a)*(110+Math.random()*40),y:point.y+Math.sin(a)*(110+Math.random()*40)};actor(i%2?'guard':'chaser',{p,homeX:p.x,homeY:p.y})}}}
+  const r1=rank('res1'),r2=rank('res2'),r3=rank('res3'),large=r3>0;
+  const baseStock=50+r1*12+(large?35+r3*18:0);
+  vein={
+    x:point.x,y:point.y,r:large?32:26,stock:Math.round(baseStock*currentPlan().vein),
+    progress:0,required:r1>=3?3:1.2,cleared:r2?0:1,waveStage:0,inflowStage:0,
+    defenseWave:0,defenseCleared:r3>=5?0:1,defenseWait:0,guardPulseTimer:r2>=5?2.2:999
+  };
+  if(r2>0){
+    const angle=Math.random()*6.28,guardPoint={x:point.x+Math.cos(angle)*90,y:point.y+Math.sin(angle)*90};
+    const elite=actor('elite',{p:guardPoint,homeX:guardPoint.x,homeY:guardPoint.y});
+    elite.mineGuard=1;elite.mineGuardSpecial=r2>=5?1:0;elite.guardPulseCd=2.2;
+    if(r2>=3){
+      for(let i=0;i<2+(r2>=5?1:0);i++){
+        const a=Math.random()*6.28,p={x:point.x+Math.cos(a)*(110+Math.random()*40),y:point.y+Math.sin(a)*(110+Math.random()*40)};
+        const guard=actor(i%2?'guard':'chaser',{p,homeX:p.x,homeY:p.y});guard.mineGuard=1;
+      }
+    }
+  }
 }
 
 function foundationApi(){
@@ -1375,7 +1441,9 @@ function begin(){
     thieves:0,treasures:0,mined:0,dodges:0,combo:0,comboTime:0,bestCombo:0,
     herbLeft:herbTotal-herbInitial,beastLeft:beastTotal-beastInitial,
     herbTimer:7+Math.random()*3,beastTimer:4.2+Math.random()*1.8,rogueTimer:6,
-    lightningTimer:M.area==='thunder'?2.2:999,
+    fateContestTimer:rank('fate2')>=5?7.5:999,fateContestDone:0,
+    luckySpiritTimer:rank('fate3')>=5?4.5:999,luckySpiritDone:0,
+    lightningTimer:M.area==='thunder'?2.2:999,stormRewardCount:0,stormHerbCount:0,
     lastDamageAt:-999,regenPulse:0,damageTaken:0,lastDamageSource:'',damageBySource:{},
     skillDamage:{basic:0,sword:0,wave:0,chain:0,thunder:0,array:0},
     skillCasts:{basic:0,sword:0,wave:0,chain:0,thunder:0,array:0},
@@ -1393,7 +1461,8 @@ function begin(){
   for(let i=0;i<herbInitial;i++)randomHerb();
   if(!foundationContent()?.bossOnly?.(M.area,M.realm))initEncounterPacks();else run.packs=[];
   if(branches().includes('fate')&&rank('fate3')){
-    for(let i=0;i<1+Math.floor((rank('fate3')-1)/2);i++)actor('spirit');
+    const normalCount=1+Math.floor((Math.min(4,rank('fate3'))-1)/2);
+    for(let i=0;i<normalCount;i++)actor('spirit');
   }
   setupVein();
   foundationContent()?.onBegin?.(foundationApi());
@@ -1581,24 +1650,71 @@ function moveToward(actor,x,y,speed,dt){
   actor.y+=dy/d*speed*dt;
 }
 
-function spawnLightning(){
-  const level=rank('storm1');
-  const foresight=rank('storm2');
-  hazards.push({
-    x:clamp(P.x+(Math.random()-.5)*70,45,W-45),
-    y:clamp(P.y+(Math.random()-.5)*70,45,H-45),
-    r:36+foresight*2,
-    t:.82+foresight*.075,
-    ttl:.82+foresight*.075,
-    struck:0,
-    reward:STORM_BAL.reward[level]||0
-  });
+function spawnLightning(options={}){
+  const level=rank('storm1'),foresight=rank('storm2'),storm3=rank('storm3');
+  const combat=enemies.some(e=>encounterBeast(e)&&e.aggressive&&distance(P,e)<320);
+  let x,y;
+  if(level>=4&&combat){
+    const a=Math.random()*Math.PI*2,d=45+Math.random()*(STORM_BAL.focusRadius-45);
+    x=clamp(P.x+Math.cos(a)*d,45,W-45);y=clamp(P.y+Math.sin(a)*d,45,H-45);
+  }else{
+    x=45+Math.random()*(W-90);y=45+Math.random()*(H-90);
+  }
+  if(options.x!==undefined)x=clamp(options.x,45,W-45);
+  if(options.y!==undefined)y=clamp(options.y,45,H-45);
+  const warn=.82+(STORM_BAL.foresightWarn[foresight]||0),radius=Math.max(26,36-(STORM_BAL.foresightRadius[foresight]||0));
+  hazards.push({kind:'lightning',x,y,r:radius,t:warn,ttl:warn,struck:0,reward:STORM_BAL.reward[level]||0,compound:options.compound?1:0});
+  if(!options.compound&&storm3>=3&&Math.random()<(STORM_BAL.storm3ExtraChance[storm3]||0)){
+    const a=Math.random()*Math.PI*2,d=85+Math.random()*70;
+    const ex=clamp(x+Math.cos(a)*d,45,W-45),ey=clamp(y+Math.sin(a)*d,45,H-45);
+    setTimeout(()=>{if(phase==='run')spawnLightning({x:ex,y:ey,compound:1})},Math.round((.32+.05*foresight)*1000));
+  }
 }
-
+function makeStormZone(x,y){
+  const a=Math.random()*Math.PI*2;
+  return {kind:'storm_zone',x,y,r:56,t:STORM_BAL.r5ZoneDuration,ttl:STORM_BAL.r5ZoneDuration,struck:0,reward:0,vx:Math.cos(a)*92,vy:Math.sin(a)*92,hitCd:0};
+}
 function updateHazards(dt){
   foundationContent()?.updateHazards?.(dt,foundationApi());
-  if(M.area==='thunder'&&M.realm.major>=1&&(M.realm.stage||0)>=3){run.lightningTimer-=dt;if(run.lightningTimer<=0){const level=rank('storm1'),chain=STORM_BAL.chain[level]||1;for(let i=0;i<chain;i++)setTimeout(()=>{if(phase==='run')spawnLightning()},i*STORM_BAL.chainDelay*1000);run.lightningTimer=STORM_BAL.period[level]||6.5}}
-  for(const h of hazards){if(h.visualOwner==='foundation')continue;h.t-=dt;if(h.t<=0&&!h.struck){h.struck=1;h.t=.28;h.ttl=.28;if(distance(P,h)<h.r){let dmg=Math.ceil(beastConfig().hit*.55);takePlayerDamage(dmg,false,'lightning');pop(P.x,P.y,'천뢰 -'+dmg,'#ff9fa0',1)}else{run.dodges++;if((run.stormRewardCount||0)<STORM_BAL.rewardCap&&h.reward>0){run.stormRewardCount=(run.stormRewardCount||0)+1;drop('s',h.x,h.y,h.reward)}pop(h.x,h.y,'천뢰 회피','#bfc5ff',.9)}ring(h.x,h.y,h.r,'#d6d5ff',.3)}}hazards=hazards.filter(h=>h.t>0)
+  if(M.area==='thunder'&&M.realm.major>=1&&(M.realm.stage||0)>=3){
+    run.lightningTimer-=dt;
+    if(run.lightningTimer<=0){
+      const level=rank('storm1'),chain=STORM_BAL.chain[level]||1;
+      for(let i=0;i<chain;i++)setTimeout(()=>{if(phase==='run')spawnLightning()},i*STORM_BAL.chainDelay*1000);
+      run.lightningTimer=STORM_BAL.period[level]||6.5;
+    }
+  }
+  const additions=[];
+  for(const h of hazards){
+    if(h.visualOwner==='foundation')continue;
+    if(h.kind==='storm_zone'){
+      h.t-=dt;h.hitCd=Math.max(0,(h.hitCd||0)-dt);
+      h.x=clamp(h.x+(h.vx||0)*dt,35,W-35);h.y=clamp(h.y+(h.vy||0)*dt,35,H-35);
+      if(distance(P,h)<h.r&&h.hitCd<=0){const dmg=Math.ceil(beastConfig().hit*.18);takePlayerDamage(dmg,false,'lightning_zone');h.hitCd=.62;pop(P.x,P.y,'뢰역 -'+dmg,'#c8b7ff',.55)}
+      continue;
+    }
+    h.t-=dt;
+    if(h.t>0||h.struck)continue;
+    h.struck=1;h.t=.28;h.ttl=.28;
+    if(h.kind==='vein_pulse'){
+      if(distance(P,h)<h.r){const dmg=Math.ceil(beastConfig().hit*.42);takePlayerDamage(dmg,false,'vein_pulse');pop(P.x,P.y,'영맥 충격 -'+dmg,'#d9a6ff',.75)}
+      ring(h.x,h.y,h.r,'#d9a6ff',.35);continue;
+    }
+    const hit=distance(P,h)<h.r;
+    if(hit){
+      const dmg=Math.ceil(beastConfig().hit*.55);takePlayerDamage(dmg,false,'lightning');pop(P.x,P.y,'천뢰 -'+dmg,'#ff9fa0',1);
+    }else{
+      run.dodges++;
+      if((run.stormRewardCount||0)<STORM_BAL.rewardCap&&h.reward>0){run.stormRewardCount=(run.stormRewardCount||0)+1;drop('s',h.x,h.y,h.reward)}
+      const s3=rank('storm3');
+      if(s3>0&&(run.stormHerbCount||0)<2&&Math.random()<(STORM_BAL.storm3HerbChance[s3]||0)){run.stormHerbCount=(run.stormHerbCount||0)+1;drop('h',h.x+10,h.y-8,1,2);pop(h.x,h.y-20,'뇌정 응축 · 상급 영초','#d5b8ff',.8)}
+      pop(h.x,h.y,'천뢰 회피','#bfc5ff',.9);
+    }
+    if(rank('storm1')>=5&&Math.random()<STORM_BAL.r5ZoneChance)additions.push(makeStormZone(h.x,h.y));
+    ring(h.x,h.y,h.r,'#d6d5ff',.3);
+  }
+  if(additions.length)hazards.push(...additions);
+  hazards=hazards.filter(h=>h.t>0);
 }
 
 function update(dt){
@@ -1616,16 +1732,92 @@ function update(dt){
   const exitDistance=Math.hypot(P.x-EXIT.x,P.y+PLAYER_GROUND_OFFSET-EXIT.y);if(exitDistance>68)run.left=1;if(run.left&&exitDistance<EXIT.r+9){finish('return');return}
   run.herbTimer-=dt;if(run.herbLeft>0&&run.herbTimer<=0){randomHerb();run.herbLeft--;run.herbTimer=7+Math.random()*3}
   updateEncounterPacks(dt);
-  if(branches().includes('fate')&&rank('fate1')>0){run.rogueTimer-=dt;if(run.rogueTimer<=0){actor(Math.random()<.68?'rogue':'rat');run.rogueTimer=Math.max(4.2,10-rank('fate1')*.75)}}
+  if(branches().includes('fate')&&rank('fate1')>0){
+    run.rogueTimer-=dt;
+    if(run.rogueTimer<=0){actor(Math.random()<.68?'rogue':'rat');run.rogueTimer=Math.max(4.2,10-rank('fate1')*.75)}
+    run.fateContestTimer-=dt;if(run.fateContestTimer<=0&&!run.fateContestDone)spawnFateContest();
+    run.luckySpiritTimer-=dt;if(run.luckySpiritTimer<=0&&!run.luckySpiritDone)spawnLuckySpirit();
+  }
   const pr=autoPickupRange();objects=objects.filter(o=>{if(distance(P,o)<pr+o.r){if(o.type==='h')gainHerb(o.value,o.grade,o.x,o.y);else gainStone(o.value,o.x,o.y);return false}return true});
-  if(vein&&vein.stock>0&&distance(P,vein)<vein.r+P.r+10){vein.progress+=dt;const r3=rank('res3');if(r3>=3&&vein.waveStage<1&&vein.progress>=1){vein.waveStage=1;for(let i=0;i<2;i++){const a=Math.random()*6.28,p={x:vein.x+Math.cos(a)*130,y:vein.y+Math.sin(a)*130};actor(i?'chaser':'guard',{p,homeX:p.x,homeY:p.y})}}if(r3>=3&&vein.waveStage<2&&vein.progress>=2){vein.waveStage=2;for(let i=0;i<2+(r3>=5?2:0);i++){const a=Math.random()*6.28,p={x:vein.x+Math.cos(a)*(130+Math.random()*40),y:vein.y+Math.sin(a)*(130+Math.random()*40)};actor(i%2?'attacker':'chaser',{p,homeX:p.x,homeY:p.y})}}if(vein.progress>=3){const mined=vein.stock,x=vein.x,y=vein.y,doneVein=vein;run.mined+=mined;gainStone(mined,x,y);pop(x,y-34,'영맥 채굴 완료','#b8d7ef',1.1);if(P.target===doneVein)P.target=null;vein=null}}
+  if(vein&&vein.stock>0){
+    const nearVein=distance(P,vein)<vein.r+P.r+10,r1=rank('res1'),r2=rank('res2'),r3=rank('res3');
+    const guardsAlive=enemies.some(e=>e.hp>0&&e.mineGuard);
+    if(vein.cleared===0&&!guardsAlive)vein.cleared=1;
+    if(r2>=5&&guardsAlive){
+      vein.guardPulseTimer-=dt;
+      if(vein.guardPulseTimer<=0){
+        vein.guardPulseTimer=2.4;
+        hazards.push({kind:'vein_pulse',x:vein.x,y:vein.y,r:88,t:.75,ttl:.75,struck:0,reward:0});
+      }
+    }
+    if(nearVein&&vein.cleared){
+      if(r3>=5&&!vein.defenseCleared){
+        if(!veinDefenseAlive()){
+          vein.defenseWait-=dt;
+          if(vein.defenseWave<3&&vein.defenseWait<=0){startNextVeinDefenseWave();vein.defenseWait=.55}
+          else if(vein.defenseWave>=3){vein.defenseCleared=1;pop(vein.x,vein.y-34,'영맥 폭주 진압','#c6f0df',.9)}
+        }
+      }else{
+        vein.progress+=dt;
+        if(r1>=5&&vein.inflowStage<1&&vein.progress>=Math.min(1,vein.required*.34)){vein.inflowStage=1;spawnVeinBeasts(2,false);pop(vein.x,vein.y-30,'채굴 소음 · 요수 유입','#e4b77d',.7)}
+        if(r1>=5&&vein.inflowStage<2&&vein.progress>=Math.min(2,vein.required*.68)){vein.inflowStage=2;spawnVeinBeasts(2,false)}
+        if(r3>=3&&vein.waveStage<1&&vein.progress>=Math.min(1,vein.required*.40)){vein.waveStage=1;spawnVeinBeasts(2,false)}
+        if(r3>=3&&vein.waveStage<2&&vein.progress>=Math.min(2,vein.required*.75)){vein.waveStage=2;spawnVeinBeasts(2+(r3>=4?1:0),false)}
+        if(vein.progress>=vein.required){
+          const mined=vein.stock,x=vein.x,y=vein.y,doneVein=vein;run.mined+=mined;gainStone(mined,x,y);
+          pop(x,y-34,r3>=5?'대형 영맥 확보':'영맥 채굴 완료','#b8d7ef',1.1);
+          if(P.target===doneVein)P.target=null;vein=null;
+        }
+      }
+    }
+  }
   const strikeSet=attackStrikeSet();
   for(const enemy of enemies){
     enemy.cd=Math.max(0,enemy.cd-dt);refreshCombatStatuses(enemy);
     if(foundationContent()?.updateEnemy?.(enemy,dt,foundationApi()))continue;
     if(enemy.type==='attacker'&&enemy.windup>0){enemy.windup-=dt;if(enemy.windup<=0&&enemy.pendingStrike){enemy.pendingStrike=0;if(distance(enemy,P)<P.r+enemy.r+16){let dmg=(enemy.attack||beastConfig().hit)*incomingDamageScale();if(enemies.some(o=>o!==enemy&&o.rareTrait==='howl'&&o.hp>0&&distance(o,enemy)<130))dmg*=1.15;if(P.hitGrace>0&&M.trainingNodes?.q6_spirit)dmg*=M.trainingNodes?.q9_harmony ? .90 : .92;dmg=Math.ceil(dmg);takePlayerDamage(dmg,true,'attacker');ring(P.x,P.y,P.r+9,'#c96893',.20)}}}
-    if(enemy.type==='spirit'){const d=distance(enemy,P);if(d<40){enemy.bond+=dt;if(enemy.bond>1.3){const ai=areaIndex(),grade=Math.min(2,ai),bonus=ai>=3?(Math.random()<.35?1:0):ai>=2?(Math.random()<.25?1:0):0,reward=8+Math.floor(Math.random()*5)+bonus;gainHerb(reward,grade,enemy.x,enemy.y);pop(enemy.x,enemy.y-28,bonus?'영수 포획 · 기연 보너스!':'영수 포획 성공','#79ded6',1);enemy.hp=0}}else enemy.bond=Math.max(0,enemy.bond-dt*.3);if(rank('fate3')>=3&&d<130){const dx=enemy.x-P.x,dy=enemy.y-P.y,n=Math.hypot(dx,dy)||1;enemy.vx=dx/n*enemy.speed;enemy.vy=dy/n*enemy.speed}enemy.x=clamp(enemy.x+enemy.vx*dt,18,W-18);enemy.y=clamp(enemy.y+enemy.vy*dt,18,H-18);continue}
-    if(enemy.type==='rogue'||enemy.type==='rat'){enemy.stealCd=Math.max(0,enemy.stealCd-dt);const dP=distance(enemy,P);if(enemy.type==='rogue'&&enemy.treasure&&rank('fate2')>=3&&dP<170)enemy.escape=1;let target=null,nearest=Infinity;if(!enemy.escape&&rank('fate1')>=3){for(const o of objects){const d=distance(enemy,o);if(d<nearest){nearest=d;target=o}}}if(target){moveToward(enemy,target.x,target.y,enemy.speed,dt);if(nearest<enemy.r+target.r+4&&enemy.stealCd<=0){const idx=objects.indexOf(target);if(idx>=0){objects.splice(idx,1);enemy.carry.push({type:target.type,value:target.value,grade:target.grade});enemy.stealCd=.35;if(enemy.type==='rat'||enemy.carry.length>=2)enemy.escape=1}}}else if(enemy.carry.length)enemy.escape=1;else if(!enemy.escape){enemy.x=clamp(enemy.x+enemy.vx*dt,18,W-18);enemy.y=clamp(enemy.y+enemy.vy*dt,18,H-18)}if(elapsed>21)enemy.escape=1;if(enemy.escape)moveToward(enemy,enemy.x<W/2?-30:W+30,enemy.y,enemy.speed*1.2,dt);continue}
+    if(enemy.type==='spirit'){
+      const d=distance(enemy,P);
+      if(enemy.lucky&&enemy.expireAt>0&&elapsed>=enemy.expireAt){pop(enemy.x,enemy.y-18,'기연 영수 이탈','#98b5b0',.6);enemy.hp=0;continue}
+      if(d<40){
+        enemy.bond+=dt;
+        if(enemy.bond>1.3){
+          const ai=areaIndex(),grade=Math.min(2,ai),bonus=ai>=3?(Math.random()<.35?1:0):ai>=2?(Math.random()<.25?1:0):0;
+          const reward=(enemy.lucky?14:8)+Math.floor(Math.random()*(enemy.lucky?7:5))+bonus;
+          gainHerb(reward,grade,enemy.x,enemy.y);pop(enemy.x,enemy.y-28,enemy.lucky?'기연 영수 포획!':bonus?'영수 포획 · 기연 보너스!':'영수 포획 성공','#79ded6',1);enemy.hp=0;
+        }
+      }else enemy.bond=Math.max(0,enemy.bond-dt*.3);
+      if(rank('fate3')>=3&&d<150){
+        let danger=null,best=Infinity;
+        for(const h of hazards){if(h.struck)continue;const hd=distance(enemy,h);if(hd<best){best=hd;danger=h}}
+        if(!danger)for(const e of enemies){if(e===enemy||!encounterBeast(e))continue;const ed=distance(enemy,e);if(ed<best){best=ed;danger=e}}
+        if(danger)moveToward(enemy,danger.x,danger.y,enemy.speed*1.08,dt);
+        else{const dx=enemy.x-P.x,dy=enemy.y-P.y,n=Math.hypot(dx,dy)||1;enemy.vx=dx/n*enemy.speed;enemy.vy=dy/n*enemy.speed}
+      }
+      enemy.x=clamp(enemy.x+enemy.vx*dt,18,W-18);enemy.y=clamp(enemy.y+enemy.vy*dt,18,H-18);continue
+    }
+    if(enemy.type==='rogue'||enemy.type==='rat'){
+      enemy.stealCd=Math.max(0,enemy.stealCd-dt);const dP=distance(enemy,P);
+      if(enemy.type==='rogue'&&enemy.treasure&&rank('fate2')>=3&&dP<170)enemy.escape=1;
+      let target=null,nearest=Infinity;
+      if(!enemy.escape&&rank('fate1')>=3){
+        if(rank('fate1')>=5&&objects.length){
+          let bestScore=-Infinity;
+          for(const o of objects){const score=lootValueScore(o)-distance(enemy,o)*.02;if(score>bestScore){bestScore=score;target=o}}
+          if(target)nearest=distance(enemy,target);
+        }else{
+          for(const o of objects){const d=distance(enemy,o);if(d<nearest){nearest=d;target=o}}
+        }
+      }
+      if(target){
+        moveToward(enemy,target.x,target.y,enemy.speed,dt);
+        if(nearest<enemy.r+target.r+4&&enemy.stealCd<=0){
+          const idx=objects.indexOf(target);if(idx>=0){objects.splice(idx,1);enemy.carry.push({type:target.type,value:target.value,grade:target.grade});enemy.stealCd=.35;if(enemy.type==='rat'||enemy.carry.length>=2)enemy.escape=1}
+        }
+      }else if(enemy.carry.length)enemy.escape=1;else if(!enemy.escape){enemy.x=clamp(enemy.x+enemy.vx*dt,18,W-18);enemy.y=clamp(enemy.y+enemy.vy*dt,18,H-18)}
+      if(elapsed>21||(enemy.contest&&elapsed>18))enemy.escape=1;
+      if(enemy.escape)moveToward(enemy,enemy.x<W/2?-30:W+30,enemy.y,enemy.speed*1.2,dt);continue
+    }
     const d=distance(enemy,P),home=Math.hypot(enemy.x-enemy.homeX,enemy.y-enemy.homeY),aggro=enemy.type==='chaser'?220:enemy.type==='elite'?105:120;
     if(enemy.type==='chaser'){if(d<aggro)enemy.aggressive=1;if(d>aggro*1.45)enemy.aggressive=0}else{if(d<aggro)enemy.aggressive=1;if(home>210&&d>aggro)enemy.aggressive=0}
     let speedMul=1,period=enemy.attackPeriod||1;if(enemy.rareTrait==='frenzy'&&enemy.hp/enemy.max<.5){speedMul=1.15;period*=.8}if(enemy.aggressive){if(strikeSet.has(enemy))moveToward(enemy,P.x,P.y,enemy.speed*speedMul,dt);else{const rr=58+(enemy.r||12),tx=P.x+Math.cos(enemy.slotAngle||0)*rr,ty=P.y+Math.sin(enemy.slotAngle||0)*rr;moveToward(enemy,tx,ty,enemy.speed*.82*speedMul,dt)}}else if(home>5)moveToward(enemy,enemy.homeX,enemy.homeY,enemy.speed*.55,dt);
@@ -2199,13 +2391,13 @@ window.__xianxiaDebug={
   replaceState:value=>{
     M={...fresh(),...value};
     M=loadNormalized(M);
-    render();draw();
+    save();render();draw();
   },
   selectArea:id=>{
-    if(AREAS.some(area=>area.id===id)){M.area=id;M.unlocked[id]=1;ensurePlan();render();draw()}
+    if(AREAS.some(area=>area.id===id)){M.area=id;M.unlocked[id]=1;ensurePlan();save();render();draw()}
   },
   selectPlan:id=>{
-    if(PLANS.some(plan=>plan.id===id)){M.settings.plan=id;ensurePlan();render()}
+    if(PLANS.some(plan=>plan.id===id)){M.settings.plan=id;ensurePlan();save();render()}
   },
   moveTo:(x,y)=>setDestination({x:clamp(x,11,W-11),y:clamp(y,11,H-11)},false),
   begin,
