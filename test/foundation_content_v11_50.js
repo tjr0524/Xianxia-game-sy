@@ -313,11 +313,17 @@ function completeTaixuTrial(api){
   }
 }
 function onFormationNodeDeath(enemy,api){
-  const trial=taixuTrial(api);if(!trial||trial.state!=='active'||!enemy?.trialNode)return;
+  const trial=taixuTrial(api);if(!trial||!enemy?.trialNode||!['active','complete'].includes(trial.state))return;
   trial.nodesDestroyed=Math.min(trial.nodesTotal,(trial.nodesDestroyed||0)+1);
-  trial.remaining=Math.max(0,trial.remaining-1);
-  api.pop(enemy.x,enemy.y-42,`결절 파괴 · 수성 -1.0초`,'#e9dcff',.8);
+  if(trial.state==='active'){
+    trial.remaining=Math.max(0,trial.remaining-1);
+    api.pop(enemy.x,enemy.y-42,`결절 파괴 · 수성 -1.0초`,'#e9dcff',.8);
+  }else api.pop(enemy.x,enemy.y-42,'결절 파괴','#e9dcff',.65);
   api.ring(enemy.x,enemy.y,52,'#e9dcff',.45);
+  if(trial.state==='complete'&&trial.nodesTotal>0&&trial.nodesDestroyed>=trial.nodesTotal&&!trial.nodeBonus){
+    trial.nodeBonus=1;api.run.taixuSigils=(api.run.taixuSigils||0)+1;
+    api.pop(trial.x,trial.y-46,'완전 해체 · 태허진문 +1','#fff0b5',.9);
+  }
 }
 function updateTaixuTrial(dt,api){
   const trial=taixuTrial(api);if(!trial)return;
