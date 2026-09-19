@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.51.2';
+const VERSION='11.51.5';
 if(window.__xianxiaFormationSkillsVersion===VERSION)return;
 window.__xianxiaFormationSkillsVersion=VERSION;
 
@@ -13,7 +13,7 @@ const $=s=>document.querySelector(s);
 const REALMS=['연기','축기','결단','원영'];
 const HERB_KEYS=['herb','herb2','herb3'];
 const HERB_NAMES=['하급','중급','상급'];
-const DAO_MARK_COST=1;
+const DAO_MARK_COST=0;
 
 const A='assets/ink_v1/foundation_trial_v1/ui/node_icons/';
 const F='assets/ink_v1/runtime/ui/formation_skills/';
@@ -356,7 +356,7 @@ function chooseTrait(id,tier,optId){
     if(cost>0&&(+f.daoMarks||0)<cost){notice(`추가 선택지 해금에는 도흔 ${cost}개가 필요합니다.`);return false}
     if(cost>0)f.daoMarks-=cost;
     st.owned.push(optId);st.selected=optId;
-    notice(`${s.name} 특성을 도흔 ${cost}개로 영구 해금하고 장착했습니다.`);
+    notice(cost>0?`${s.name} 특성을 도흔 ${cost}개로 영구 해금하고 장착했습니다.`:`${s.name} 특성을 무료로 영구 해금하고 장착했습니다.`);
     return true;
   });
 }
@@ -507,7 +507,7 @@ function traitPanel(M,s,tier,opt,phase){
   else if(status==='selected'){action='선택 중';disabled='disabled'}
   else if(owned){action='장착'}
   else if((st.owned?.length||0)===0){action='무료 해금 · 장착'}
-  else{action='도흔 1 · 해금'}
+  else{action=`도흔 ${DAO_MARK_COST} · 해금`}
   if(phase==='run')disabled='disabled';
   if(!owned&&(st.owned?.length||0)>0&&daoMarks(M)<DAO_MARK_COST)disabled='disabled';
   const statusLabel={locked:'봉인',available:'해금 가능',owned:'보유',selected:'장착 중'}[status]||status;
@@ -516,7 +516,7 @@ function traitPanel(M,s,tier,opt,phase){
     :`<small>${realmLabel(t.req)} 개방 · 조건 충족</small>`;
   return `<div class="fs49-detail-head"><b>${s.name} · Tier ${['Ⅰ','Ⅱ','Ⅲ'][tier-1]}</b><span>${statusLabel}</span></div>
     <div class="fs49-detail-main fs49-detail-trait"><img src="${traitIcon(s.id,opt[1])}" alt=""><div><strong>${opt[1]}</strong>${effectPresentation(opt[2])}${condition}</div></div>
-    <div class="fs49-detail-actions"><span>${owned?'영구 보유 · 비경 밖 무료 교체':(st.owned?.length?'추가 선택지 비용: 도흔 1':'해당 Tier 첫 선택 무료')}</span>
+    <div class="fs49-detail-actions"><span>${owned?'영구 보유 · 비경 밖 무료 교체':(st.owned?.length?`추가 선택지 비용: 도흔 ${DAO_MARK_COST}`:'해당 Tier 첫 선택 무료')}</span>
     <button type="button" data-act="choose" data-id="${s.id}" data-tier="${tier}" data-opt="${opt[0]}" ${disabled}>${action}</button></div>`;
 }
 function renderDetail(M,phase){
