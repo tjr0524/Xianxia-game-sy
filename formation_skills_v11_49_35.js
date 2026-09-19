@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.51.19';
+const VERSION='11.51.20';
 if(window.__xianxiaFormationSkillsVersion===VERSION)return;
 window.__xianxiaFormationSkillsVersion=VERSION;
 
@@ -227,7 +227,7 @@ function foundationMaterial(M){
   const stage=M.realm?.stage||1;
   if(stage<=3)return {key:'thunderMark',name:'뢰흔'};
   if(stage<=6)return {key:'purpleEssence',name:'자운정수'};
-  return null;
+  return {key:'taixuSigil',name:'태허진문'};
 }
 function secondaryCost(M,c){
   const amount=Math.max(0,+c?.h||0);if(!amount)return {kind:'none',amount:0,name:''};
