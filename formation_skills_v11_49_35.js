@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.49.35';
+const VERSION='11.49.36';
 if(window.__xianxiaFormationSkillsVersion===VERSION)return;
 window.__xianxiaFormationSkillsVersion=VERSION;
 
@@ -178,6 +178,37 @@ burst:[
 let active={type:'summary'};
 let queued=false;
 let rootObserver=null;
+const view={scale:1,x:0,y:0,pointers:new Map(),gesture:null,dragged:false,suppressClick:false};
+
+function clamp(value,min,max){return Math.max(min,Math.min(max,value))}
+function applyView(){
+  const board=$('#fs49Board');
+  const viewport=$('#fs49Viewport');
+  if(!board||!viewport)return;
+  board.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.scale})`;
+  viewport.classList.toggle('zoomed',view.scale>1.001);
+  const label=viewport.querySelector('[data-zoom-label]');
+  if(label)label.textContent=`${Math.round(view.scale*100)}%`;
+}
+function resetView(){view.scale=1;view.x=0;view.y=0;applyView()}
+function zoomBy(factor){
+  const old=view.scale;
+  const next=clamp(old*factor,1,2.2);
+  if(Math.abs(next-old)<.001)return;
+  const ratio=next/old;
+  view.scale=next;
+  view.x*=ratio;view.y*=ratio;
+  if(next<=1.001){view.x=0;view.y=0}
+  applyView();
+}
+function viewGesture(){
+  const pts=[...view.pointers.values()];
+  if(!pts.length)return null;
+  const center={x:pts.reduce((a,p)=>a+p.x,0)/pts.length,y:pts.reduce((a,p)=>a+p.y,0)/pts.length};
+  let distance=0;
+  if(pts.length>1)distance=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);
+  return {center,distance,count:pts.length};
+}
 
 function snapshot(){return D.snapshot()}
 function reached(M,req){
@@ -238,6 +269,17 @@ function traitStatus(M,s,tierIndex,optId){
   if(st.selected===optId)return'selected';
   if(st.owned?.includes(optId))return'owned';
   return'available';
+}
+function traitLockReason(M,s,tierIndex){
+  const t=TRAITS[s.id]?.[tierIndex];
+  if(!t)return'특성 데이터 없음';
+  const reasons=[];
+  if(!reached(M,t.req))reasons.push(`경지 · ${realmLabel(t.req)} 필요`);
+  if(!mainUnlocked(M,s)){
+    reasons.push(s.kind==='spell'?`본체 · ${s.name} 전승 필요`:`본체 · ${s.name} Rank 1 활성화 필요`);
+  }
+  if(t.reserved)reasons.push('후기 경지 예약 슬롯 · 밸런스 미정');
+  return reasons.join(' · ');
 }
 function mutation(fn){
   const sh=snapshot();
@@ -429,6 +471,7 @@ function traitPanel(M,s,tier,opt,phase){
   const t=TRAITS[s.id][tier-1],status=traitStatus(M,s,tier,opt[0]);
   const st=traitState(M,s.id,tier);
   const owned=st.owned?.includes(opt[0]);
+  const lockReason=traitLockReason(M,s,tier-1);
   let action='',disabled='';
   if(status==='locked'||t.reserved){action=t.reserved?'후기 슬롯':'잠김';disabled='disabled'}
   else if(status==='selected'){action='선택 중';disabled='disabled'}
@@ -437,8 +480,11 @@ function traitPanel(M,s,tier,opt,phase){
   else{action='도흔 1 · 해금'}
   if(phase==='run')disabled='disabled';
   const statusLabel={locked:'봉인',available:'해금 가능',owned:'보유',selected:'장착 중'}[status]||status;
+  const condition=status==='locked'||t.reserved
+    ?`<small class="fs49-lock-reason"><b>잠금 조건</b> · ${lockReason||'조건 확인 필요'}</small>`
+    :`<small>${realmLabel(t.req)} 개방 · 조건 충족</small>`;
   return `<div class="fs49-detail-head"><b>${s.name} · Tier ${['Ⅰ','Ⅱ','Ⅲ'][tier-1]}</b><span>${statusLabel}</span></div>
-    <div class="fs49-detail-main"><img src="${traitIcon(s.id,opt[1])}" alt=""><div><strong>${opt[1]}</strong><p>${opt[2]}</p><small>${realmLabel(t.req)} 개방${t.reserved?' · 후기 설계 예약':''}</small></div></div>
+    <div class="fs49-detail-main"><img src="${traitIcon(s.id,opt[1])}" alt=""><div><strong>${opt[1]}</strong><p>${opt[2]}</p>${condition}</div></div>
     <div class="fs49-detail-actions"><span>${owned?'영구 보유 · 비경 밖 무료 교체':(st.owned?.length?'추가 선택지 비용: 도흔 1':'해당 Tier 첫 선택 무료')}</span>
     <button type="button" data-act="choose" data-id="${s.id}" data-tier="${tier}" data-opt="${opt[0]}" ${disabled}>${action}</button></div>`;
 }
@@ -467,7 +513,8 @@ function render(){
   });
   root.innerHTML=`<div class="formation-board49">
     <div class="fs49-topline"><span>팔괘 진반</span><small>본체=Rank · 내/중/외환=Tier Ⅰ/Ⅱ/Ⅲ · 도흔 ${daoMarks(M)}</small></div>
-    <div class="fs49-board">
+    <div class="fs49-viewport" id="fs49Viewport">
+      <div class="fs49-board" id="fs49Board">
       <svg class="fs49-lines" viewBox="0 0 1000 1000" aria-hidden="true">
         <g class="fs49-sector-lines">${linePath()}</g>
         <polygon class="tier tier1" points="${vertices(310)}"/>
@@ -477,10 +524,17 @@ function render(){
       <div class="fs49-ring-label r1">Ⅰ</div><div class="fs49-ring-label r2">Ⅱ</div><div class="fs49-ring-label r3">Ⅲ</div>
       <button type="button" class="fs49-core" data-act="summary" aria-label="진반 전체 요약"><img src="${F}formation_core.png" alt=""><span>${M.realm?.major<0?'범인':`${REALMS[M.realm.major]} ${M.realm.stage}층`}</span></button>
       ${mains}${dots}
+      </div>
+      <div class="fs49-zoom-controls" aria-label="진반 확대">
+        <button type="button" data-act="zoom-out" aria-label="축소">−</button>
+        <button type="button" data-act="zoom-reset" class="fit"><span data-zoom-label>100%</span><small>맞춤</small></button>
+        <button type="button" data-act="zoom-in" aria-label="확대">＋</button>
+      </div>
     </div>
     <div id="fs49Detail" class="fs49-detail"></div>
   </div>`;
   renderDetail(M,sh.phase);
+  applyView();
 }
 function schedule(){
   if(queued)return;
@@ -490,14 +544,80 @@ function schedule(){
 function bind(){
   const root=$('#skillTree');if(!root)return;
   root.addEventListener('click',e=>{
+    if(view.suppressClick){e.preventDefault();e.stopPropagation();return}
     const b=e.target.closest('[data-act]');if(!b)return;
     const act=b.dataset.act;
+    if(act==='zoom-in'){zoomBy(1.22);return}
+    if(act==='zoom-out'){zoomBy(1/1.22);return}
+    if(act==='zoom-reset'){resetView();return}
     if(act==='summary'){active={type:'summary'};const sh=snapshot();renderDetail(sh.M,sh.phase);return}
     if(act==='main'){active={type:'main',id:b.dataset.id};render();return}
     if(act==='trait'){active={type:'trait',id:b.dataset.id,tier:+b.dataset.tier,opt:b.dataset.opt};render();return}
     if(act==='rank'){upgradeMain(b.dataset.id);return}
     if(act==='choose'){chooseTrait(b.dataset.id,+b.dataset.tier,b.dataset.opt);return}
   });
+  root.addEventListener('wheel',e=>{
+    if(!e.target.closest('.fs49-viewport'))return;
+    e.preventDefault();zoomBy(e.deltaY<0?1.12:1/1.12);
+  },{passive:false});
+  root.addEventListener('dblclick',e=>{
+    if(!e.target.closest('.fs49-viewport'))return;
+    e.preventDefault();
+    if(view.scale>1.05)resetView();else zoomBy(1.6);
+  });
+  root.addEventListener('pointerdown',e=>{
+    const vp=e.target.closest('.fs49-viewport');if(!vp)return;
+    if(e.pointerType==='mouse'&&e.button!==0)return;
+    view.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    view.gesture=viewGesture();
+    view.dragged=false;
+    if(view.pointers.size>1)e.preventDefault();
+  },{passive:false});
+  root.addEventListener('pointermove',e=>{
+    if(!view.pointers.has(e.pointerId))return;
+    const prev=view.gesture;
+    view.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    const next=viewGesture();
+    if(prev&&next){
+      if(prev.count>1&&next.count>1&&prev.distance>0){
+        e.preventDefault();
+        const vp=e.target.closest('.fs49-viewport')||$('#fs49Viewport');
+        const rect=vp?.getBoundingClientRect();
+        const old=view.scale;
+        const scale=clamp(old*next.distance/prev.distance,1,2.2);
+        if(rect){
+          const px=prev.center.x-rect.left-rect.width/2,py=prev.center.y-rect.top-rect.height/2;
+          const nx=next.center.x-rect.left-rect.width/2,ny=next.center.y-rect.top-rect.height/2;
+          const cx=(px-view.x)/old,cy=(py-view.y)/old;
+          view.x=nx-cx*scale;view.y=ny-cy*scale;
+        }
+        view.scale=scale;
+        view.dragged=true;
+        applyView();
+      }else if(view.scale>1.001){
+        const dx=next.center.x-prev.center.x,dy=next.center.y-prev.center.y;
+        if(Math.hypot(dx,dy)>1){
+          e.preventDefault();
+          view.x+=dx;view.y+=dy;view.dragged=true;applyView();
+          const vp=e.target.closest('.fs49-viewport');vp?.setPointerCapture?.(e.pointerId);
+        }
+      }
+    }
+    view.gesture=next;
+  },{passive:false});
+  const endPointer=e=>{
+    if(!view.pointers.has(e.pointerId))return;
+    view.pointers.delete(e.pointerId);
+    view.gesture=viewGesture();
+    if(view.scale<=1.001){view.x=0;view.y=0;applyView()}
+    if(view.dragged){
+      view.suppressClick=true;
+      requestAnimationFrame(()=>{view.suppressClick=false});
+    }
+    if(!view.pointers.size)view.dragged=false;
+  };
+  root.addEventListener('pointerup',endPointer);
+  root.addEventListener('pointercancel',endPointer);
   rootObserver=new MutationObserver(()=>{
     if(!root.querySelector('.formation-board49'))schedule();
   });
