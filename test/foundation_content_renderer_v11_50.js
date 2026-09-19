@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.51.15-boss-ground-anchor';
+const VERSION='11.51.20-taixu-formation';
 if(window.__xianxiaFoundationRenderer?.version===VERSION)return;
 const W=1800,H=2400,BASE='assets/ink_v1/foundation_trial_v1/';
 const areaAssets={
@@ -33,7 +33,37 @@ function drawEnvironment(area,t){
   const c=state.ctx,atlas=image(area,'decor'),ambient=image(area,'ambient'),node=image(area,'node');
   if(atlas?.naturalWidth){const positions=[[170,330,0],[1630,420,1],[220,2070,2],[1580,2140,3]];for(const[x,y,index]of positions){const sw=atlas.naturalWidth/2,sh=atlas.naturalHeight/2;c.save();c.globalAlpha=.48;c.drawImage(atlas,index%2*sw,Math.floor(index/2)*sh,sw,sh,x-100,y-100,200,200);c.restore()}}
   if(ambient?.naturalWidth){const sw=ambient.naturalWidth/2,sh=ambient.naturalHeight/2;for(let i=0;i<4;i++){const x=280+i*410,y=520+(i%2)*850;c.save();c.globalAlpha=.13+.05*Math.sin(t+i);c.drawImage(ambient,i%2*sw,Math.floor(i/2)*sh,sw,sh,x-130,y-130,260,260);c.restore()}}
-  if(node?.naturalWidth){for(const[x,y]of[[330,720],[1470,760],[380,1800],[1420,1760]]){c.save();c.globalAlpha=.55;c.drawImage(node,x-52,y-72,104,104);c.restore()}}
+  if(node?.naturalWidth&&area!=='taixu'){for(const[x,y]of[[330,720],[1470,760],[380,1800],[1420,1760]]){c.save();c.globalAlpha=.55;c.drawImage(node,x-52,y-72,104,104);c.restore()}}
+}
+function drawTaixuTrial(snapshot,t){
+  if(snapshot.M?.area!=='taixu')return;
+  const trial=snapshot.run?.foundation?.taixuTrial;if(!trial)return;
+  const c=state.ctx,node=image('taixu','node'),floor=image('taixu','grandFloor'),activation=image('taixu','areaActivation');
+  const elapsed=+snapshot.elapsed||0,pulse=.5+.5*Math.sin(t*4.6),x=+trial.x||0,y=+trial.y||0,r=+trial.radius||150;
+  if(trial.state==='boss_wait')return;
+  if(trial.state==='complete'){
+    const age=elapsed-(+trial.completedAt||elapsed);if(age>1.2)return;
+    const fade=Math.max(0,1-age/1.2);
+    c.save();c.globalAlpha=.42*fade;c.strokeStyle='#fff0b5';c.lineWidth=5;c.beginPath();c.arc(x,y,r*(1+age*.16),0,Math.PI*2);c.stroke();c.restore();return;
+  }
+  if(trial.state==='dormant'){
+    c.save();c.globalAlpha=.18+.12*pulse;c.fillStyle='#8e8acb';c.beginPath();c.arc(x,y,trial.activateRadius||78,0,Math.PI*2);c.fill();
+    c.globalAlpha=.70;c.strokeStyle='#d8d3ff';c.lineWidth=2.5;c.setLineDash([10,8]);c.beginPath();c.arc(x,y,trial.activateRadius||78,0,Math.PI*2);c.stroke();c.setLineDash([]);
+    if(node?.naturalWidth){c.globalAlpha=.48+.18*pulse;c.drawImage(node,x-54,y-54,108,108)}
+    c.globalAlpha=.96;c.textAlign='center';c.font='800 15px serif';c.strokeStyle='rgba(18,20,32,.9)';c.lineWidth=4;c.fillStyle='#f0ecff';c.strokeText('진안 · 접근해 활성화',x,y-r*.62);c.fillText('진안 · 접근해 활성화',x,y-r*.62);c.restore();return;
+  }
+  if(trial.state!=='active')return;
+  const progress=Math.max(0,Math.min(1,1-(+trial.remaining||0)/Math.max(.01,+trial.duration||1))),inside=!!trial.inside;
+  c.save();
+  if(floor?.naturalWidth){const sw=floor.naturalWidth/6,sh=floor.naturalHeight,idx=Math.floor(t*8)%6;c.globalAlpha=.28+.08*pulse;c.drawImage(floor,idx*sw,0,sw,sh,x-r,y-r,r*2,r*2)}
+  else{c.globalAlpha=.12;c.fillStyle='#8d82ca';c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill()}
+  c.globalAlpha=inside?.75:.46;c.strokeStyle=inside?'#e3ddff':'#d59a78';c.lineWidth=3;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.stroke();
+  c.globalAlpha=.92;c.strokeStyle='#fff0b5';c.lineWidth=6;c.beginPath();c.arc(x,y,r+10,-Math.PI/2,-Math.PI/2+Math.PI*2*progress);c.stroke();
+  if(activation?.naturalWidth){const sw=activation.naturalWidth/6,sh=activation.naturalHeight,idx=Math.floor(t*10)%6;c.globalAlpha=.20+.10*pulse;c.drawImage(activation,idx*sw,0,sw,sh,x-70,y-70,140,140)}
+  c.textAlign='center';c.strokeStyle='rgba(18,20,32,.92)';c.lineWidth=4;c.fillStyle=inside?'#f5f0ff':'#ffd6b6';c.font='900 16px serif';
+  const main=inside?`진법 안정화 ${Math.max(0,+trial.remaining||0).toFixed(1)}s`:`진안으로 복귀 · 시간 정지`;c.strokeText(main,x,y-r-34);c.fillText(main,x,y-r-34);
+  if((trial.nodesTotal||0)>0){c.font='800 13px serif';c.fillStyle='#e7dcff';const sub=`결절 ${trial.nodesDestroyed||0}/${trial.nodesTotal} · 파괴 시 -1.0초`;c.strokeText(sub,x,y-r-13);c.fillText(sub,x,y-r-13)}
+  c.restore();
 }
 function enemyHeight(e){return e.boss?(e.type==='taixu_boss'?310:270):92}
 function enemySpriteBottom(e,height=enemyHeight(e)){
@@ -68,6 +98,9 @@ function drawFoundationDeaths(area,now){
   for(let i=state.deaths.length-1;i>=0;i--){
     const d=state.deaths[i],age=now-d.start,duration=d.boss?.92:.72;
     if(age>=duration){state.deaths.splice(i,1);continue}
+    if(d.type==='formation_node'){
+      const nim=image(area,'node');if(nim?.naturalWidth){const fade=Math.max(0,1-age/duration),size=96*(1-age*.28);c.save();c.globalAlpha=.70*fade;c.drawImage(nim,d.x-size/2,d.y-size/2,size,size);c.strokeStyle='#efe2ff';c.lineWidth=3;c.beginPath();c.arc(d.x,d.y,34+age*38,0,Math.PI*2);c.stroke();c.restore()}continue;
+    }
     const im=image(area,d.type);if(!im?.naturalWidth)continue;
     const rows=d.boss?4:3,row=d.boss?3:2,steps=4,step=Math.min(steps-1,Math.floor(age/duration*steps));
     const index=d.boss?2+step:step,height=enemyHeight(d),bottom=enemySpriteBottom(d,height),fade=age>duration*.68?1-(age-duration*.68)/(duration*.32):1;
@@ -75,7 +108,16 @@ function drawFoundationDeaths(area,now){
     frame(im,row,6,index,rows,d.x,bottom,height,d.facing<0,Math.max(0,fade));
   }
 }
-function drawEnemy(area,e,t,elapsed){const im=image(area,e.type);if(!im?.naturalWidth)return;const boss=e.boss,rows=boss?4:3,row=e.action==='attack'?1:e.action==='special'?(boss?2:1):0,index=Math.floor((t*(e.action==='move'?9:6)+e.id*.7))%6,height=enemyHeight(e),bottom=enemySpriteBottom(e,height),top=bottom-height,c=state.ctx;
+function drawEnemy(area,e,t,elapsed){
+  const c=state.ctx;
+  if(e.type==='formation_node'){
+    const im=image(area,'node');if(!im?.naturalWidth)return;const pulse=.5+.5*Math.sin(t*5+e.id),size=100;
+    c.save();c.globalAlpha=.16+.08*pulse;c.fillStyle='#b8a7ff';c.beginPath();c.arc(e.x,e.y,48+6*pulse,0,Math.PI*2);c.fill();
+    c.globalAlpha=.92;c.drawImage(im,e.x-size/2,e.y-size/2,size,size);
+    const hp=Math.max(0,e.hp/Math.max(1,e.max)),w=76;c.fillStyle='#0b1018dd';c.fillRect(e.x-w/2,e.y-66,w,7);c.fillStyle='#c9b9ff';c.fillRect(e.x-w/2+1,e.y-65,(w-2)*hp,5);
+    c.font='800 12px serif';c.textAlign='center';c.fillStyle='#f3edff';c.strokeStyle='rgba(18,20,32,.9)';c.lineWidth=3;c.strokeText(e.name||'진법 결절',e.x,e.y-76);c.fillText(e.name||'진법 결절',e.x,e.y-76);c.restore();return;
+  }
+  const im=image(area,e.type);if(!im?.naturalWidth)return;const boss=e.boss,rows=boss?4:3,row=e.action==='attack'?1:e.action==='special'?(boss?2:1):0,index=Math.floor((t*(e.action==='move'?9:6)+e.id*.7))%6,height=enemyHeight(e),bottom=enemySpriteBottom(e,height),top=bottom-height;
   c.save();c.globalAlpha=.25;c.fillStyle='#111';c.beginPath();c.ellipse(e.x,e.y+20,boss?76:27,boss?19:7,0,0,Math.PI*2);c.fill();c.restore();
   if(e.commandedUntil>elapsed){const marker=image('marsh','command');centered(marker,4,Math.floor(t*7)%4,e.x,top-20,42,.95)}
   if(e.shield>0){const shield=image('marsh','shield');centered(shield,4,Math.floor(t*6)%4,e.x,top+height*.52,boss?150:105,.76)}
@@ -100,6 +142,7 @@ function drawBossPlate(area,snapshot,m){const boss=(snapshot.enemies||[]).find(e
 function draw(snapshot,meta){if(!layer()||!snapshot)return;const area=snapshot.M?.area||'',supported=!!areaAssets[area],m=metrics(snapshot);resize(m);const c=state.ctx;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,state.canvas.width,state.canvas.height);state.canvas.style.display=supported&&snapshot.phase==='run'?'block':'none';if(!supported||snapshot.phase!=='run'){state.prevFoundation.clear();state.deaths.length=0;state.damageFloats.length=0;state.lastArea=area;return}ensureArea(area);applyBackground(area,m);const k=m.renderScale;c.setTransform(k*m.worldScale,0,0,k*m.worldScale,k*m.left,k*m.top);const t=(meta?.now||performance.now())/1000;
   const foundationEnemies=syncFoundationDeaths(snapshot,area,t);
   drawEnvironment(area,t);
+  drawTaixuTrial(snapshot,t);
   for(const h of snapshot.hazards||[])if(h.visualOwner==='foundation')drawHazard(area,h,t);
   drawFoundationDeaths(area,t);
   for(const e of foundationEnemies)drawEnemy(area,e,t,snapshot.elapsed||0);
