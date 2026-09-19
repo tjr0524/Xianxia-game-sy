@@ -15,6 +15,7 @@ const RUN_TIME=25;
 const MAJORS=['연기','축기','결단','원영'];
 const HN=['하급','중급','상급'];
 const VERSION='11';
+const foundationContent=()=>window.__xianxiaFoundationContent||null;
 
 const UI={
   game:$('#game'),controls:$('.controls'),ov:$('#ov'),ot:$('#ot'),ox:$('#ox'),start:$('#start'),ret:$('#ret'),
@@ -34,7 +35,10 @@ const AREAS=[
   {id:'qingyun',name:'청운산 후산',desc:'기본 요수전과 이동을 익히는 초입 비경.',enemy:1,reward:1,killStone:11,herbs:10,env:{move:1,pick:1},baseStage:1,rec:'범인~연기 3층',req:{major:0,stage:1,prev:null,nodes:0},palette:['#172e31','#244d48','#6b8f72']},
   {id:'blackwind',name:'흑풍곡',desc:'무리 요수와 산수의 전리품 경쟁이 시작되는 골짜기.',enemy:1,reward:1,killStone:34,herbs:10,env:{move:.86,pick:.75},baseStage:3,rec:'연기 3~6층',req:{major:0,stage:3,prev:'qingyun',nodes:2},palette:['#191f22','#34342a','#6d6042']},
   {id:'blood',name:'적혈비경',desc:'영맥 점유와 정예 수호전이 핵심인 고위 비경.',enemy:1,reward:1,killStone:90,herbs:9,env:{move:.77,pick:.60},baseStage:6,rec:'연기 6~9층',req:{major:0,stage:6,prev:'blackwind',nodes:3},palette:['#291719','#532127','#8c493b']},
-  {id:'thunder',name:'천뢰봉',desc:'환경 낙뢰와 고위 요수전이 겹치는 축기 비경.',enemy:1,reward:1,killStone:210,herbs:12,env:{move:.68,pick:.42},baseStage:1,rec:'축기 1층 이상',req:{major:1,stage:1,prev:'blood',nodes:4},palette:['#11182b','#24284b','#555c91']}
+  {id:'foundation_trial',name:'축기 시련',desc:'축기에 오르기 전 수문장과 맞서는 단일 보스 시련.',enemy:1,reward:1,rewardTier:2,killStone:90,herbs:9,env:{move:.77,pick:.60},baseStage:9,rec:'연기 9층',req:{major:0,stage:9,prev:'blood',nodes:0},palette:['#171d1c','#32403a','#708574']},
+  {id:'thunder',name:'천뢰봉',desc:'낙뢰 전조와 돌진 요수를 함께 읽는 축기 첫 비경.',enemy:1,reward:1,rewardTier:2,killStone:90,herbs:9,env:{move:.77,pick:.60},baseStage:1,rec:'축기 1층 이상',req:{major:1,stage:1,prev:'foundation_trial',nodes:0},palette:['#11182b','#24284b','#555c91']},
+  {id:'marsh',name:'자운택',desc:'안개 속 원거리 사격·폭발·호령·수호가 겹치는 습지 비경.',enemy:1,reward:1,rewardTier:2,killStone:90,herbs:9,env:{move:.77,pick:.60},baseStage:2,rec:'축기 2층 이상',req:{major:1,stage:2,prev:'thunder',nodes:0},palette:['#172422','#31483f','#758c79']},
+  {id:'taixu',name:'태허유적',desc:'움직이는 진법과 수호령, 태허진령이 지키는 최종 비경.',enemy:1,reward:1,rewardTier:2,killStone:90,herbs:9,env:{move:.77,pick:.60},baseStage:7,rec:'축기 7층 이상',req:{major:1,stage:7,prev:'marsh',nodes:0},palette:['#171a24','#30354a','#747b9a']}
 ];
 
 const TREE={
@@ -80,16 +84,19 @@ const BAL={
     qingyun:{hp:70,hit:22,period:1.25,chaserSpeed:95,total:4,sim:2},
     blackwind:{hp:160,hit:38,period:1.15,chaserSpeed:120,total:5,sim:2},
     blood:{hp:380,hit:95,period:1.10,chaserSpeed:150,total:5,sim:3},
-    thunder:{hp:1300,hit:300,period:1.00,chaserSpeed:190,total:6,sim:3}
+    foundation_trial:{hp:380,hit:95,period:1.10,chaserSpeed:150,total:1,sim:1},
+    thunder:{hp:380,hit:95,period:1.10,chaserSpeed:150,total:5,sim:3},
+    marsh:{hp:380,hit:95,period:1.10,chaserSpeed:150,total:5,sim:3},
+    taixu:{hp:380,hit:95,period:1.10,chaserSpeed:150,total:5,sim:3}
   },
   ecoTotal:[1,1.15,1.30,1.50,1.75,2.00],
   ecoSim:[0,0,1,1,2,3],
   encounter:{
-    packCounts:{qingyun:[8,10,12,15,23,34],blackwind:[10,12,15,19,28,38],blood:[10,12,15,19,25,32],thunder:[12,14,17,21,26,30]},
+    packCounts:{qingyun:[8,10,12,15,23,34],blackwind:[10,12,15,19,28,38],blood:[10,12,15,19,25,32],foundation_trial:[1,1,1,1,1,1],thunder:[10,12,15,19,25,32],marsh:[10,12,15,19,25,32],taixu:[10,12,15,19,25,32]},
     packSize:[[1,2],[2,2],[2,3],[3,4],[4,5],[5,7]],
-    liveCaps:{qingyun:[5,6,7,9,12,16],blackwind:[6,7,8,11,14,18],blood:[6,7,8,11,14,18],thunder:[7,8,10,12,15,18]},
-    attackSlots:{qingyun:2,blackwind:3,blood:3,thunder:3},
-    starterPacks:{qingyun:2,blackwind:3,blood:3,thunder:3},
+    liveCaps:{qingyun:[5,6,7,9,12,16],blackwind:[6,7,8,11,14,18],blood:[6,7,8,11,14,18],foundation_trial:[1,1,1,1,1,1],thunder:[6,7,8,11,14,18],marsh:[6,7,8,11,14,18],taixu:[6,7,8,11,14,18]},
+    attackSlots:{qingyun:2,blackwind:3,blood:3,foundation_trial:1,thunder:3,marsh:3,taixu:3},
+    starterPacks:{qingyun:2,blackwind:3,blood:3,foundation_trial:0,thunder:3,marsh:3,taixu:3},
     wakeRadius:[560,570,580,600,620,650],
     minPackGap:[360,330,300,260,210,170],
     chainDelay:[99,99,99,4.5,3.3,2.4],
@@ -196,7 +203,7 @@ function save(){
 const A=()=>AREAS.find(area=>area.id===M.area)||AREAS[0];
 const Z=(id=M.area)=>M.zones[id];
 const currentPlan=()=>PLANS.find(plan=>plan.id===M.settings.plan)||PLANS[0];
-const areaIndex=(id=M.area)=>Math.max(0,AREAS.findIndex(area=>area.id===id));
+const areaIndex=(id=M.area)=>{const area=AREAS.find(item=>item.id===id);return area?.rewardTier??Math.max(0,AREAS.findIndex(item=>item.id===id))};
 const isMortal=()=>M.realm.major<0;
 const realmName=()=>isMortal()?'범인':`${MAJORS[M.realm.major]||'상위경지'} ${M.realm.stage}층`;
 const realmPower=()=>1;
@@ -204,8 +211,7 @@ const combatPower=()=>1+(run?.combo||0)*.02;
 function areaMoveScale(){
   let s=1;
   if(M.area==='blackwind'){const d=M.realm.major>0?3:clamp((M.realm.stage||3)-3,0,3);s=.86+.04*d}
-  else if(M.area==='blood'){const d=M.realm.major>0?3:clamp((M.realm.stage||6)-6,0,3);s=.77+.03*d}
-  else if(M.area==='thunder'){const d=M.realm.major>1?4:M.realm.major===1?clamp((M.realm.stage||1)-1,0,4):0;s=.68+.04*d}
+  else if(['blood','foundation_trial','thunder','marsh','taixu'].includes(M.area)){const d=M.realm.major>0?3:clamp((M.realm.stage||6)-6,0,3);s=.77+.03*d}
   if(M.trainingNodes?.q3_shadow)s+=(1-s)*.05;
   if(M.trainingNodes?.q8_shadow)s+=(1-s)*.25;
   if(M.trainingNodes?.q9_harmony)s+=(1-s)*.03;
@@ -215,8 +221,8 @@ function areaMoveScale(){
 function areaPickupScale(){
   if(M.area==='qingyun')return 1;
   if(M.area==='blackwind'){const d=M.realm.major>0?3:clamp((M.realm.stage||3)-3,0,3);return Math.min(1.08,.75+.12*d)}
-  if(M.area==='blood'){const d=M.realm.major>0?3:clamp((M.realm.stage||6)-6,0,3);return .60+.08*d}
-  return .42;
+  if(['blood','foundation_trial','thunder','marsh','taixu'].includes(M.area)){const d=M.realm.major>0?3:clamp((M.realm.stage||6)-6,0,3);return .60+.08*d}
+  return .60;
 }
 function autoPickupRange(){return (20+Math.max(0,(M.cult.sen||1)-1)*12)*areaPickupScale()}
 function basicDamage(){return 4+12*(M.cult.atk||1)}
@@ -229,11 +235,12 @@ function skillCycleRank(id){return clamp(Math.round(+M.skills?.[id]?.cycle||0),0
 function skillCooldown(id){const b=BAL.skill[id];return b?b.cd[skillCycleRank(id)]??99:99}
 function beastConfig(){return BAL.enemy[M.area]||BAL.enemy.qingyun}
 function playerProgressTier(){return M.realm.major>0?9+(M.realm.stage||1):(M.realm.stage||1)}
-function areaBaseTier(){return({qingyun:1,blackwind:3,blood:6,thunder:10}[M.area]||1)}
+function areaBaseTier(){return({qingyun:1,blackwind:3,blood:6,foundation_trial:9,thunder:10,marsh:11,taixu:16}[M.area]||1)}
 function areaOverlevelGap(){return Math.max(0,playerProgressTier()-areaBaseTier())}
-function incomingDamageScale(){const slots=Math.max(1,({qingyun:2,blackwind:3,blood:3,thunder:3}[M.area]||3));const multi=1/(1+.25*(slots-1));const over=Math.pow(.85,areaOverlevelGap());return multi*over}
+function incomingDamageScale(){const slots=Math.max(1,({qingyun:2,blackwind:3,blood:3,foundation_trial:1,thunder:3,marsh:3,taixu:3}[M.area]||3));const multi=1/(1+.25*(slots-1));const over=Math.pow(.85,areaOverlevelGap());return multi*over}
 function takePlayerDamage(dmg,grantGrace=false,source='enemy'){
   dmg=Math.max(0,+dmg||0);
+  dmg=foundationContent()?.modifyPlayerDamage?.(dmg,source,foundationApi())??dmg;
   if(!dmg)return;
   const effective=Math.min(Math.max(0,P.hp),dmg);
   P.hp-=dmg;
@@ -250,6 +257,7 @@ function takePlayerDamage(dmg,grantGrace=false,source='enemy'){
 }
 function dealEnemyDamage(enemy,amount,source='unknown'){
   amount=Math.max(0,+amount||0);
+  amount=foundationContent()?.modifyEnemyDamage?.(enemy,amount,source,foundationApi())??amount;
   if(!enemy||enemy.hp<=0||!amount)return 0;
   const effective=Math.min(enemy.hp,amount);
   enemy.hp-=amount;
@@ -288,7 +296,8 @@ function branches(id=M.area){
   if(id==='qingyun')return ['eco'];
   if(id==='blackwind')return ['eco','fate'];
   if(id==='blood')return ['eco','fate','res'];
-  return ['eco','fate','res','storm'];
+  if(id==='thunder')return ['eco','fate','res','storm'];
+  return [];
 }
 
 function branchOf(id){
@@ -783,7 +792,7 @@ function breakthrough(){
   const price=breakthroughCost();
   const needsEvent=price.major&&M.realm.major===0&&!M.events.foundationInsight;
   if(needsEvent){
-    UI.notice.textContent='적혈비경에서 축기의 실마리를 얻어야 합니다.';
+    UI.notice.textContent='축기 시련의 수문장을 넘어야 합니다.';
     return;
   }
   if(M.stone<price.s||herbHave(price.hg)<price.h){
@@ -833,7 +842,7 @@ function randomHerb(){const point=randomPoint();drop('h',point.x,point.y,1)}
 function actor(type,options={}){
   const point=options.p||edgePoint();
   const cfg=beastConfig();
-  const isBeast=['basic','guard','chaser','attacker','elite'].includes(type);
+  const isBeast=['basic','guard','chaser','attacker','elite'].includes(type)||!!foundationContent()?.isCombatType?.(type);
   const role={basic:{hp:1,atk:1,speed:1},guard:{hp:1.2,atk:1.1,speed:.8},chaser:{hp:.85,atk:.9,speed:1.25},attacker:{hp:1,atk:1.3,speed:1},elite:{hp:4,atk:1.55,speed:.95}}[type]||{hp:1,atk:1,speed:1};
   const baseSpeed=cfg.chaserSpeed/1.25;
   let grade=options.grade||((type==='elite')?'elite':'normal');
@@ -853,6 +862,7 @@ function actor(type,options={}){
     if(er>=3){const traits=er>=5?['frenzy','iron','howl','devour']:['frenzy','iron','howl'];enemy.rareTrait=traits[Math.floor(Math.random()*traits.length)];if(enemy.rareTrait==='iron'){enemy.hp*=1.18;enemy.max=enemy.hp}}
   }
   if(type==='rogue')enemy.treasure=Math.random()<.18+rank('fate2')*.10;
+  foundationContent()?.configureEnemy?.(enemy,type,options,foundationApi());
   enemies.push(enemy);
   return enemy;
 }
@@ -860,10 +870,11 @@ function actor(type,options={}){
 function spawnBeast(point=null,options={}){
   const mix={qingyun:[['basic',.55],['guard',.25],['chaser',.20],['attacker',0]],blackwind:[['basic',.25],['guard',.25],['chaser',.35],['attacker',.15]],blood:[['basic',.15],['guard',.30],['chaser',.25],['attacker',.30]],thunder:[['basic',.10],['guard',.20],['chaser',.35],['attacker',.35]]}[M.area]||[['basic',1]];
   let u=Math.random(),type=mix[mix.length-1][0];for(const [t,p] of mix){if(u<p){type=t;break}u-=p}
+  type=foundationContent()?.spawnType?.(M.area,M.realm,type,foundationApi())||type;
   const p=point||edgePoint();return actor(type,{...options,p,homeX:options.homeX??p.x,homeY:options.homeY??p.y});
 }
 function encounterConfig(){return BAL.encounter}
-function encounterBeast(e){return e&&['basic','guard','chaser','attacker','elite'].includes(e.type)&&e.hp>0}
+function encounterBeast(e){return e&&(['basic','guard','chaser','attacker','elite'].includes(e.type)||!!foundationContent()?.isCombatType?.(e.type))&&e.hp>0}
 function encounterRank(){return Math.max(0,Math.min(5,rank('eco1')))}
 function encounterPackCount(){const e=encounterConfig(),r=encounterRank();return e.packCounts[M.area]?.[r]??e.packCounts.qingyun[r]}
 function encounterPackSize(){const e=encounterConfig(),r=Math.max(0,Math.min(5,rank('eco2'))),v=e.packSize[r]||e.packSize[0],lo=v[0],hi=v[1];return lo+Math.floor(Math.random()*(hi-lo+1))}
@@ -899,6 +910,20 @@ function setupVein(){
   if(r2>0){const angle=Math.random()*6.28,guardPoint={x:point.x+Math.cos(angle)*90,y:point.y+Math.sin(angle)*90};const elite=actor('elite',{p:guardPoint,homeX:guardPoint.x,homeY:guardPoint.y});elite.mineGuard=1;if(r2>=3){for(let i=0;i<2+(r2>=5?1:0);i++){const a=Math.random()*6.28,p={x:point.x+Math.cos(a)*(110+Math.random()*40),y:point.y+Math.sin(a)*(110+Math.random()*40)};actor(i%2?'guard':'chaser',{p,homeX:p.x,homeY:p.y})}}}
 }
 
+function foundationApi(){
+  return {
+    get state(){return M},get player(){return P},get run(){return run},get enemies(){return enemies},get hazards(){return hazards},get objects(){return objects},
+    get phase(){return phase},get elapsed(){return elapsed},W,H,EXIT,clamp,distance,moveToward,
+    spawn:(type,options={})=>actor(type,options),
+    addHazard:hazard=>hazards.push(hazard),
+    damagePlayer:(amount,source='foundation')=>takePlayerDamage(amount,true,source),
+    damageEnemy:(enemy,amount,source='foundation')=>dealEnemyDamage(enemy,amount,source),
+    gainStone,gainHerb,drop,pop,ring,slash,
+    finish,
+    save
+  };
+}
+
 function begin(){
   if(phase==='run')return;
   ensurePlan();
@@ -924,6 +949,7 @@ function begin(){
     skillCasts:{basic:0,sword:0,wave:0,chain:0,thunder:0,array:0},
     skillCooldowns:Object.fromEntries(SKILLS.map(skill=>[skill.id,0])),scheduledHits:[]
   };
+  run.limit=foundationContent()?.runLimit?.(M.area,M.realm)||RUN_TIME;
   P.x=P.tx=EXIT_APPROACH.x;
   P.y=P.ty=EXIT_APPROACH.y;
   P.target=null;
@@ -932,11 +958,12 @@ function begin(){
   P.cd=0;
   run.minHp=P.max;
   for(let i=0;i<herbInitial;i++)randomHerb();
-  initEncounterPacks();
+  if(!foundationContent()?.bossOnly?.(M.area,M.realm))initEncounterPacks();else run.packs=[];
   if(branches().includes('fate')&&rank('fate3')){
     for(let i=0;i<1+Math.floor((rank('fate3')-1)/2);i++)actor('spirit');
   }
   setupVein();
+  foundationContent()?.onBegin?.(foundationApi());
   UI.ov.classList.add('hide');
   if(window.matchMedia?.('(max-width:920px)').matches)setMenuOpen(false);
   UI.ret.disabled=false;
@@ -977,7 +1004,10 @@ function registerKill(enemy){
 }
 function reward(enemy){
   const plan=currentPlan();
-  if(['basic','guard','chaser','attacker'].includes(enemy.type)){
+  const handled=foundationContent()?.rewardEnemy?.(enemy,foundationApi());
+  if(handled){
+    // Content module owns the reward, while the shared kill/combo accounting stays here.
+  }else if(['basic','guard','chaser','attacker'].includes(enemy.type)){
     gainStone(Math.ceil(A().killStone*plan.reward*(enemy.rewardMult||1)),enemy.x,enemy.y);
   }else if(enemy.type==='elite'){
     run.elite=1;gainStone(Math.ceil(A().killStone*6*plan.reward),enemy.x,enemy.y);gainHerb(2+rank('res3'),Math.min(2,areaIndex()),enemy.x+10,enemy.y);if(vein){vein.cleared=1;vein.stock+=20+rank('res3')*8}
@@ -1045,17 +1075,19 @@ function spawnLightning(){
 }
 
 function updateHazards(dt){
-  if(M.area!=='thunder')return;run.lightningTimer-=dt;if(run.lightningTimer<=0){const chain=rank('storm1')>=3?2+(rank('storm1')>=5?1:0):1;for(let i=0;i<chain;i++)setTimeout(()=>{if(phase==='run')spawnLightning()},i*180);run.lightningTimer=Math.max(2.7,5.0-rank('storm1')*.32)}
-  for(const h of hazards){h.t-=dt;if(h.t<=0&&!h.struck){h.struck=1;h.t=.28;h.ttl=.28;if(distance(P,h)<h.r){let dmg=Math.ceil(beastConfig().hit*.55);takePlayerDamage(dmg,false,'lightning');pop(P.x,P.y,'천뢰 -'+dmg,'#ff9fa0',1)}else{run.dodges++;drop('s',h.x,h.y,h.reward);pop(h.x,h.y,'천뢰 회피','#bfc5ff',.9)}ring(h.x,h.y,h.r,'#d6d5ff',.3)}}hazards=hazards.filter(h=>h.t>0)
+  foundationContent()?.updateHazards?.(dt,foundationApi());
+  if(M.area==='thunder'){run.lightningTimer-=dt;if(run.lightningTimer<=0){const chain=rank('storm1')>=3?2+(rank('storm1')>=5?1:0):1;for(let i=0;i<chain;i++)setTimeout(()=>{if(phase==='run')spawnLightning()},i*180);run.lightningTimer=Math.max(2.7,5.0-rank('storm1')*.32)}}
+  for(const h of hazards){if(h.visualOwner==='foundation')continue;h.t-=dt;if(h.t<=0&&!h.struck){h.struck=1;h.t=.28;h.ttl=.28;if(distance(P,h)<h.r){let dmg=Math.ceil(beastConfig().hit*.55);takePlayerDamage(dmg,false,'lightning');pop(P.x,P.y,'천뢰 -'+dmg,'#ff9fa0',1)}else{run.dodges++;drop('s',h.x,h.y,h.reward);pop(h.x,h.y,'천뢰 회피','#bfc5ff',.9)}ring(h.x,h.y,h.r,'#d6d5ff',.3)}}hazards=hazards.filter(h=>h.t>0)
 }
 
 function update(dt){
-  if(phase!=='run')return;elapsed+=dt;if(elapsed>=RUN_TIME){finish('collapse');return}
+  if(phase!=='run')return;elapsed+=dt;const limit=run?.limit||RUN_TIME;if(elapsed>=limit){finish('collapse');return}
   P.cd=Math.max(0,P.cd-dt);P.hitGrace=Math.max(0,(P.hitGrace||0)-dt);
   if(run.combo>0){run.comboTime-=dt;if(run.comboTime<=0){run.combo=0;run.comboTime=0}}
   for(const id of Object.keys(run.skillCooldowns))run.skillCooldowns[id]=Math.max(0,run.skillCooldowns[id]-dt);
   if(run.scheduledHits?.length){for(const h of run.scheduledHits){h.t-=dt;if(h.t<=0&&!h.done){h.done=1;for(const e of enemies)if(e.type!=='spirit'&&distance(h,e)<h.r)dealEnemyDamage(e,h.damage,h.kind||'array');ring(h.x,h.y,h.r,'#ffe9a8',.28)}}run.scheduledHits=run.scheduledHits.filter(h=>!h.done)}
   const activeTargets=[...enemies,...objects,...(vein?[vein]:[])];if(P.target&&!activeTargets.includes(P.target))P.target=null;if(P.target){P.tx=P.target.x;P.ty=P.target.y}
+  foundationContent()?.updateRun?.(dt,foundationApi());
   const speed=(isMortal()?150:(M.cult.mov||150))*areaMoveScale()*(1+run.combo*.005);
   const horizontal=(keys.has('arrowright')||keys.has('d')?1:0)-(keys.has('arrowleft')||keys.has('a')?1:0),vertical=(keys.has('arrowdown')||keys.has('s')?1:0)-(keys.has('arrowup')||keys.has('w')?1:0);
   if(horizontal||vertical){P.target=null;const norm=Math.hypot(horizontal,vertical)||1;P.x+=horizontal/norm*speed*dt;P.y+=vertical/norm*speed*dt;P.tx=P.x;P.ty=P.y}else moveToward(P,P.tx,P.ty,speed,dt);P.x=clamp(P.x,11,W-11);P.y=clamp(P.y,11,H-11);
@@ -1068,6 +1100,7 @@ function update(dt){
   const strikeSet=attackStrikeSet();
   for(const enemy of enemies){
     enemy.cd=Math.max(0,enemy.cd-dt);
+    if(foundationContent()?.updateEnemy?.(enemy,dt,foundationApi()))continue;
     if(enemy.type==='attacker'&&enemy.windup>0){enemy.windup-=dt;if(enemy.windup<=0&&enemy.pendingStrike){enemy.pendingStrike=0;if(distance(enemy,P)<P.r+enemy.r+16){let dmg=(enemy.attack||beastConfig().hit)*incomingDamageScale();if(enemies.some(o=>o!==enemy&&o.rareTrait==='howl'&&o.hp>0&&distance(o,enemy)<130))dmg*=1.15;if(P.hitGrace>0&&M.trainingNodes?.q6_spirit)dmg*=M.trainingNodes?.q9_harmony ? .90 : .92;dmg=Math.ceil(dmg);takePlayerDamage(dmg,true,'attacker');ring(P.x,P.y,P.r+9,'#c96893',.20)}}}
     if(enemy.type==='spirit'){const d=distance(enemy,P);if(d<40){enemy.bond+=dt;if(enemy.bond>1.3){const ai=areaIndex(),grade=Math.min(2,ai),bonus=ai>=3?(Math.random()<.35?1:0):ai>=2?(Math.random()<.25?1:0):0,reward=8+Math.floor(Math.random()*5)+bonus;gainHerb(reward,grade,enemy.x,enemy.y);pop(enemy.x,enemy.y-28,bonus?'영수 포획 · 기연 보너스!':'영수 포획 성공','#79ded6',1);enemy.hp=0}}else enemy.bond=Math.max(0,enemy.bond-dt*.3);if(rank('fate3')>=3&&d<130){const dx=enemy.x-P.x,dy=enemy.y-P.y,n=Math.hypot(dx,dy)||1;enemy.vx=dx/n*enemy.speed;enemy.vy=dy/n*enemy.speed}enemy.x=clamp(enemy.x+enemy.vx*dt,18,W-18);enemy.y=clamp(enemy.y+enemy.vy*dt,18,H-18);continue}
     if(enemy.type==='rogue'||enemy.type==='rat'){enemy.stealCd=Math.max(0,enemy.stealCd-dt);const dP=distance(enemy,P);if(enemy.type==='rogue'&&enemy.treasure&&rank('fate2')>=3&&dP<170)enemy.escape=1;let target=null,nearest=Infinity;if(!enemy.escape&&rank('fate1')>=3){for(const o of objects){const d=distance(enemy,o);if(d<nearest){nearest=d;target=o}}}if(target){moveToward(enemy,target.x,target.y,enemy.speed,dt);if(nearest<enemy.r+target.r+4&&enemy.stealCd<=0){const idx=objects.indexOf(target);if(idx>=0){objects.splice(idx,1);enemy.carry.push({type:target.type,value:target.value,grade:target.grade});enemy.stealCd=.35;if(enemy.type==='rat'||enemy.carry.length>=2)enemy.escape=1}}}else if(enemy.carry.length)enemy.escape=1;else if(!enemy.escape){enemy.x=clamp(enemy.x+enemy.vx*dt,18,W-18);enemy.y=clamp(enemy.y+enemy.vy*dt,18,H-18)}if(elapsed>21)enemy.escape=1;if(enemy.escape)moveToward(enemy,enemy.x<W/2?-30:W+30,enemy.y,enemy.speed*1.2,dt);continue}
@@ -1076,7 +1109,7 @@ function update(dt){
     let speedMul=1,period=enemy.attackPeriod||1;if(enemy.rareTrait==='frenzy'&&enemy.hp/enemy.max<.5){speedMul=1.15;period*=.8}if(enemy.aggressive){if(strikeSet.has(enemy))moveToward(enemy,P.x,P.y,enemy.speed*speedMul,dt);else{const rr=58+(enemy.r||12),tx=P.x+Math.cos(enemy.slotAngle||0)*rr,ty=P.y+Math.sin(enemy.slotAngle||0)*rr;moveToward(enemy,tx,ty,enemy.speed*.82*speedMul,dt)}}else if(home>5)moveToward(enemy,enemy.homeX,enemy.homeY,enemy.speed*.55,dt);
     if(strikeSet.has(enemy)&&d<P.r+enemy.r+3&&enemy.cd<=0){if(enemy.type==='attacker'){enemy.windup=.55;enemy.pendingStrike=1;enemy.cd=period+.55;ring(enemy.x,enemy.y,enemy.r+18,'#c96893',.55)}else{let dmg=(enemy.attack||beastConfig().hit)*incomingDamageScale();if(enemies.some(o=>o!==enemy&&o.rareTrait==='howl'&&o.hp>0&&distance(o,enemy)<130))dmg*=1.15;if(P.hitGrace>0&&M.trainingNodes?.q6_spirit)dmg*=M.trainingNodes?.q9_harmony ? .90 : .92;dmg=Math.ceil(dmg);takePlayerDamage(dmg,true,'enemy_melee');enemy.cd=period;ring(P.x,P.y,P.r+7,'#f47b6f',.16)}}
   }
-  enemies=enemies.filter(e=>{if((e.type==='rogue'||e.type==='rat')&&(e.x<-10||e.x>W+10))return false;if(e.hp<=0){if(e.type!=='spirit')reward(e);return false}return true});
+  enemies=enemies.filter(e=>{if((e.type==='rogue'||e.type==='rat')&&(e.x<-10||e.x>W+10))return false;if(e.hp<=0){foundationContent()?.beforeEnemyDeath?.(e,foundationApi());if(e.type!=='spirit')reward(e);return false}return true});
   if(!isMortal()&&P.cd<=0){const range=basicAttackRange(),targets=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&distance(P,e)<range).sort((a,b)=>distance(P,a)-distance(P,b)).slice(0,basicAttackTargets());if(targets.length){const dmg=basicDamage()*combatPower(),scales=[1,.62,.48,.36];targets.forEach((target,i)=>{dealEnemyDamage(target,dmg*(scales[i]||.32),'basic');slash(P.x,P.y,target.x,target.y,i?'#e8d6a5':'#f7e5ad')});run.skillCasts.basic=(run.skillCasts.basic||0)+1;P.cd=basicInterval()}}
   for(const skill of SKILLS){const st=skillState(skill.id);if(!st.u)continue;if(run.skillCooldowns[skill.id]<=0&&cast(skill)){run.skillCasts[skill.id]=(run.skillCasts[skill.id]||0)+1;run.skillCooldowns[skill.id]=skillCooldown(skill.id)}}
   updateHazards(dt);updateNonCombatRecovery(dt);if(P.hp<=0){P.hp=0;finish('dead');return}syncHud();
@@ -1121,10 +1154,7 @@ function finish(reason){
   zone.bestKills=Math.max(zone.bestKills||0,run.kills);
 
   let event='';
-  if(safe&&M.area==='blood'&&run.elite&&M.realm.major===0&&M.realm.stage===9&&!M.events.foundationInsight){
-    M.events.foundationInsight=1;
-    event='<div class="event"><b>기연 · 축기의 실마리</b><br>적혈 영맥의 기운을 품고 무사 귀환했습니다.</div>';
-  }
+  event+=foundationContent()?.onFinish?.(reason,foundationApi())||'';
   event+=fortune(reason);
 
   let objective='';
@@ -1147,7 +1177,7 @@ function syncHud(){
   UI.hp.textContent=`${Math.ceil(P.hp)} / ${P.max}`;
   UI.hpFill.style.width=`${Math.max(0,P.hp/P.max)*100}%`;
   UI.loot.textContent=`영석 ${run?.s||0} · 영초 ${totalHerbs(run)}`;
-  const remaining=Math.max(0,RUN_TIME-elapsed);
+  const remaining=Math.max(0,(run?.limit||RUN_TIME)-elapsed);
   UI.time.textContent=`${remaining.toFixed(1)}초`;
   UI.time.style.color=phase==='run'&&remaining<=5?'#ff776c':phase==='run'&&remaining<=10?'#e8a06f':'';
   UI.game.classList.toggle('danger',phase==='run'&&remaining<=10);
@@ -1617,7 +1647,7 @@ function frameSnapshot(){
     elapsed,
     run:run?{...run}:null,
     P:{...P},
-    enemies:enemies.map(enemy=>({id:enemy.id,type:enemy.type,x:enemy.x,y:enemy.y,hp:enemy.hp,max:enemy.max,rare:enemy.rare,rareTrait:enemy.rareTrait,treasure:enemy.treasure,carryCount:enemy.carry?.length||0,bond:enemy.bond||0,captureRange:enemy.type==='spirit'?40:0})),
+    enemies:enemies.map(enemy=>({id:enemy.id,type:enemy.type,x:enemy.x,y:enemy.y,hp:enemy.hp,max:enemy.max,rare:enemy.rare,rareTrait:enemy.rareTrait,treasure:enemy.treasure,carryCount:enemy.carry?.length||0,bond:enemy.bond||0,captureRange:enemy.type==='spirit'?40:0,visualOwner:enemy.visualOwner||'',action:enemy.action||'idle',facing:enemy.facing||1,shield:enemy.shield||0,shieldMax:enemy.shieldMax||0,commandedUntil:enemy.commandedUntil||0,boss:enemy.boss||0,name:enemy.name||'',...(foundationContent()?.snapshotEnemy?.(enemy)||{})})),
     objects:objects.map(object=>({type:object.type,x:object.x,y:object.y,value:object.value,grade:object.grade})),
     vein:vein?{...vein}:null,
     hazards:hazards.map(hazard=>({...hazard}))
@@ -1645,7 +1675,8 @@ window.__xianxiaDebug={
   tick:seconds=>update(seconds),
   finish,
   objectiveData,
-  setMenuOpen
+  setMenuOpen,
+  foundationApi
 };
 
 function loadNormalized(value){
