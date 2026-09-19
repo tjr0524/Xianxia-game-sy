@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.50.2';
+const VERSION='11.50.4';
 if(window.__xianxiaFoundationContent?.version===VERSION)return;
 
 const TYPES=new Set(['charging_boar','ranged_toad','exploding_beetle','command_ape','shield_pangolin','sword_sentinel','formation_warden','foundation_guardian','taixu_boss']);
@@ -63,12 +63,13 @@ function activateArt(id){
     if(trait(api,'dash','flow'))distance*=1.25;if(trait(api,'dash','long'))distance*=1.35;
     let dx=api.player.tx-api.player.x,dy=api.player.ty-api.player.y,n=Math.hypot(dx,dy);
     if(n<2){dx=1;dy=0;n=1}
-    const x=clamp(api.player.x+dx/n*distance,11,api.W-11),y=clamp(api.player.y+dy/n*distance,11,api.H-11);
+    const from={x:api.player.x,y:api.player.y},x=clamp(api.player.x+dx/n*distance,11,api.W-11),y=clamp(api.player.y+dy/n*distance,11,api.H-11);
     api.slash(api.player.x,api.player.y,x,y,'#a7efe0');api.player.x=api.player.tx=x;api.player.y=api.player.ty=y;
     arts.dashCharges--;arts.dashRecharge=Math.max(arts.dashRecharge,.01);
     if(trait(api,'dash','guard'))arts.shieldCd=Math.max(0,arts.shieldCd-2);
     if(trait(api,'dash','kill'))arts.dashSpellBoost=1.5;
     api.ring(x,y,30,'#b4f4e5',.3);
+    api.trigger?.('onDash',{from,to:{x,y},distance:Math.hypot(x-from.x,y-from.y),rank:r},{source:'dash'});
   }
   if(id==='burst'&&arts.burstCd<=0){
     let duration=ART.burst.duration[r],cooldown=ART.burst.cd[r];
@@ -76,6 +77,7 @@ function activateArt(id){
     if(trait(api,'burst','cycle')){duration*=1.4;cooldown*=.85}
     arts.burstTime=duration;arts.burstCd=cooldown;arts.burstKillExtend=0;
     api.ring(api.player.x,api.player.y,64,'#ffe09a',.6);api.pop(api.player.x,api.player.y-34,'진기폭주','#fff0b8',1);
+    api.trigger?.('onBurstStart',{rank:r,duration,cooldown},{source:'burst'});
   }
   updateControls(api);
 }
@@ -209,7 +211,7 @@ function modifyEnemyDamage(enemy,amount){
 function modifyPlayerDamage(amount,source,api){
   const arts=artState(api);if(!arts?.shieldHp)return amount;
   const blocked=Math.min(arts.shieldHp,amount);arts.shieldHp-=blocked;
-  if(arts.shieldHp<=0){arts.shieldHp=0;let regen=ART.shield.cd[rank(api,'shield')]||0;if(trait(api,'shield','unyield'))regen*=1.10;if(trait(api,'shield','reverse'))regen*=1.15;arts.shieldCd=regen;api.pop(api.player.x,api.player.y-28,'호체 파괴','#a5e6d7',.8);if(trait(api,'shield','reflux'))for(const id of Object.keys(api.run.skillCooldowns||{}))api.run.skillCooldowns[id]*=.92;if(trait(api,'shield','reverse'))for(const id of Object.keys(api.run.skillCooldowns||{}))api.run.skillCooldowns[id]*=.88}
+  if(arts.shieldHp<=0){arts.shieldHp=0;let regen=ART.shield.cd[rank(api,'shield')]||0;if(trait(api,'shield','unyield'))regen*=1.10;if(trait(api,'shield','reverse'))regen*=1.15;arts.shieldCd=regen;api.pop(api.player.x,api.player.y-28,'호체 파괴','#a5e6d7',.8);if(trait(api,'shield','reflux'))for(const id of Object.keys(api.run.skillCooldowns||{}))api.run.skillCooldowns[id]*=.92;if(trait(api,'shield','reverse'))for(const id of Object.keys(api.run.skillCooldowns||{}))api.run.skillCooldowns[id]*=.88;api.trigger?.('onShieldBreak',{rank:rank(api,'shield'),blocked,damageSource:source,regen},{source:'shield'})}
   return amount-blocked;
 }
 function beforeEnemyDeath(enemy,api){if(enemy.boss)api.run.foundation.bossKilled=1}
