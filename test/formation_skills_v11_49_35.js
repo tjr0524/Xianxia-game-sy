@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.50.3';
+const VERSION='11.50.10';
 if(window.__xianxiaFormationSkillsVersion===VERSION)return;
 window.__xianxiaFormationSkillsVersion=VERSION;
 
@@ -13,6 +13,7 @@ const $=s=>document.querySelector(s);
 const REALMS=['연기','축기','결단','원영'];
 const HERB_KEYS=['herb','herb2','herb3'];
 const HERB_NAMES=['하급','중급','상급'];
+const TEST_DAO_MARK_COST=0; // TEST only: trait unlocks are free while combat traits are being validated.
 
 const A='assets/ink_v1/foundation_trial_v1/ui/node_icons/';
 const F='assets/ink_v1/runtime/ui/formation_skills/';
@@ -351,10 +352,11 @@ function chooseTrait(id,tier,optId){
       notice(`${s.name} Tier ${tier} 첫 특성을 무료로 영구 해금했습니다.`);
       return true;
     }
-    const f=artState(M,true);
-    if((+f.daoMarks||0)<1){notice('추가 선택지 해금에는 도흔 1개가 필요합니다.');return false}
-    f.daoMarks-=1;st.owned.push(optId);st.selected=optId;
-    notice(`${s.name} 특성을 도흔 1개로 영구 해금하고 장착했습니다.`);
+    const f=artState(M,true),cost=TEST_DAO_MARK_COST;
+    if(cost>0&&(+f.daoMarks||0)<cost){notice(`추가 선택지 해금에는 도흔 ${cost}개가 필요합니다.`);return false}
+    if(cost>0)f.daoMarks-=cost;
+    st.owned.push(optId);st.selected=optId;
+    notice(cost>0?`${s.name} 특성을 도흔 ${cost}개로 영구 해금하고 장착했습니다.`:`TEST · ${s.name} 특성을 도흔 없이 해금했습니다.`);
     return true;
   });
 }
