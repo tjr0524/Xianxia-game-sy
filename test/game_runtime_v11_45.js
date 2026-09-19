@@ -163,7 +163,7 @@ const treeCamera={x:0,y:0,scale:1,ready:false,pointers:new Map(),gesture:null,dr
 const TREE_SCALE_MIN=.55;
 const TREE_SCALE_MAX=1.9;
 
-const P={x:EXIT.x,y:EXIT.y,r:11,hp:36,max:36,tx:EXIT.x,ty:EXIT.y,target:null,cd:0};
+const P={x:EXIT.x,y:EXIT.y,r:11,hp:36,max:36,tx:EXIT.x,ty:EXIT.y,target:null,cd:0,dirX:1,dirY:0};
 
 function loadState(){
   let state=fresh();
@@ -976,6 +976,7 @@ function renderAreas(){
     };
     UI.areas.appendChild(button);
   }
+  requestAnimationFrame(()=>UI.areas.querySelector('.area-btn.active')?.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}));
 }
 
 function renderTree(){
@@ -1606,12 +1607,12 @@ function update(dt){
   if(run.combo>0){run.comboTime-=dt;if(run.comboTime<=0){run.combo=0;run.comboTime=0}}
   for(const id of Object.keys(run.skillCooldowns))run.skillCooldowns[id]=Math.max(0,run.skillCooldowns[id]-dt);
   if(run.scheduledHits?.length){for(const h of run.scheduledHits){h.t-=dt;if(h.t<=0&&!h.done){h.done=1;if(h.kind==='trait-area'||h.kind==='trait-direct')processScheduledTraitHit(h);else{for(const e of enemies)if(e.type!=='spirit'&&distance(h,e)<h.r)dealEnemyDamage(e,h.damage,h.source||h.kind||'array',h.triggerMeta||null);ring(h.x,h.y,h.r,'#ffe9a8',.28)}}}run.scheduledHits=run.scheduledHits.filter(h=>!h.done)}
-  const activeTargets=[...enemies,...objects,...(vein?[vein]:[])];if(P.target&&!activeTargets.includes(P.target))P.target=null;if(P.target){P.tx=P.target.x;P.ty=P.target.y}
+  const activeTargets=[...enemies,...objects,...(vein?[vein]:[])];if(P.target&&!activeTargets.includes(P.target))P.target=null;if(P.target){P.tx=P.target.x;P.ty=P.target.y;const dx=P.tx-P.x,dy=P.ty-P.y,n=Math.hypot(dx,dy);if(n>2){P.dirX=dx/n;P.dirY=dy/n}}
   foundationContent()?.updateRun?.(dt,foundationApi());
   updateFormationTraitRuntime(dt);
   const artSpeed=foundationContent()?.playerSpeedMultiplier?.(foundationApi())??1;const speed=(isMortal()?150:(M.cult.mov||150))*areaMoveScale()*(1+run.combo*.005)*artSpeed;
   const horizontal=(keys.has('arrowright')||keys.has('d')?1:0)-(keys.has('arrowleft')||keys.has('a')?1:0),vertical=(keys.has('arrowdown')||keys.has('s')?1:0)-(keys.has('arrowup')||keys.has('w')?1:0);
-  if(horizontal||vertical){P.target=null;const norm=Math.hypot(horizontal,vertical)||1;P.x+=horizontal/norm*speed*dt;P.y+=vertical/norm*speed*dt;P.tx=P.x;P.ty=P.y}else moveToward(P,P.tx,P.ty,speed,dt);P.x=clamp(P.x,11,W-11);P.y=clamp(P.y,11,H-11);
+  if(horizontal||vertical){P.target=null;const norm=Math.hypot(horizontal,vertical)||1;P.dirX=horizontal/norm;P.dirY=vertical/norm;P.x+=P.dirX*speed*dt;P.y+=P.dirY*speed*dt;P.tx=P.x;P.ty=P.y}else moveToward(P,P.tx,P.ty,speed,dt);P.x=clamp(P.x,11,W-11);P.y=clamp(P.y,11,H-11);
   const exitDistance=Math.hypot(P.x-EXIT.x,P.y+PLAYER_GROUND_OFFSET-EXIT.y);if(exitDistance>68)run.left=1;if(run.left&&exitDistance<EXIT.r+9){finish('return');return}
   run.herbTimer-=dt;if(run.herbLeft>0&&run.herbTimer<=0){randomHerb();run.herbLeft--;run.herbTimer=7+Math.random()*3}
   updateEncounterPacks(dt);
@@ -2010,9 +2011,9 @@ function setDestination(point,allowTarget=true){
       if(d<hitRadius&&d<nearest){nearest=d;target=candidate}
     }
   }
-  P.target=target;
-  P.tx=target?target.x:point.x;
-  P.ty=target?target.y:point.y;
+  const tx=target?target.x:point.x,ty=target?target.y:point.y,dx=tx-P.x,dy=ty-P.y,n=Math.hypot(dx,dy);
+  if(n>2){P.dirX=dx/n;P.dirY=dy/n}
+  P.target=target;P.tx=tx;P.ty=ty;
 }
 
 function activateTab(name,persist=true,toggleMenu=false){
