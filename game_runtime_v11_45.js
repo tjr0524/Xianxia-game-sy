@@ -635,7 +635,7 @@ function handleWaveTraits(payload,ctx){
   }
   if(ctx.event==='onDash'&&hasFormationTrait('wave','dashtrail')){
     const from=payload.from||P,to=payload.to||P,meta=systemTraitMeta(ctx,'wave','dashtrail','wave:dashtrail'),base=currentWaveBaseDamage()*.15*(payload?.derivedScale||1),r=skillRadiusValue('wave')*.55;
-    for(let i=1;i<=4;i++){const q=i/5,x=from.x+(to.x-from.x)*q,y=from.y+(to.y-from.y)*q,t=.08+(i-1)*.30;scheduleAreaHit({t,x,y,r,damage:base,source:'wave:dashtrail',family:'wave',meta,color:'#9fdfff'});emitSkillVisual('wave',x,y,{r,duration:.42})}
+    for(let i=1;i<=4;i++){const q=i/5,x=from.x+(to.x-from.x)*q,y=from.y+(to.y-from.y)*q,t=.08+(i-1)*(1.12/3);scheduleAreaHit({t,x,y,r,damage:base,source:'wave:dashtrail',family:'wave',meta,color:'#9fdfff'});emitSkillVisual('wave',x,y,{r,duration:.42,delay:Math.max(0,t-.05)})}
   }
 }
 function handleChainTraits(payload,ctx,api){
@@ -1738,12 +1738,12 @@ function bestClusterTarget(acquire,radius){
   }
   return target;
 }
-function emitSkillVisual(id,x,y,{r=0,duration=.64,kind='burst'}={}){
+function emitSkillVisual(id,x,y,{r=0,duration=.64,kind='burst',delay=0}={}){
   if(!run||!Number.isFinite(x)||!Number.isFinite(y))return;
   run.visualCastSeq=(run.visualCastSeq||0)+1;
   run.visualCasts??=[];
-  run.visualCasts.push({seq:run.visualCastSeq,id,x,y,r,duration,kind,at:elapsed});
-  if(run.visualCasts.length>32)run.visualCasts.splice(0,run.visualCasts.length-32);
+  run.visualCasts.push({seq:run.visualCastSeq,id,x,y,r,duration,kind,at:elapsed+Math.max(0,+delay||0)});
+  if(run.visualCasts.length>48)run.visualCasts.splice(0,run.visualCasts.length-48);
 }
 function emitProjectileVisual(id,from,to,{delay=0,duration=.12,color=''}={}){
   if(!run||!from||!to)return;
