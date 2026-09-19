@@ -459,6 +459,19 @@ function drawProjectiles(now){
     c.restore();
   }
 }
+function drawPersistentSpellZones(s,t){
+  const z=s.run?.traitRuntime?.arrayZone;
+  if(!z||(+z.until||0)<=(+s.elapsed||0)||!(+z.r>0))return;
+  const center=z.follow?s.P:z;if(!center)return;
+  const r=+z.r||0,c=S.ctx,pulse=.5+.5*Math.sin(t*4.2);
+  if(!visible(center.x,center.y,r+80))return;
+  c.save();
+  c.globalAlpha=.07+.035*pulse;c.fillStyle='#ffe9a8';c.beginPath();c.arc(center.x,center.y,r,0,Math.PI*2);c.fill();
+  c.globalAlpha=.38+.12*pulse;c.strokeStyle='#ffe9a8';c.lineWidth=2.1;c.setLineDash([10,7]);c.beginPath();c.arc(center.x,center.y,r,0,Math.PI*2);c.stroke();
+  c.globalAlpha=.22+.08*pulse;c.setLineDash([]);c.beginPath();c.arc(center.x,center.y,r*.68,0,Math.PI*2);c.stroke();
+  c.restore();
+  centered('effects',effectRow.array,4,Math.floor(t*4)%4,center.x,center.y+8,r*2,false,.12+.05*pulse);
+}
 function drawPlayerShield(s,t){
   const p=s.P,arts=s.run?.foundation?.arts,layers=arts?.shieldLayers;
   if(!p||!Array.isArray(layers)||!layers.length)return;
@@ -553,6 +566,7 @@ function drawFrame(s,meta){
   drawPortal(t);
   drawLightningTraces(s);
   drawHazards(s);
+  drawPersistentSpellZones(s,t);
   drawGatherRings(s,t);
   drawObjects(s,t);
   drawVeinProgress(s,t);
