@@ -9,7 +9,7 @@ const OBJECTIVES={
   qingyun:['첫 무사 귀환','한 원정에서 영초 8개 회수','요수 군락 3단계에서 대형 무리 격파','강화·희귀 요수 격파 후 귀환','생태 노드 3종 4단계 이상에서 귀환'],
   blackwind:['산수·비보를 목격하고 귀환','산수에게 빼앗기기 전에 비보 확보','인연 3단계 이상에서 비보 확보','인연 4단계 이상에서 강화 무리와 비보 확보','인연 5단계 쟁탈을 완수하고 생환'],
   blood:['영맥을 발견하고 귀환','영맥 하나를 완전 채굴','영맥 3단계 수호전 완수','영맥 4단계 대형 영맥 확보','영맥 5단계 다중 방어전 완수'],
-  thunder:['돌진형을 격파하고 귀환','돌진형과 원거리형을 한 원정에서 격파','낙뢰 3단계에서 낙뢰를 피하고 귀환','낙뢰 4단계 연속 낙뢰와 특수 혼합 무리 돌파','낙뢰 5단계 정예 무리를 돌파하고 생환'],
+  thunder:['천뢰에 1회 직격하고 귀환','한 원정에서 천뢰에 2회 직격','낙뢰 3단계에서 천뢰 직격 2회 후 귀환','낙뢰 4단계 연속 천뢰 직격 3회','낙뢰 5단계에서 천뢰 직격 3회와 정예 무리 돌파'],
   marsh:['폭렬형 격파','폭발 피해 없이 폭렬형 무리 격파','폭렬형·호령형 혼합 무리 격파','호체형이 포함된 특수 조합 격파','특수 3종 정예 무리를 돌파하고 생환'],
   taixu:['검위 또는 진위 격파','장판을 견디고 무리 격파','진법 결절 파괴 후 귀환','진법 4단계에서 결절과 대형 무리 돌파','태허진령 격파']
 };
@@ -33,7 +33,7 @@ function predicates(area,api){
   if(area==='qingyun')return[true,herbs>=8,rank(api,'eco2')>=3&&kills>=5,anyRare(run),['eco1','eco2','eco3'].every(id=>rank(api,id)>=4)];
   if(area==='blackwind')return[(run.thieves||run.treasures)>0,run.treasures>0,rank(api,'fate1')>=3&&run.treasures>0,rank(api,'fate2')>=4&&run.treasures>0&&anyRare(run),rank(api,'fate3')>=5&&run.treasures>0&&run.fateContestDone];
   if(area==='blood')return[!!run.veinSeen,!!run.veinMined,rank(api,'res1')>=3&&!!run.veinMined,rank(api,'res2')>=4&&!!run.largeVein,rank(api,'res3')>=5&&!!run.veinDefenseComplete];
-  if(area==='thunder')return[killed(run,'charging_boar')>0,killed(run,'charging_boar')>0&&killed(run,'ranged_toad')>0,rank(api,'storm1')>=3&&run.dodges>0,rank(api,'storm2')>=4&&run.dodges>=2&&m.specialKinds>=2,rank(api,'storm3')>=5&&anyRare(run)&&m.specialKinds>=2];
+  if(area==='thunder')return[(run.lightningHits||0)>=1,(run.lightningHits||0)>=2,rank(api,'storm1')>=3&&(run.lightningHits||0)>=2,rank(api,'storm2')>=4&&(run.lightningHits||0)>=3,rank(api,'storm3')>=5&&(run.lightningHits||0)>=3&&anyRare(run)&&m.specialKinds>=2];
   if(area==='marsh')return[killed(run,'exploding_beetle')>0,killed(run,'exploding_beetle')>=2&&!explosionDamage,killed(run,'exploding_beetle')>0&&killed(run,'command_ape')>0,killed(run,'shield_pangolin')>0&&m.specialKinds>=2,killed(run,'exploding_beetle')>0&&killed(run,'command_ape')>0&&killed(run,'shield_pangolin')>0&&anyRare(run)];
   if(area==='taixu')return[killed(run,'sword_sentinel')+killed(run,'formation_warden')>0,m.zoneExperienced&&kills>=3,m.formationNodes>0,rank(api,'formation2')>=4&&m.formationNodes>=2&&kills>=5,killed(run,'taixu_boss')>0];
   return[false,false,false,false,false];

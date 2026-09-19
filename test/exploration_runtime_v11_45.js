@@ -164,7 +164,12 @@ function updateHud(s){
   const r=s.run||{},p=s.P||{hp:0,max:1};
   const stone=$('#v1133Stone'),herbs=$('#v1133Herbs'),hpText=$('#v1133HpText'),hpFill=$('#v1133HpFill'),timer=$('#v1133Timer'),objective=$('#v1133Objective');
   if(stone)stone.textContent=`영석 ${Math.floor(r.s||0)}`;
-  if(herbs)herbs.textContent=`영초 下${r.h0||0} · 中${r.h1||0} · 上${r.h2||0}`;
+  if(herbs){
+    const stage=+s.M?.realm?.stage||0,major=+s.M?.realm?.major||-1;
+    herbs.textContent=major>=1
+      ?stage<=3?`뢰흔 ${r.thunderMarks||0}`:stage<=6?`자운정수 ${r.purpleEssence||0}`:'후기 재료 미정'
+      :`영초 下${r.h0||0} · 中${r.h1||0} · 上${r.h2||0}`;
+  }
   if(hpText)hpText.textContent=`${Math.max(0,Math.ceil(p.hp||0))} / ${Math.max(1,Math.ceil(p.max||1))}`;
   if(hpFill)hpFill.style.width=`${clamp((p.hp||0)/Math.max(1,p.max||1)*100,0,100)}%`;
   const total=s.run?.limit||window.__xianxiaDebug?.constants?.RUN_TIME||25,remaining=Math.max(0,total-(s.elapsed||0));
