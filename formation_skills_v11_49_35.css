@@ -72,9 +72,11 @@
 }
 .fs49-ring-label.r1{top:19%}.fs49-ring-label.r2{top:11.5%}.fs49-ring-label.r3{top:4%}
 .fs49-detail{
-  min-height:124px;margin:3px 2px 1px;padding:9px 10px;border-radius:9px 3px 9px 3px;
-  border:1px solid #71807655;background:#f7f0e2f2 url("assets/paper_fiber.svg");
-  box-shadow:inset 0 0 24px #fff9,0 3px 9px #33402f14
+  position:absolute;left:6px;right:6px;bottom:6px;z-index:14;
+  min-height:0;margin:0;padding:9px 10px;border-radius:9px 3px 9px 3px;
+  border:1px solid #71807670;background:#f7f0e2fa url("assets/paper_fiber.svg");
+  box-shadow:inset 0 0 24px #fff9,0 7px 20px #33402f30;
+  overflow:visible;pointer-events:auto;touch-action:manipulation
 }
 .fs49-detail-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-bottom:6px;margin-bottom:7px;border-bottom:1px solid #847a6255}
 .fs49-detail-head b{font:800 12px/1.15 var(--v25-serif,serif);color:#263b33}
@@ -117,7 +119,7 @@
   .fs49-main>em{font-size:5.5px;min-width:16px}
   .fs49-trait{width:16px;height:16px}
   .fs49-trait.selected{width:19px;height:19px}
-  .fs49-detail{min-height:120px;padding:8px}
+  .fs49-detail{min-height:0;padding:8px}
   .fs49-detail-head b{font-size:11.5px}
   .fs49-detail-main{grid-template-columns:44px minmax(0,1fr);gap:7px}
   .fs49-detail-main img{width:42px;height:42px}
@@ -130,7 +132,7 @@
   .fs49-effect-metrics b{font-size:12.2px}
 }
 
-.fs49-zoom-controls{position:absolute;right:6px;bottom:6px;z-index:15;display:flex;align-items:center;gap:3px;padding:3px;border:1px solid #7d735a55;border-radius:9px;background:#f4eddfdd;box-shadow:0 2px 8px #29342e24;backdrop-filter:blur(4px)}
+.fs49-zoom-controls{position:absolute;right:6px;top:6px;bottom:auto;z-index:15;display:flex;align-items:center;gap:3px;padding:3px;border:1px solid #7d735a55;border-radius:9px;background:#f4eddfdd;box-shadow:0 2px 8px #29342e24;backdrop-filter:blur(4px)}
 .fs49-zoom-controls button{display:grid;place-items:center;min-width:28px;height:28px;margin:0;padding:0;border:1px solid #81775f55;border-radius:6px;background:#f8f2e6e8;color:#3f5149;font:800 15px/1 sans-serif}
 .fs49-zoom-controls .fit{min-width:42px;height:28px;font-size:7px;line-height:1.05}
 .fs49-zoom-controls .fit span,.fs49-zoom-controls .fit small{display:block;font-size:6px;line-height:1.05}
