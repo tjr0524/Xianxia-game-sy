@@ -1,10 +1,10 @@
 (()=>{
 'use strict';
 
-const VERSION='11.51.19-foundation-content';
+const VERSION='11.51.20-taixu-formation';
 if(window.__xianxiaFoundationContent?.version===VERSION)return;
 
-const TYPES=new Set(['charging_boar','ranged_toad','exploding_beetle','command_ape','shield_pangolin','sword_sentinel','formation_warden','foundation_guardian','taixu_boss']);
+const TYPES=new Set(['charging_boar','ranged_toad','exploding_beetle','command_ape','shield_pangolin','sword_sentinel','formation_warden','formation_node','foundation_guardian','taixu_boss']);
 const BASE='assets/ink_v1/foundation_trial_v1/';
 const ICON={
   shield:'assets/ink_v1/runtime/ui/formation_skills/shield_main.png',
@@ -19,6 +19,7 @@ const TYPE_SPEC={
   shield_pangolin:{name:'옥린천산갑',hp:1.40,atk:.48,speed:.70,r:18,reward:1.50},
   sword_sentinel:{name:'태허검위',hp:1.25,atk:.62,speed:.78,r:17,reward:1.60},
   formation_warden:{name:'태허진위',hp:1.15,atk:.60,speed:.74,r:17,reward:1.60},
+  formation_node:{name:'진법 결절',hp:.82,atk:0,speed:0,r:20,reward:0},
   foundation_guardian:{name:'축기 수문장',hp:8.0,atk:.82,speed:.78,r:31,reward:7,boss:1},
   taixu_boss:{name:'태허진령',hp:6.0,atk:.90,speed:.72,r:36,reward:10,boss:1}
 };
@@ -216,6 +217,7 @@ function configureEnemy(enemy,type,options,api){
   enemy.visualOwner='foundation';enemy.name=spec.name;enemy.boss=spec.boss||0;enemy.r=spec.r;
   enemy.hp*=spec.hp;enemy.max=enemy.hp;enemy.attack*=spec.atk;enemy.speed*=spec.speed;enemy.rewardMult=spec.reward;
   enemy.action='idle';enemy.facing=1;enemy.mechanicCd=.8+Math.random()*1.4;enemy.hitOnce=0;enemy.shield=0;enemy.shieldMax=0;
+  if(type==='formation_node'){enemy.environmentObjective=1;enemy.formationNode=1;enemy.speed=0;enemy.attack=0;enemy.mechanicCd=999}
   if(spec.boss){enemy.grade='elite';enemy.rare=0;enemy.packLeader=1}
 }
 
@@ -263,32 +265,115 @@ function spawnType(area,realm,fallback,api,options={}){
 }
 
 function spawnAt(api,type,x,y,extra={}){return api.spawn(type,{p:{x:clamp(x,70,api.W-70),y:clamp(y,70,api.H-70)},homeX:x,homeY:y,packLeader:true,grade:'normal',...extra})}
-function spawnFormationNode(api,x,y,index){
-  const enemy=spawnAt(api,'formation_warden',x,y,{environmentObjective:1});
-  enemy.environmentObjective=1;enemy.formationNode=1;enemy.name='진법 결절';enemy.speed=0;enemy.homeX=enemy.x;enemy.homeY=enemy.y;enemy.hp*=1.65;enemy.max=enemy.hp;enemy.rewardMult*=1.20;enemy.mechanicCd=1.6+index*.45;
+function taixuStage(api){return api.state.area==='taixu'&&api.state.realm?.major===1?clamp(api.state.realm.stage||7,7,9):0}
+function taixuTrial(api){return api.run?.foundation?.taixuTrial||null}
+function liveTrialNodes(api){return (api.enemies||[]).filter(e=>e.type==='formation_node'&&e.hp>0&&e.trialNode)}
+function trialEffectAlive(api,effect){return liveTrialNodes(api).some(e=>e.nodeEffect===effect)}
+function spawnFormationNode(api,trial,index,effect){
+  const a=-Math.PI/2+index*Math.PI*2/Math.max(1,trial.nodesTotal),d=trial.bossMode?155:135;
+  const x=clamp(trial.x+Math.cos(a)*d,80,api.W-80),y=clamp(trial.y+Math.sin(a)*d,80,api.H-80);
+  const enemy=spawnAt(api,'formation_node',x,y,{environmentObjective:1,trialNode:1,nodeEffect:effect,nodeIndex:index});
+  enemy.environmentObjective=1;enemy.formationNode=1;enemy.trialNode=1;enemy.nodeEffect=effect;enemy.nodeIndex=index;
+  enemy.name=effect==='summon'?'소환 결절':effect==='zone'?'검진 결절':'호체 결절';
+  enemy.speed=0;enemy.homeX=enemy.x;enemy.homeY=enemy.y;enemy.hp*=trial.bossMode?1.25:1;enemy.max=enemy.hp;enemy.mechanicCd=999;
   return enemy;
+}
+function spawnTrialWave(api,trial,waveIndex){
+  const fr=uniqueRanks(api,'taixu').primary,base=trial.stage===7?3:trial.stage===8?4:3,count=base+(fr>=3?1:0)+(waveIndex>=2&&fr>=5?1:0);
+  for(let i=0;i<count;i++){
+    const a=(i/count)*Math.PI*2+waveIndex*.55,d=150+Math.random()*55;
+    const x=clamp(trial.x+Math.cos(a)*d,70,api.W-70),y=clamp(trial.y+Math.sin(a)*d,70,api.H-70);
+    const type=trial.stage>=8&&i%3===2?'formation_warden':'sword_sentinel';
+    const enemy=spawnAt(api,type,x,y,{trialSpawn:1});enemy.trialSpawn=1;enemy.aggressive=1;
+  }
+  api.pop(trial.x,trial.y-52,`수호령 쇄도 · ${waveIndex+1}파`,'#d9d4ff',.65);
+}
+function activateTaixuTrial(api,bossMode=false){
+  const trial=taixuTrial(api);if(!trial||trial.state==='active'||trial.state==='complete')return;
+  trial.bossMode=!!bossMode;trial.state='active';trial.remaining=trial.duration;trial.activeElapsed=0;trial.waveIndex=0;trial.nextWave=0;
+  trial.nodesDestroyed=0;trial.nodeBonus=0;trial.inside=0;trial.summonCd=1.2;trial.zoneCd=1.0;trial.shieldCd=1.4;
+  trial.nodesTotal=trial.stage>=9?3:trial.stage>=8?(uniqueRanks(api,'taixu').secondary>=4?3:2):0;
+  const effects=['summon','zone','shield'];
+  for(let i=0;i<trial.nodesTotal;i++)spawnFormationNode(api,trial,i,effects[i]);
+  api.ring(trial.x,trial.y,trial.radius,'#d7d3ff',.8);
+  api.pop(trial.x,trial.y-70,bossMode?'태허대진 전개':'진안 활성 · 수성 시작','#f1e9ff',1.0);
+  spawnTrialWave(api,trial,0);trial.waveIndex=1;
+}
+function completeTaixuTrial(api){
+  const trial=taixuTrial(api);if(!trial||trial.state!=='active')return;
+  trial.state='complete';trial.remaining=0;trial.completedAt=now(api);api.run.taixuTrials=(api.run.taixuTrials||0)+1;
+  api.run.taixuSigils=(api.run.taixuSigils||0)+1;
+  let bonus=0;
+  if(trial.nodesTotal>0&&trial.nodesDestroyed>=trial.nodesTotal&&!trial.nodeBonus){trial.nodeBonus=1;bonus=1;api.run.taixuSigils++}
+  api.ring(trial.x,trial.y,trial.radius,'#fff0b5',.9);
+  api.pop(trial.x,trial.y-68,`진법 붕괴 · 태허진문 +${1+bonus}`,'#fff0b5',1.15);
+  if(trial.bossMode){
+    const boss=(api.enemies||[]).find(e=>e.type==='taixu_boss'&&e.hp>0);
+    if(boss){boss.taixuBrokenUntil=now(api)+4;api.pop(boss.x,boss.y-120,'파진 · 4초','#ffe2a6',1.0)}
+  }
+}
+function onFormationNodeDeath(enemy,api){
+  const trial=taixuTrial(api);if(!trial||trial.state!=='active'||!enemy?.trialNode)return;
+  trial.nodesDestroyed=Math.min(trial.nodesTotal,(trial.nodesDestroyed||0)+1);
+  trial.remaining=Math.max(0,trial.remaining-1);
+  api.pop(enemy.x,enemy.y-42,`결절 파괴 · 수성 -1.0초`,'#e9dcff',.8);
+  api.ring(enemy.x,enemy.y,52,'#e9dcff',.45);
+}
+function updateTaixuTrial(dt,api){
+  const trial=taixuTrial(api);if(!trial)return;
+  if(trial.state==='dormant'){
+    if(dist(api.player,trial)<=trial.activateRadius)activateTaixuTrial(api,false);
+    return;
+  }
+  if(trial.state==='boss_wait'){
+    const boss=(api.enemies||[]).find(e=>e.type==='taixu_boss'&&e.hp>0);
+    if(boss&&boss.hp/Math.max(1,boss.max)<=.65){trial.x=boss.x;trial.y=boss.y;activateTaixuTrial(api,true)}
+    return;
+  }
+  if(trial.state!=='active')return;
+  trial.inside=dist(api.player,trial)<=trial.radius?1:0;
+  trial.activeElapsed+=dt;
+  if(trial.inside)trial.remaining=Math.max(0,trial.remaining-dt);
+  const thresholds=trial.stage===7?[0,2.5,4.6]:trial.stage===8?[0,2.8,5.6]:[0,3.2,6.4];
+  while(trial.waveIndex<thresholds.length&&trial.activeElapsed>=thresholds[trial.waveIndex]){spawnTrialWave(api,trial,trial.waveIndex);trial.waveIndex++}
+  if(trialEffectAlive(api,'summon')){
+    trial.summonCd-=dt;
+    if(trial.summonCd<=0){trial.summonCd=2.35;const a=Math.random()*Math.PI*2,d=170;const e=spawnAt(api,'sword_sentinel',trial.x+Math.cos(a)*d,trial.y+Math.sin(a)*d,{trialSpawn:1});e.trialSpawn=1;e.aggressive=1}
+  }
+  if(trialEffectAlive(api,'zone')){
+    trial.zoneCd-=dt;
+    if(trial.zoneCd<=0){trial.zoneCd=1.85;const a=Math.random()*Math.PI*2;addTargetHazard(api,'moving_zone',clamp(api.player.x+Math.cos(a)*55,45,api.W-45),clamp(api.player.y+Math.sin(a)*55,45,api.H-45),54,.82,ratioDamage(api,.16),'formation_node',{vx:Math.cos(a+1.25)*66,vy:Math.sin(a+1.25)*66})}
+  }
+  if(trialEffectAlive(api,'shield')){
+    trial.shieldCd-=dt;
+    if(trial.shieldCd<=0){trial.shieldCd=2.5;for(const e of api.enemies||[])if(e.trialSpawn&&e.hp>0){e.shield=Math.max(e.shield||0,e.max*.20);e.shieldMax=Math.max(e.shieldMax||0,e.shield)}}
+  }
+  if(trial.remaining<=0)completeTaixuTrial(api);
 }
 function onBegin(api){
   api.run.foundation={bossKilled:0,packProfiles:{},arts:{
     shieldLayers:[],shieldHp:0,shieldMax:0,shieldCd:0,moveBuffPct:0,moveBuffUntil:0,slowImmuneUntil:0,dotReduceUntil:0,
     dashCharges:maxDashCharges(api),dashRecharge:0,dashSpellBoost:0,
     burstCd:0,burstTime:0,trueburstTime:0,burstKillExtend:0,burstGuardExtend:0,burstWarExtend:0
-  },bossSpawned:0};
+  },bossSpawned:0,taixuTrial:null};
   const arts=artState(api);arts.shieldLayers=makeShieldLayers(api);syncShieldTotals(arts);
   if(api.state.area==='foundation_trial')spawnAt(api,'foundation_guardian',api.W*.5,api.H*.34);
   if(api.state.area==='taixu'){
-    const ranks=uniqueRanks(api,'taixu'),stage=api.state.realm?.major===1?(api.state.realm.stage||1):0;
-    if(stage>=8&&ranks.secondary>=1){
-      const spots=[[api.W*.27,api.H*.30],[api.W*.73,api.H*.44],[api.W*.48,api.H*.66]],count=ranks.secondary>=4?3:2;
-      for(let i=0;i<count;i++)spawnFormationNode(api,spots[i][0],spots[i][1],i);
+    const stage=taixuStage(api),a=-Math.PI/2+(Math.random()-.5)*.55,d=235;
+    if(stage===7||stage===8){
+      api.run.foundation.taixuTrial={stage,state:'dormant',x:clamp(api.player.x+Math.cos(a)*d,90,api.W-90),y:clamp(api.player.y+Math.sin(a)*d,90,api.H-90),radius:150,activateRadius:78,duration:stage===7?6:8,remaining:stage===7?6:8,nodesTotal:0,nodesDestroyed:0,inside:0};
     }
-    if(stage>=9)spawnAt(api,'taixu_boss',api.W*.5,api.H*.32);
+    if(stage>=9){
+      const boss=spawnAt(api,'taixu_boss',api.W*.5,api.H*.32);
+      api.run.foundation.taixuTrial={stage,state:'boss_wait',x:boss.x,y:boss.y,radius:165,activateRadius:0,duration:10,remaining:10,nodesTotal:0,nodesDestroyed:0,inside:0,bossMode:1};
+    }
   }
   updateControls(api);
 }
 
 function updateRun(dt,api){
   const arts=artState(api);if(!arts)return;
+  if(api.state.area==='taixu')updateTaixuTrial(dt,api);
   arts.burstCd=Math.max(0,arts.burstCd-dt);arts.burstTime=Math.max(0,arts.burstTime-dt);arts.trueburstTime=Math.max(0,Math.min(arts.trueburstTime||0,arts.burstTime||0)-dt);arts.dashSpellBoost=Math.max(0,arts.dashSpellBoost-dt);
   const layers=ensureShieldLayers(api);
   for(const layer of layers){
@@ -334,6 +419,7 @@ function meleeMovement(enemy,dt,api,mult=.35){
 
 function updateEnemy(enemy,dt,api){
   if(!TYPES.has(enemy.type))return false;
+  if(enemy.type==='formation_node'){enemy.x=enemy.homeX;enemy.y=enemy.homeY;enemy.action='special';enemy.facing=1;return true}
   enemy.mechanicCd-=dt;enemy.action='move';
   if(enemy.type==='charging_boar'||enemy.type==='foundation_guardian'){
     if(enemy.chargeWindup>0){enemy.chargeWindup-=dt;enemy.action='special';if(enemy.chargeWindup<=0){enemy.chargeTime=enemy.type==='foundation_guardian'?.58:.42;enemy.hitOnce=0}return true}
@@ -402,7 +488,15 @@ function updateHazards(dt,api){
   }
 }
 
-function modifyEnemyDamage(enemy,amount){
+function modifyEnemyDamage(enemy,amount,source,api){
+  if(enemy?.type==='taixu_boss'&&api){
+    const trial=taixuTrial(api);
+    if(trial?.state==='active'&&trial.bossMode){
+      const alive=liveTrialNodes(api).length;
+      amount*=Math.max(.40,1-alive*.15);
+    }
+    if((enemy.taixuBrokenUntil||0)>now(api))amount*=1.35;
+  }
   if(!enemy?.shield)return amount;
   const blocked=Math.min(enemy.shield,amount);enemy.shield-=blocked;return amount-blocked;
 }
@@ -474,15 +568,24 @@ function onTrigger(event,payload,ctx,api){
     }
   }
 }
-function beforeEnemyDeath(enemy,api){if(enemy.boss)api.run.foundation.bossKilled=1}
+function beforeEnemyDeath(enemy,api){
+  if(enemy?.formationNode)onFormationNodeDeath(enemy,api);
+  if(enemy.boss)api.run.foundation.bossKilled=1;
+}
 function rewardEnemy(enemy,api){
   if(!TYPES.has(enemy.type))return false;
+  if(enemy.type==='formation_node')return true;
   const amount=Math.ceil((api.baseKillStone?.()||90)*(enemy.rewardMult||1)*(api.planRewardMultiplier?.()||1)*(api.areaRewardMultiplier?.()||1));api.gainStone(amount,enemy.x,enemy.y);
   if(api.state.area==='marsh'&&['exploding_beetle','command_ape','shield_pangolin'].includes(enemy.type)){
     api.run.purpleEssence=(api.run.purpleEssence||0)+1;
     api.pop(enemy.x,enemy.y-48,'자운정수 +1','#d7b6ef',1.0);
   }
-  if(enemy.boss){api.run.elite=1;api.gainHerb(enemy.type==='taixu_boss'?5:3,2,enemy.x+12,enemy.y);api.pop(enemy.x,enemy.y-42,`${enemy.name} 격파`,'#ffe4a0',1.25)}
+  if(enemy.type==='taixu_boss'){
+    api.run.elite=1;api.run.taixuSigils=(api.run.taixuSigils||0)+3;
+    api.pop(enemy.x,enemy.y-42,`${enemy.name} 격파 · 태허진문 +3`,'#ffe4a0',1.25);
+  }else if(enemy.boss){
+    api.run.elite=1;api.gainHerb(3,2,enemy.x+12,enemy.y);api.pop(enemy.x,enemy.y-42,`${enemy.name} 격파`,'#ffe4a0',1.25);
+  }
   return true;
 }
 function onFinish(reason,api){
@@ -490,10 +593,10 @@ function onFinish(reason,api){
   if(reason==='return'&&api.state.area==='foundation_trial'&&api.run?.foundation?.bossKilled&&!api.state.events.foundationInsight){api.state.events.foundationInsight=1;api.save();return '<div class="event"><b>시련 완수 · 축기의 실마리</b><br>수문장을 넘어 축기의 문을 열었습니다.</div>'}
   return '';
 }
-function snapshotEnemy(enemy){return{chargeWindup:enemy.chargeWindup||0,chargeTime:enemy.chargeTime||0,mechanicCd:enemy.mechanicCd||0,detonating:enemy.detonating||0}}
+function snapshotEnemy(enemy){return{chargeWindup:enemy.chargeWindup||0,chargeTime:enemy.chargeTime||0,mechanicCd:enemy.mechanicCd||0,detonating:enemy.detonating||0,formationNode:enemy.formationNode||0,trialNode:enemy.trialNode||0,nodeEffect:enemy.nodeEffect||'',nodeIndex:enemy.nodeIndex??-1,taixuBrokenUntil:enemy.taixuBrokenUntil||0}}
 
 window.__xianxiaFoundationContent={
-  version:VERSION,base:BASE,isCombatType:type=>TYPES.has(type),configureEnemy,spawnType,
+  version:VERSION,base:BASE,isCombatType:type=>TYPES.has(type)&&type!=='formation_node',configureEnemy,spawnType,
   bossOnly:area=>area==='foundation_trial',runLimit:()=>25,
   onBegin,updateRun,updateEnemy,updateHazards,modifyEnemyDamage,modifyPlayerDamage,playerSpeedMultiplier,onTrigger,beforeEnemyDeath,rewardEnemy,onFinish,snapshotEnemy
 };
