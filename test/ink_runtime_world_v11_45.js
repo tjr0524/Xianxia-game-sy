@@ -285,9 +285,9 @@ function drawHazards(s){const c=S.ctx;for(const h of s.hazards||[]){if(h.visualO
       c.globalAlpha=.18+.10*pulse;c.fillStyle='#ff9b22';c.beginPath();c.arc(h.x,h.y,r,0,Math.PI*2);c.fill();
       c.shadowColor='#fff2a8';c.shadowBlur=14+8*pulse;
       c.globalAlpha=.98;c.strokeStyle='#fff4a8';c.lineWidth=5.5;c.setLineDash([]);c.beginPath();c.arc(h.x,h.y,r,0,Math.PI*2);c.stroke();
-      c.shadowBlur=8;c.globalAlpha=.82+.12*pulse;c.strokeStyle='#ff6b2c';c.lineWidth=3.2;c.setLineDash([9,5]);c.beginPath();c.arc(h.x,h.y,r+23+7*pulse,0,Math.PI*2);c.stroke();c.setLineDash([]);
-      c.shadowBlur=0;c.globalAlpha=.92;c.strokeStyle='#fff4a8';c.lineWidth=2.8;for(let i=0;i<4;i++){const a=i*Math.PI/2;c.beginPath();c.moveTo(h.x+Math.cos(a)*(r+7),h.y+Math.sin(a)*(r+7));c.lineTo(h.x+Math.cos(a)*(r+38),h.y+Math.sin(a)*(r+38));c.stroke()}
-      c.font='900 13px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';c.textAlign='center';c.fillStyle='#fff3a1';c.strokeStyle='rgba(78,25,12,.96)';c.lineWidth=4;c.strokeText('천뢰 · 직격 보상',h.x,h.y-r-38);c.fillText('천뢰 · 직격 보상',h.x,h.y-r-38);
+      c.shadowBlur=7;c.globalAlpha=.78+.14*pulse;c.strokeStyle='#ff6b2c';c.lineWidth=2.8;c.setLineDash([9,5]);c.beginPath();c.arc(h.x,h.y,r*.70,0,Math.PI*2);c.stroke();c.setLineDash([]);
+      c.shadowBlur=0;c.globalAlpha=.92;c.strokeStyle='#fff4a8';c.lineWidth=2.8;for(let i=0;i<4;i++){const a=i*Math.PI/2;c.beginPath();c.moveTo(h.x+Math.cos(a)*(r+5),h.y+Math.sin(a)*(r+5));c.lineTo(h.x+Math.cos(a)*(r+28),h.y+Math.sin(a)*(r+28));c.stroke()}
+      c.font='900 13px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';c.textAlign='center';c.fillStyle='#fff3a1';c.strokeStyle='rgba(78,25,12,.96)';c.lineWidth=4;c.strokeText('천뢰 · 직격 보상',h.x,h.y-r-30);c.fillText('천뢰 · 직격 보상',h.x,h.y-r-30);
     }else{
       const fade=Math.max(0,Math.min(1,h.t/(h.ttl||.68)));
       c.globalAlpha=.35+.55*fade;c.strokeStyle='#f5f1ff';c.shadowColor='#c9c2ff';c.shadowBlur=18;c.lineCap='round';

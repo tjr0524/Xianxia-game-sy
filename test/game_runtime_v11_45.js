@@ -1851,7 +1851,11 @@ function spawnLightning(options={}){
     const a=Math.random()*Math.PI*2,maxD=level>=4&&combat?145:125,d=42+Math.random()*(maxD-42);
     x=clamp(P.x+Math.cos(a)*d,45,W-45);y=clamp(P.y+Math.sin(a)*d,45,H-45);
   }
-  const warn=1.12+(STORM_BAL.foresightWarn[foresight]||0),radius=Math.max(30,40-(STORM_BAL.foresightRadius[foresight]||0));
+  const warn=1.12+(STORM_BAL.foresightWarn[foresight]||0);
+  // The visible warning circle is the actual strike area. Previously the bright
+  // outer telegraph was much wider than the collision radius, making intentional
+  // hits feel unfairly strict.
+  const radius=Math.max(58,66-(STORM_BAL.foresightRadius[foresight]||0));
   hazards.push({kind:'lightning',x,y,r:radius,t:warn,ttl:warn,struck:0,reward:STORM_BAL.reward[level]||0,compound:options.compound?1:0});
   if(!options.compound&&storm3>=3&&Math.random()<(STORM_BAL.storm3ExtraChance[storm3]||0)){
     const a=Math.random()*Math.PI*2,d=85+Math.random()*70;
@@ -1898,7 +1902,7 @@ function updateHazards(dt){
       if(run.lightningTraces.length>32)run.lightningTraces.splice(0,run.lightningTraces.length-32);
     }
     if(hit){
-      const dmg=Math.ceil((foundationTarget('thunder')?.playerHp||P.max)*.40);
+      const dmg=Math.ceil((foundationTarget('thunder')?.playerHp||P.max)*.55);
       takePlayerDamage(dmg,false,'lightning');
       run.lightningHits=(run.lightningHits||0)+1;
       run.thunderMarks=(run.thunderMarks||0)+1;
