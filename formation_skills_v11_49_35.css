@@ -27,10 +27,10 @@
   padding:2px 5px;border:1px solid #8d7b5850;border-radius:8px;background:#f4eddccc;color:#5f5542;font-size:6.8px;font-weight:800
 }
 .fs49-main{
-  width:54px;height:54px;border:0;background:transparent;z-index:5;overflow:visible
+  width:50px;height:50px;border:0;background:transparent;z-index:5;overflow:visible
 }
 .fs49-main img{
-  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:48px;height:48px;object-fit:contain;border-radius:50%;
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:44px;height:44px;object-fit:contain;border-radius:50%;
   background:url("assets/ink_v1/foundation_trial_v1/ui/node_icons/node_frames/frame_locked_256.png") center/100% 100% no-repeat;
   filter:grayscale(.82) opacity(.56)
 }
@@ -44,7 +44,7 @@
 }
 .fs49-main.active img{outline:2px solid #b58b3b99;outline-offset:1px}
 .fs49-main>b{
-  position:absolute;left:50%;top:48px;transform:translateX(-50%);white-space:nowrap;
+  position:absolute;left:50%;top:44px;transform:translateX(-50%);white-space:nowrap;
   color:#33463e;font:800 7.2px/1 var(--v25-serif,serif);text-shadow:0 1px #fff
 }
 .fs49-main>em{
@@ -53,7 +53,7 @@
 }
 .fs49-rankring{
   position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:60px;height:60px;z-index:8;overflow:visible;pointer-events:none
+  width:56px;height:56px;z-index:8;overflow:visible;pointer-events:none
 }
 .fs49-rankring circle{fill:none;stroke:#79807858;stroke-width:3.4;stroke-linecap:round}
 .fs49-rankring circle.on{stroke:#477f69;filter:drop-shadow(0 0 1.5px #5b9b7f80)}
@@ -108,9 +108,10 @@
   .fs49-topline{padding-top:1px}
   .fs49-board{width:100%}
   .fs49-core{width:70px;height:70px}
-  .fs49-main{width:48px;height:48px}
-  .fs49-main img{width:43px;height:43px}
-  .fs49-main>b{top:43px;font-size:6.6px}
+  .fs49-main{width:45px;height:45px}
+  .fs49-main img{width:40px;height:40px}
+  .fs49-main>b{top:40px;font-size:6.6px}
+  .fs49-rankring{width:53px;height:53px}
   .fs49-main>em{font-size:5.5px;min-width:16px}
   .fs49-trait{width:16px;height:16px}
   .fs49-trait.selected{width:19px;height:19px}
