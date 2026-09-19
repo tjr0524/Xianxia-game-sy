@@ -37,7 +37,7 @@ const AREAS=[
   {id:'blood',name:'적혈비경',desc:'영맥 점유와 정예 수호전이 핵심인 고위 비경.',enemy:1,reward:1,killStone:90,herbs:9,env:{move:.77,pick:.60},baseStage:6,rec:'연기 6~9층',req:{major:0,stage:6,prev:'blackwind',nodes:3},palette:['#291719','#532127','#8c493b']},
   {id:'foundation_trial',name:'축기 시련',desc:'축기에 오르기 전 수문장과 맞서는 단일 보스 시련.',enemy:1,reward:1,rewardTier:2,killStone:90,herbs:9,env:{move:.77,pick:.60},baseStage:9,rec:'연기 9층',req:{major:0,stage:9,prev:'blood',nodes:0},palette:['#171d1c','#32403a','#708574']},
   {id:'thunder',name:'천뢰봉',desc:'낙뢰 전조와 돌진 요수를 함께 읽는 축기 첫 비경.',enemy:1,reward:1,rewardTier:2,killStone:90,herbs:9,env:{move:.77,pick:.60},baseStage:1,rec:'축기 1층 이상',req:{major:1,stage:1,prev:'foundation_trial',nodes:0},palette:['#11182b','#24284b','#555c91']},
-  {id:'marsh',name:'자운택',desc:'안개 속 원거리 사격·폭발·호령·수호가 겹치는 습지 비경.',enemy:1,reward:1,rewardTier:2,killStone:90,herbs:9,env:{move:.77,pick:.60},baseStage:2,rec:'축기 2층 이상',req:{major:1,stage:2,prev:'thunder',nodes:0},palette:['#172422','#31483f','#758c79']},
+  {id:'marsh',name:'자운택',desc:'폭발·호령·수호 특수몹 조합을 공략하는 습지 비경.',enemy:1,reward:1,rewardTier:2,killStone:90,herbs:9,env:{move:.77,pick:.60},baseStage:4,rec:'축기 4층 이상',req:{major:1,stage:4,prev:'thunder',nodes:0},palette:['#172422','#31483f','#758c79']},
   {id:'taixu',name:'태허유적',desc:'움직이는 진법과 수호령, 태허진령이 지키는 최종 비경.',enemy:1,reward:1,rewardTier:2,killStone:90,herbs:9,env:{move:.77,pick:.60},baseStage:7,rec:'축기 7층 이상',req:{major:1,stage:7,prev:'marsh',nodes:0},palette:['#171a24','#30354a','#747b9a']}
 ];
 
@@ -85,16 +85,16 @@ const BAL={
     blackwind:{hp:160,hit:38,period:1.15,chaserSpeed:120,total:5,sim:2},
     blood:{hp:380,hit:95,period:1.10,chaserSpeed:150,total:5,sim:3},
     foundation_trial:{hp:380,hit:95,period:1.10,chaserSpeed:150,total:1,sim:1},
-    thunder:{hp:380,hit:95,period:1.10,chaserSpeed:150,total:5,sim:3},
+    thunder:{hp:1300,hit:300,period:1.00,chaserSpeed:190,total:6,sim:3},
     marsh:{hp:380,hit:95,period:1.10,chaserSpeed:150,total:5,sim:3},
     taixu:{hp:380,hit:95,period:1.10,chaserSpeed:150,total:5,sim:3}
   },
   ecoTotal:[1,1.15,1.30,1.50,1.75,2.00],
   ecoSim:[0,0,1,1,2,3],
   encounter:{
-    packCounts:{qingyun:[8,10,12,15,23,34],blackwind:[10,12,15,19,28,38],blood:[10,12,15,19,25,32],foundation_trial:[1,1,1,1,1,1],thunder:[10,12,15,19,25,32],marsh:[10,12,15,19,25,32],taixu:[10,12,15,19,25,32]},
+    packCounts:{qingyun:[8,10,12,15,23,34],blackwind:[10,12,15,19,28,38],blood:[10,12,15,19,25,32],foundation_trial:[1,1,1,1,1,1],thunder:[12,14,17,21,26,30],marsh:[11,13,16,20,25,30],taixu:[9,11,14,17,21,25]},
     packSize:[[1,2],[2,2],[2,3],[3,4],[4,5],[5,7]],
-    liveCaps:{qingyun:[5,6,7,9,12,16],blackwind:[6,7,8,11,14,18],blood:[6,7,8,11,14,18],foundation_trial:[1,1,1,1,1,1],thunder:[6,7,8,11,14,18],marsh:[6,7,8,11,14,18],taixu:[6,7,8,11,14,18]},
+    liveCaps:{qingyun:[5,6,7,9,12,16],blackwind:[6,7,8,11,14,18],blood:[6,7,8,11,14,18],foundation_trial:[1,1,1,1,1,1],thunder:[7,8,10,12,15,18],marsh:[7,8,10,12,15,18],taixu:[6,7,8,10,12,15]},
     attackSlots:{qingyun:2,blackwind:3,blood:3,foundation_trial:1,thunder:3,marsh:3,taixu:3},
     starterPacks:{qingyun:2,blackwind:3,blood:3,foundation_trial:0,thunder:3,marsh:3,taixu:3},
     wakeRadius:[560,570,580,600,620,650],
@@ -104,11 +104,11 @@ const BAL={
     chainRadius:[0,0,0,720,900,1100]
   },
   skill:{
-    sword:{mult:[0,2.4,3.8,5.2,6.5,7.8],cd:[4.8,4.5,4.2,3.9,3.6,3.4],range:[115,130,145,160,178,198]},
-    wave:{mult:[0,1.2,1.6,2.1,2.7,3.8],cd:[5.5,5.1,4.8,4.5,4.2,4.0],radius:[55,65,75,85,95,108],acquire:[145,165,185,205,225,248]},
-    chain:{mult:[0,1.0,1.35,1.8,2.7,4.0],cd:[6.0,5.6,5.3,5.0,4.7,4.4],count:[3,3,4,4,5,6],jump:[55,62,70,78,86,96],acquire:[150,170,190,210,230,255]},
-    thunder:{mult:[0,1.8,3.0,5.0,6.3,8.0],cd:[7.0,6.5,6.1,5.7,5.4,5.1],radius:[52,62,72,82,92,105],acquire:[210,230,250,270,295,320]},
-    array:{mult:[0,3.0,4.4,6.0,8.0,10.5],cd:[10.0,8.8,8.1,7.5,7.0,6.5],radius:[82,94,106,118,134,150],acquire:[170,195,220,245,275,305]}
+    sword:{mult:[0,2.4,3.8,5.2,6.5,7.8],cd:[4.8,4.8,4.5,4.2,4.1,4.0],range:[115,130,145,160,178,198]},
+    wave:{mult:[0,1.2,1.6,2.1,2.7,3.8],cd:[5.5,5.5,5.2,5.0,4.8,4.6],radius:[55,65,75,85,95,108],acquire:[145,165,185,205,225,248]},
+    chain:{mult:[0,1.0,1.35,1.8,2.7,4.0],cd:[6.0,6.0,5.8,5.6,5.4,5.0],count:[3,3,4,4,5,6],jump:[55,62,70,78,86,96],acquire:[150,170,190,210,230,255]},
+    thunder:{mult:[0,1.8,3.0,5.0,6.3,8.0],cd:[7.0,7.0,6.7,6.4,6.1,5.8],radius:[52,62,72,82,92,105],acquire:[210,230,250,270,295,320]},
+    array:{mult:[0,3.0,4.4,6.0,8.0,10.5],cd:[10.0,10.0,9.6,9.2,8.8,8.4],radius:[82,94,106,118,134,150],acquire:[170,195,220,245,275,305]}
   }
 };
 const KEY='xianxia_proto_v11';
@@ -232,7 +232,7 @@ function basicAttackTargets(){return 1+clamp(Math.round(+M.cult.basicHits||0),0,
 function skillRank(id){return clamp(Math.round(+M.skills?.[id]?.pow||0),0,5)}
 function skillRangeRank(id){return clamp(Math.round(+M.skills?.[id]?.range||0),0,5)}
 function skillCycleRank(id){return clamp(Math.round(+M.skills?.[id]?.cycle||0),0,5)}
-function skillCooldown(id){const b=BAL.skill[id];return b?b.cd[skillCycleRank(id)]??99:99}
+function skillCooldown(id){const b=BAL.skill[id];return b?b.cd[skillRank(id)]??99:99}
 function beastConfig(){return BAL.enemy[M.area]||BAL.enemy.qingyun}
 function playerProgressTier(){return M.realm.major>0?9+(M.realm.stage||1):(M.realm.stage||1)}
 function areaBaseTier(){return({qingyun:1,blackwind:3,blood:6,foundation_trial:9,thunder:10,marsh:11,taixu:16}[M.area]||1)}
@@ -1076,7 +1076,7 @@ function spawnLightning(){
 
 function updateHazards(dt){
   foundationContent()?.updateHazards?.(dt,foundationApi());
-  if(M.area==='thunder'){run.lightningTimer-=dt;if(run.lightningTimer<=0){const chain=rank('storm1')>=3?2+(rank('storm1')>=5?1:0):1;for(let i=0;i<chain;i++)setTimeout(()=>{if(phase==='run')spawnLightning()},i*180);run.lightningTimer=Math.max(2.7,5.0-rank('storm1')*.32)}}
+  if(M.area==='thunder'&&M.realm.major>=1&&(M.realm.stage||0)>=3){run.lightningTimer-=dt;if(run.lightningTimer<=0){const chain=rank('storm1')>=3?2+(rank('storm1')>=5?1:0):1;for(let i=0;i<chain;i++)setTimeout(()=>{if(phase==='run')spawnLightning()},i*180);run.lightningTimer=Math.max(2.7,5.0-rank('storm1')*.32)}}
   for(const h of hazards){if(h.visualOwner==='foundation')continue;h.t-=dt;if(h.t<=0&&!h.struck){h.struck=1;h.t=.28;h.ttl=.28;if(distance(P,h)<h.r){let dmg=Math.ceil(beastConfig().hit*.55);takePlayerDamage(dmg,false,'lightning');pop(P.x,P.y,'천뢰 -'+dmg,'#ff9fa0',1)}else{run.dodges++;drop('s',h.x,h.y,h.reward);pop(h.x,h.y,'천뢰 회피','#bfc5ff',.9)}ring(h.x,h.y,h.r,'#d6d5ff',.3)}}hazards=hazards.filter(h=>h.t>0)
 }
 
