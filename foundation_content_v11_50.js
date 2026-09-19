@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.51.0-foundation-content';
+const VERSION='11.51.12-foundation-content';
 if(window.__xianxiaFoundationContent?.version===VERSION)return;
 
 const TYPES=new Set(['charging_boar','ranged_toad','exploding_beetle','command_ape','shield_pangolin','sword_sentinel','formation_warden','foundation_guardian','taixu_boss']);
@@ -478,6 +478,10 @@ function beforeEnemyDeath(enemy,api){if(enemy.boss)api.run.foundation.bossKilled
 function rewardEnemy(enemy,api){
   if(!TYPES.has(enemy.type))return false;
   const amount=Math.ceil((api.baseKillStone?.()||90)*(enemy.rewardMult||1)*(api.planRewardMultiplier?.()||1)*(api.areaRewardMultiplier?.()||1));api.gainStone(amount,enemy.x,enemy.y);
+  if(api.state.area==='marsh'&&['exploding_beetle','command_ape','shield_pangolin'].includes(enemy.type)){
+    api.run.purpleEssence=(api.run.purpleEssence||0)+1;
+    api.pop(enemy.x,enemy.y-48,'자운정수 +1','#d7b6ef',1.0);
+  }
   if(enemy.boss){api.run.elite=1;api.gainHerb(enemy.type==='taixu_boss'?5:3,2,enemy.x+12,enemy.y);api.pop(enemy.x,enemy.y-42,`${enemy.name} 격파`,'#ffe4a0',1.25)}
   return true;
 }
