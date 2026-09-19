@@ -1,7 +1,7 @@
 /* GENERATED FLAT RUNTIME 11.45 · source chain: exploration_mode_v11_33 -> worldscale_exploration_v11_34 */
 (()=>{
 'use strict';
-const VERSION='11.35.0';
+const VERSION='11.50.21';
 if(window.__xianxiaExplorationMode?.version===VERSION)return;
 
 const W=1800,H=2400;
@@ -175,9 +175,12 @@ function updateHud(s){
 
 function screenToWorld(e){return{x:clamp((e.clientX-state.left)/state.scale,11,W-11),y:clamp((e.clientY-state.top)/state.scale,11,H-11)}}
 function moveFromPointer(e){const D=window.__xianxiaDebug;if(!state.active||!D?.moveTo)return;state.returning=false;const p=screenToWorld(e);D.moveTo(p.x,p.y)}
+function isCombatUiTarget(target){
+  return !!target?.closest?.('#v1133Return,.foundation-arts,.foundation-art,[data-art],button,input,select,textarea,[role="button"]');
+}
 function interceptPointer(){
   game.addEventListener('pointerdown',e=>{
-    if(!state.active||e.target.closest?.('#v1133Return'))return;
+    if(!state.active||isCombatUiTarget(e.target))return;
     e.preventDefault();e.stopPropagation();state.pressed=true;state.pointerId=e.pointerId;game.setPointerCapture?.(e.pointerId);moveFromPointer(e);
   },{capture:true,passive:false});
   game.addEventListener('pointermove',e=>{
