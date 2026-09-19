@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.50.18';;
+const VERSION='11.50.19';
 if(window.__xianxiaFormationSkillsVersion===VERSION)return;
 window.__xianxiaFormationSkillsVersion=VERSION;
 
@@ -402,7 +402,7 @@ function traitDot(M,s,tierIndex,opt,optIndex,p){
     aria-label="${s.name} Tier ${tierIndex+1} ${opt[1]} · ${status}"><span>${optIndex+1}</span></button>`;
 }
 function mainNode(M,s,index){
-  const p=polygonPoint(220,-90+index*45);
+  const p=polygonPoint(200,-90+index*45);
   const r=mainRank(M,s),cap=mainCap(M,s);
   return `<button type="button" class="fs49-main ${nodeClass(M,s)} ${active.type==='main'&&active.id===s.id?'active':''}"
       style="left:${p.x/10}%;top:${p.y/10}%" data-act="main" data-id="${s.id}" aria-label="${s.name} Rank ${r}">
