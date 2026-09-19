@@ -1816,15 +1816,15 @@ function spawnLightning(options={}){
   const level=rank('storm1'),foresight=rank('storm2'),storm3=rank('storm3');
   const combat=enemies.some(e=>encounterBeast(e)&&e.aggressive&&distance(P,e)<320);
   let x,y;
-  if(level>=4&&combat){
-    const a=Math.random()*Math.PI*2,d=45+Math.random()*(STORM_BAL.focusRadius-45);
-    x=clamp(P.x+Math.cos(a)*d,45,W-45);y=clamp(P.y+Math.sin(a)*d,45,H-45);
+  if(options.x!==undefined||options.y!==undefined){
+    x=clamp(options.x??P.x,45,W-45);y=clamp(options.y??P.y,45,H-45);
   }else{
-    x=45+Math.random()*(W-90);y=45+Math.random()*(H-90);
+    // Thunder is now an intentional risk/reward objective: keep the strike visible
+    // and realistically reachable from the player's current position.
+    const a=Math.random()*Math.PI*2,maxD=level>=4&&combat?145:125,d=42+Math.random()*(maxD-42);
+    x=clamp(P.x+Math.cos(a)*d,45,W-45);y=clamp(P.y+Math.sin(a)*d,45,H-45);
   }
-  if(options.x!==undefined)x=clamp(options.x,45,W-45);
-  if(options.y!==undefined)y=clamp(options.y,45,H-45);
-  const warn=.82+(STORM_BAL.foresightWarn[foresight]||0),radius=Math.max(26,36-(STORM_BAL.foresightRadius[foresight]||0));
+  const warn=1.12+(STORM_BAL.foresightWarn[foresight]||0),radius=Math.max(30,40-(STORM_BAL.foresightRadius[foresight]||0));
   hazards.push({kind:'lightning',x,y,r:radius,t:warn,ttl:warn,struck:0,reward:STORM_BAL.reward[level]||0,compound:options.compound?1:0});
   if(!options.compound&&storm3>=3&&Math.random()<(STORM_BAL.storm3ExtraChance[storm3]||0)){
     const a=Math.random()*Math.PI*2,d=85+Math.random()*70;
