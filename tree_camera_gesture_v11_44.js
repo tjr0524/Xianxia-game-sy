@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.50.13-map-width';
+const VERSION='11.50.14-node-tap';
 if(window.__xianxiaTreeCameraGesture?.version===VERSION)return;
 window.__xianxiaTreeCameraGesture={version:VERSION};
 
@@ -132,10 +132,13 @@ document.addEventListener('pointerdown',e=>{
   e.stopImmediatePropagation();
   syncFromDom(c,true);
   const p=localPoint(c,e);
-  c.pointers.set(e.pointerId,{x:p.x,y:p.y,startX:p.x,startY:p.y});
+  const startedOnNode=!!e.target.closest?.('.asc-node,.map-node');
+  c.pointers.set(e.pointerId,{x:p.x,y:p.y,startX:p.x,startY:p.y,startedOnNode,captured:false});
   c.moved=false;
   setBaseline(c);
-  try{elements(c).view?.setPointerCapture(e.pointerId)}catch{}
+  if(!startedOnNode){
+    try{elements(c).view?.setPointerCapture(e.pointerId);c.pointers.get(e.pointerId).captured=true}catch{}
+  }
 },true);
 
 document.addEventListener('pointermove',e=>{
@@ -143,7 +146,12 @@ document.addEventListener('pointermove',e=>{
   e.stopImmediatePropagation();e.preventDefault();
   const p=localPoint(c,e),old=c.pointers.get(e.pointerId);
   old.x=p.x;old.y=p.y;
-  if(Math.hypot(p.x-old.startX,p.y-old.startY)>7)c.moved=true;
+  if(Math.hypot(p.x-old.startX,p.y-old.startY)>7){
+    c.moved=true;
+    if(old.startedOnNode&&!old.captured){
+      try{elements(c).view?.setPointerCapture(e.pointerId);old.captured=true}catch{}
+    }
+  }
   const ps=[...c.pointers.values()],base=c.base;
   if(!base)return;
   if(ps.length===1&&base.n===1){
@@ -190,12 +198,6 @@ document.addEventListener('click',e=>{
     e.preventDefault();e.stopImmediatePropagation();
     if(action==='fit')fit(c);else if(action==='in')zoom(c,1.2);else if(action==='out')zoom(c,1/1.2);
     return;
-  }
-  const stage=e.target.closest?.('#ascWorld .asc-stage');
-  if(stage&&c.kind==='asc'){
-    const p=nodePoint(stage);if(!p)return;
-    const keep=Math.max(c.s,trainingFocusScale());
-    requestAnimationFrame(()=>focusPoint(c,p.x,p.y,keep));
   }
 },true);
 
