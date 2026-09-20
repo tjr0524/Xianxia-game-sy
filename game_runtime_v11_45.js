@@ -1684,8 +1684,10 @@ function begin(){
   window.__xianxiaMastery?.onBegin?.(foundationApi());
   UI.ov.classList.add('hide');
   if(window.matchMedia?.('(max-width:920px)').matches)setMenuOpen(false);
-  UI.ret.disabled=false;
-  UI.notice.textContent=`${planCopy(plan)[0]} 시작. 배치를 읽고 목표와 귀환 동선을 함께 잡으세요.`;
+  UI.ret.disabled=!!foundationContent()?.bossOnly?.(M.area,M.realm);
+  UI.notice.textContent=foundationContent()?.bossOnly?.(M.area,M.realm)
+    ?`${planCopy(plan)[0]} 시작. 수문장을 격파하면 즉시 시련이 종료됩니다.`
+    :`${planCopy(plan)[0]} 시작. 배치를 읽고 목표와 귀환 동선을 함께 잡으세요.`;
   syncHud();
   window.__xianxiaFrameHub?.wake?.();
 }
@@ -2038,7 +2040,12 @@ function update(dt){
   const artSpeed=foundationContent()?.playerSpeedMultiplier?.(foundationApi())??1;const speed=(isMortal()?150:(M.cult.mov||150))*areaMoveScale()*(1+run.combo*.005)*artSpeed;
   const horizontal=(keys.has('arrowright')||keys.has('d')?1:0)-(keys.has('arrowleft')||keys.has('a')?1:0),vertical=(keys.has('arrowdown')||keys.has('s')?1:0)-(keys.has('arrowup')||keys.has('w')?1:0);
   if(horizontal||vertical){P.target=null;const norm=Math.hypot(horizontal,vertical)||1;P.dirX=horizontal/norm;P.dirY=vertical/norm;P.x+=P.dirX*speed*dt;P.y+=P.dirY*speed*dt;P.tx=P.x;P.ty=P.y}else moveToward(P,P.tx,P.ty,speed,dt);P.x=clamp(P.x,11,W-11);P.y=clamp(P.y,11,H-11);
-  const exitDistance=Math.hypot(P.x-EXIT.x,P.y+PLAYER_GROUND_OFFSET-EXIT.y);if(exitDistance>68)run.left=1;if(run.left&&exitDistance<EXIT.r+9){finish('return');return}
+  const bossEncounter=!!foundationContent()?.bossOnly?.(M.area,M.realm);
+  if(!bossEncounter){
+    const exitDistance=Math.hypot(P.x-EXIT.x,P.y+PLAYER_GROUND_OFFSET-EXIT.y);
+    if(exitDistance>68)run.left=1;
+    if(run.left&&exitDistance<EXIT.r+9){finish('return');return}
+  }
   run.herbTimer-=dt;if(run.herbLeft>0&&run.herbTimer<=0){randomHerb();run.herbLeft--;run.herbTimer=7+Math.random()*3}
   updateEncounterPacks(dt);
   if(branches().includes('fate')&&rank('fate1')>0){
@@ -2159,6 +2166,9 @@ function update(dt){
     }
     return true;
   });
+  // Boss-only encounters end at the kill itself: rewards are already accounted above,
+  // so there is no portal walk-back step.
+  if(phase==='run'&&bossEncounter&&run?.foundation?.bossKilled){finish('return');return}
   if(!isMortal()&&P.cd<=0){const range=basicAttackRange(),targets=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&distance(P,e)<range).sort((a,b)=>distance(P,a)-distance(P,b)).slice(0,basicAttackTargets());if(targets.length){const dmg=basicDamage()*combatPower(),scales=[1,.62,.48,.36];targets.forEach((target,i)=>{dealEnemyDamage(target,dmg*(scales[i]||.32),'basic');slash(P.x,P.y,target.x,target.y,i?'#e8d6a5':'#f7e5ad')});run.skillCasts.basic=(run.skillCasts.basic||0)+1;P.cd=basicInterval()}}
   for(const skill of SKILLS){const st=skillState(skill.id);if(!st.u)continue;if(run.skillCooldowns[skill.id]<=0&&cast(skill)){run.skillCasts[skill.id]=(run.skillCasts[skill.id]||0)+1;run.skillCooldowns[skill.id]=effectiveSkillCooldown(skill.id)}}
   updateHazards(dt);updateNonCombatRecovery(dt);if(P.hp<=0){P.hp=0;finish('dead');return}syncHud();
