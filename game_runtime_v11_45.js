@@ -2726,7 +2726,7 @@ function frameSnapshot(){
     elapsed,
     run:run?{...run}:null,
     P:{...P},
-    enemies:enemies.map(enemy=>({id:enemy.id,type:enemy.type,x:enemy.x,y:enemy.y,hp:enemy.hp,max:enemy.max,rare:enemy.rare,rareTrait:enemy.rareTrait,treasure:enemy.treasure,carryCount:enemy.carry?.length||0,bond:enemy.bond||0,captureRange:enemy.type==='spirit'?40:0,visualOwner:enemy.visualOwner||'',action:enemy.action||'idle',facing:enemy.facing||1,shield:enemy.shield||0,shieldMax:enemy.shieldMax||0,commandedUntil:enemy.commandedUntil||0,boss:enemy.boss||0,name:enemy.name||'',lastHitSource:enemy._lastHit?.source||'',...(foundationContent()?.snapshotEnemy?.(enemy)||{})})),
+    enemies:enemies.map(enemy=>({id:enemy.id,type:enemy.type,x:enemy.x,y:enemy.y,hp:enemy.hp,max:enemy.max,rare:enemy.rare,rareTrait:enemy.rareTrait,treasure:enemy.treasure,carryCount:enemy.carry?.length||0,carryHerbCount:enemy.carry?.filter(item=>item.type==='h').length||0,carryHerbGrade:Math.max(-1,...(enemy.carry||[]).filter(item=>item.type==='h').map(item=>Number(item.grade)||0)),bond:enemy.bond||0,captureRange:enemy.type==='spirit'?40:0,visualOwner:enemy.visualOwner||'',action:enemy.action||'idle',facing:enemy.facing||1,shield:enemy.shield||0,shieldMax:enemy.shieldMax||0,commandedUntil:enemy.commandedUntil||0,boss:enemy.boss||0,name:enemy.name||'',lastHitSource:enemy._lastHit?.source||'',...(foundationContent()?.snapshotEnemy?.(enemy)||{})})),
     objects:objects.map(object=>({type:object.type,x:object.x,y:object.y,value:object.value,grade:object.grade})),
     vein:vein?{...vein}:null,
     hazards:hazards.map(hazard=>({...hazard}))
