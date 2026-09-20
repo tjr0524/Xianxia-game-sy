@@ -1802,7 +1802,7 @@ function cast(skill,options={}){
     if(t1==='vortex'){
       const vmeta=copyTriggerMeta(meta),duration=2.5,pulses=5,interval=duration/(pulses-1);
       for(let i=0;i<pulses;i++)scheduleAreaHit({t:.05+i*interval,x:target.x,y:target.y,r:radius,damage:base*.22,source:'wave:vortex',family:'wave',meta:vmeta,color:'#9fdfff'});
-      fieldFx(target.x,target.y,radius,'#9fdfff',duration+.08);emitSkillVisual('wave',target.x,target.y,{r:radius,duration,kind:'field'});return done({target,hits:1});
+      fieldFx(target.x,target.y,radius,'#9fdfff',duration+.08);emitSkillVisual('wave',target.x,target.y,{r:radius,duration,kind:'vortex'});return done({target,hits:1});
     }
     if(t1==='double'){
       const dx=target.x-P.x,dy=target.y-P.y,n=Math.hypot(dx,dy)||1,px=-dy/n,py=dx/n,offset=radius*.55,centers=[{x:target.x+px*offset,y:target.y+py*offset},{x:target.x-px*offset,y:target.y-py*offset}],seen=new Set();
@@ -1843,7 +1843,6 @@ function cast(skill,options={}){
     }
     if(t1==='back'&&first&&first.hp>0)queue(first,.50,source,meta,'#dce5ff');
     if(!hits)return false;
-    if(last)emitSkillVisual('chain',last.x,last.y,{r:24,duration:.62+step*linkDelay});
     const result=done({target:last,hits});
     if(!options.triggered&&hasFormationTrait('chain','burst')&&(run.foundation?.arts?.burstTime||0)>0){
       for(let i=0;i<2;i++)setTimeout(()=>{if(phase==='run')cast(skill,{powerScale:.55,triggered:true,source:'chain:burst',triggerMeta:systemTraitMeta(meta,'chain','burst','chain:burst')})},Math.round((.18+i*.16)*1000));
