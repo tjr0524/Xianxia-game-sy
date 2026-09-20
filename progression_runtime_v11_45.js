@@ -84,16 +84,17 @@ const BREAKTHROUGH_COST={
   q7:{s:1300,h:15,hg:2,mat:'herb3'},
   q8:{s:1800,h:20,hg:2,mat:'herb3'},
   q9:{s:2600,h:28,hg:2,mat:'herb3'},
-  // 축기 진입비는 그대로 두고, 천뢰봉 수익을 받기 시작한 뒤의 소경지 돌파 영석을 4배로 상향.
+  // 축기권 몬스터 영석 보상이 2배이므로 소경지 돌파 영석도 정확히 2배.
+  // 이렇게 해야 '돌파 영석을 모으는 판수'가 기존과 동일하게 유지된다.
   f1:{s:4500,h:40,hg:2,mat:'herb3',major:true},
-  f2:{s:21600,h:8,hg:2,mat:'thunderMark'},
-  f3:{s:27200,h:12,hg:2,mat:'thunderMark'},
-  f4:{s:33600,h:16,hg:2,mat:'thunderMark'},
-  f5:{s:44000,h:8,hg:2,mat:'purpleEssence'},
-  f6:{s:53600,h:12,hg:2,mat:'purpleEssence'},
-  f7:{s:65200,h:16,hg:2,mat:'purpleEssence'},
-  f8:{s:84400,h:6,hg:2,mat:'taixuSigil'},
-  f9:{s:108800,h:12,hg:2,mat:'taixuSigil'}
+  f2:{s:10800,h:8,hg:2,mat:'thunderMark'},
+  f3:{s:13600,h:12,hg:2,mat:'thunderMark'},
+  f4:{s:16800,h:16,hg:2,mat:'thunderMark'},
+  f5:{s:22000,h:8,hg:2,mat:'purpleEssence'},
+  f6:{s:26800,h:12,hg:2,mat:'purpleEssence'},
+  f7:{s:32600,h:16,hg:2,mat:'purpleEssence'},
+  f8:{s:42200,h:6,hg:2,mat:'taixuSigil'},
+  f9:{s:54400,h:12,hg:2,mat:'taixuSigil'}
 };
 function breakthroughCost(target){
   const stage=typeof target==='number'?TRAIN[target]:target;
