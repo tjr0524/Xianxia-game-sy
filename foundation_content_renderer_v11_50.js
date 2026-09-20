@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.51.20-taixu-formation';
+const VERSION='11.51.27-combat-fx';
 if(window.__xianxiaFoundationRenderer?.version===VERSION)return;
 const W=1800,H=2400,BASE='assets/ink_v1/foundation_trial_v1/';
 const areaAssets={
@@ -83,14 +83,14 @@ function syncFoundationDeaths(snapshot,area,now){
   for(const e of current){
     const prev=state.prevFoundation.get(e.id);
     if(prev&&Number.isFinite(prev.hp)&&e.hp<prev.hp-.05){
-      state.damageFloats.push({x:e.x,y:e.y,damage:prev.hp-e.hp,start:now,boss:!!e.boss});
+      state.damageFloats.push({x:e.x,y:e.y,damage:prev.hp-e.hp,start:now,boss:!!e.boss,source:e.lastHitSource||''});
       if(state.damageFloats.length>24)state.damageFloats.splice(0,state.damageFloats.length-24);
     }
   }
   for(const [id,e] of state.prevFoundation){
     if(!seen.has(id))state.deaths.push({...e,start:now});
   }
-  state.prevFoundation=new Map(current.map(e=>[e.id,{id:e.id,type:e.type,x:e.x,y:e.y,hp:e.hp,max:e.max,boss:!!e.boss,facing:e.facing||1,name:e.name||''}]));
+  state.prevFoundation=new Map(current.map(e=>[e.id,{id:e.id,type:e.type,x:e.x,y:e.y,hp:e.hp,max:e.max,boss:!!e.boss,facing:e.facing||1,name:e.name||'',lastHitSource:e.lastHitSource||''}]));
   return current;
 }
 function drawFoundationDeaths(area,now){
@@ -131,8 +131,9 @@ function drawFoundationDamage(now){
     if(age>=d){state.damageFloats.splice(i,1);continue}
     const u=age/d,fade=1-u,y=q.y-(q.boss?172:62)-u*30;
     c.save();c.globalAlpha=Math.min(1,age/.06)*fade;c.textAlign='center';c.textBaseline='middle';
+    const isChain=/^chain/.test(q.source),isVortex=/^wave:vortex/.test(q.source),isArray=/^array/.test(q.source);
     c.strokeStyle='rgba(248,241,220,.95)';c.lineWidth=q.boss?5:4;
-    c.fillStyle='#8b352d';c.font='900 '+(q.boss?20:17)+'px sans-serif';
+    c.fillStyle=isChain?'#2f6faa':isVortex?'#287e9b':isArray?'#9b732a':'#8b352d';c.font='900 '+(q.boss?20:17)+'px sans-serif';
     const text='-'+Math.max(1,Math.round(q.damage));
     c.strokeText(text,q.x,y);c.fillText(text,q.x,y);c.restore();
   }
