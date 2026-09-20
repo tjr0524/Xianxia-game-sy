@@ -975,7 +975,7 @@ function breakthroughCost(){
     '1:4':{s:11000,h:8,hg:2},
     '1:5':{s:13400,h:12,hg:2},
     '1:6':{s:16300,h:16,hg:2},
-    '1:7':{s:21100,h:8,hg:2},
+    '1:7':{s:21100,h:6,hg:2},
     '1:8':{s:27200,h:12,hg:2}
   };
   return costs[`${M.realm.major}:${M.realm.stage}`]||{s:999999999,h:999999,hg:2};
@@ -1000,7 +1000,7 @@ function ventureCopy(){
   if(M.area==='blood')return ['영맥 잠행','영맥에서 영석 10개 채굴 · 혼합 보상'];
   if(M.area==='thunder')return ['천뢰 수행','낙뢰에 2회 직격 · 뢰흔 확보'];
   if(M.area==='marsh')return ['자운 사냥','특수 요수 2마리 격파 · 자운정수 확보'];
-  if(M.area==='taixu')return ['진안 파훼','진안 수성 1회 완수 · 태허진문 확보'];
+  if(M.area==='taixu')return ['진안 파훼','진안 수성 1회 완수 · 추가 영석 확보'];
   return ['기믹 수행','비경 고유 기믹을 수행'];
 }
 function planCopy(plan){
@@ -1028,7 +1028,7 @@ function objectiveData(){
   }
   if(M.area==='thunder')return {label:'천뢰 수행',value:run?.lightningHits||0,target:2,reward:'뢰흔'};
   if(M.area==='marsh')return {label:'자운 사냥',value:run?.purpleEssence||0,target:2,reward:'자운정수'};
-  if(M.area==='taixu')return {label:'진안 파훼',value:run?.taixuTrials||0,target:1,reward:'태허진문'};
+  if(M.area==='taixu')return {label:'진안 파훼',value:run?.taixuTrials||0,target:1,reward:'추가 영석'};
   return {label:'기믹 수행',value:run?.kills||0,target:4,reward:'영석'};
 }
 function objectiveMet(){
@@ -1051,7 +1051,7 @@ function objectiveReward(){
   M.stone+=stone;
   if(M.area==='thunder'){M.thunderMark=(M.thunderMark||0)+1;return `영석 +${stone} · 뢰흔 +1`}
   if(M.area==='marsh'){M.purpleEssence=(M.purpleEssence||0)+1;return `영석 +${stone} · 자운정수 +1`}
-  if(M.area==='taixu'){M.taixuSigil=(M.taixuSigil||0)+1;return `영석 +${stone} · 태허진문 +1`}
+  if(M.area==='taixu')return `영석 +${stone}`
   if(M.realm.major>=1)return `영석 +${stone}`;
   const herbs=1+Math.floor(index/2);
   herbAdd(Math.min(2,index),herbs);
