@@ -327,118 +327,196 @@
   word-break:keep-all;
 }
 
-/* 비경 지도: 계통별 도장과 단계 링으로 정리 */
+/* 비경 지도: 배경 지도 위의 가벼운 점/선 UI */
 .v25-theme .map-viewport{
-  background:linear-gradient(rgba(249,246,236,.72),rgba(238,232,217,.72)),url("assets/ink_v1/runtime/ui/world_map.png") center/cover no-repeat!important;
+  background:#0e1115!important;
+  border-color:#c9c4b8!important;
+  box-shadow:inset 0 0 22px #0005,0 8px 20px #0003!important;
 }
-.v25-theme .map-world{background:none!important}
-.v25-theme .map-zone{
-  border:1px solid rgba(83,105,97,.14)!important;
-  border-radius:26px 8px 26px 8px!important;
-  background:rgba(255,253,247,.12)!important;
+.v25-theme .map-world{
+  background:none!important;
+  isolation:isolate!important;
 }
-.v25-theme .map-zone span{
-  padding:4px 7px;
-  border-left:3px solid rgba(66,104,91,.6);
-  color:rgba(38,57,53,.78)!important;
-  font:800 14px/1.2 var(--v25-body)!important;
-  letter-spacing:.04em;
-  white-space:nowrap;
-  word-break:keep-all;
-}
-.v25-theme .map-node{
-  display:grid!important;
-  place-items:center!important;
-  border:0!important;
-  color:#334741!important;
-  background-image:none!important;
-  filter:none!important;
-  font-family:var(--v25-serif)!important;
-}
-.v25-theme .map-root{
-  width:108px!important;
-  height:54px!important;
-  grid-template-columns:32px minmax(0,1fr)!important;
-  gap:6px!important;
-  padding:7px 9px!important;
-  border:1px solid #819a90!important;
-  border-radius:10px 3px 10px 3px!important;
-  background:linear-gradient(145deg,#faf8ef,#e7ece5)!important;
-  box-shadow:0 8px 18px rgba(40,58,53,.14),inset 0 1px #fff!important;
-}
-.v25-theme .map-root.on{border-color:#568675!important;background:linear-gradient(145deg,#f1f7f2,#dceae2)!important}
-.v25-theme .map-root.current{outline:3px solid rgba(155,65,55,.74)!important;outline-offset:4px!important}
-.v25-theme .map-root-seal38{
-  width:31px;
-  height:31px;
-  display:grid;
-  place-items:center;
-  border:1px solid #577f71;
-  border-radius:50%;
-  color:#fff;
-  background:#517d6e;
-  font:800 16px/1 var(--v25-serif);
-}
-.v25-theme .map-root-name38{
-  overflow:hidden;
-  color:#29443b;
-  font:800 12px/1.2 var(--v25-body);
-  white-space:nowrap;
-  text-overflow:ellipsis;
-  word-break:keep-all;
-}
-.v25-theme .map-point{
-  width:54px!important;
-  height:54px!important;
+.v25-theme .map-zone{display:none!important}
+.v25-theme #mapWorld .map-node{
+  display:block!important;
+  place-items:initial!important;
+  width:38px!important;
+  height:38px!important;
+  min-width:0!important;
+  min-height:0!important;
   padding:0!important;
-  border:1px solid #a5afa9!important;
+  border:0!important;
+  border-radius:999px!important;
+  background:transparent!important;
+  background-image:none!important;
+  box-shadow:none!important;
+  outline:none!important;
+  color:transparent!important;
+  filter:none!important;
+  overflow:visible!important;
+}
+.v25-theme #mapWorld .map-node>*{display:none!important}
+.v25-theme #mapWorld .map-node::before{
+  content:''!important;
+  display:block!important;
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  width:17px!important;
+  height:17px!important;
+  transform:translate(-50%,-50%)!important;
+  border:2px solid #18212b!important;
   border-radius:50%!important;
-  background:radial-gradient(circle at 34% 29%,#fffdf8,#e8e7de 74%)!important;
-  box-shadow:0 6px 14px rgba(48,61,57,.12),inset 0 0 0 4px rgba(255,255,255,.55)!important;
+  background:radial-gradient(circle at 36% 32%,#fff 0 18%,#fffdf7 19% 43%,#f4efe3 72%,#e9dfca 100%)!important;
+  box-shadow:
+    0 0 0 2px var(--map-color,#8ea3c8),
+    0 0 8px var(--map-color,#8ea3c8),
+    0 2px 4px rgba(0,0,0,.34)!important;
+  opacity:.96!important;
+  filter:none!important;
 }
-.v25-theme .map-point.on{
-  border-color:#5e907f!important;
-  color:#245345!important;
-  background:radial-gradient(circle at 34% 29%,#f7fcf8,#d8e9df 74%)!important;
+.v25-theme #mapWorld .map-node::after{
+  content:''!important;
+  display:block!important;
+  position:absolute!important;
+  left:calc(50% - 3px)!important;
+  top:calc(50% - 4px)!important;
+  width:5px!important;
+  height:5px!important;
+  border-radius:50%!important;
+  background:rgba(255,255,255,.72)!important;
+  box-shadow:none!important;
+  pointer-events:none!important;
 }
-.v25-theme .map-point.available{
-  border-color:#b38c3e!important;
-  color:#77591e!important;
-  background:radial-gradient(circle at 34% 29%,#fffaf0,#f5e5b3 74%)!important;
-  box-shadow:0 0 0 4px rgba(183,145,64,.1),0 6px 15px rgba(82,66,32,.12)!important;
+.v25-theme #mapWorld .map-root{
+  width:42px!important;
+  height:42px!important;
+  grid-template-columns:none!important;
+  gap:0!important;
 }
-.v25-theme .map-point.locked{opacity:.68!important;filter:grayscale(.58)!important}
-.v25-theme .map-point-glyph38{font:800 20px/1 var(--v25-serif)}
-.v25-theme .map-point .rank{
-  right:-5px!important;
-  bottom:-4px!important;
-  min-width:29px!important;
-  height:20px!important;
-  padding:0 5px!important;
-  border:2px solid #f6f2e7!important;
-  border-radius:99px!important;
-  color:#fff!important;
-  background:#56645f!important;
-  font:700 9px/16px var(--v25-serif)!important;
+.v25-theme #mapWorld .map-root::before{
+  width:23px!important;
+  height:23px!important;
+  border-width:2px!important;
+  border-radius:50%!important;
+  background:radial-gradient(circle at 36% 32%,#fff 0 17%,#fffdf7 18% 42%,#f4efe3 70%,#e7dcc5 100%)!important;
+  box-shadow:
+    0 0 0 2px var(--map-color,#8ea3c8),
+    0 0 11px var(--map-color,#8ea3c8),
+    0 2px 5px rgba(0,0,0,.38)!important;
 }
-.v25-theme .map-point.on .rank{background:#477766!important}
-.v25-theme .map-point.available .rank{background:#9d792f!important}
-.v25-theme .map-gate{
-  width:86px!important;
-  height:46px!important;
-  grid-template-columns:28px minmax(0,1fr)!important;
-  gap:5px!important;
-  padding:6px 8px!important;
-  border:1px solid #a08246!important;
-  border-radius:8px 8px 14px 14px!important;
-  color:#684f20!important;
-  background:linear-gradient(#fff6d9,#e8d49f)!important;
-  box-shadow:0 7px 16px rgba(69,54,24,.14),inset 0 0 0 2px rgba(255,255,255,.52)!important;
+.v25-theme #mapWorld .map-root.current{
+  outline:none!important;
 }
-.v25-theme .map-gate::before{display:none!important}
-.v25-theme .map-gate-mark38{font:800 22px/1 var(--v25-serif)}
-.v25-theme .map-gate-name38{font:800 10px/1.15 var(--v25-body);white-space:nowrap;word-break:keep-all}
-.v25-theme #mapDetail.v17float .node-kicker{font-family:var(--v25-serif)!important}
+.v25-theme #mapWorld .map-root.current::before{
+  box-shadow:
+    0 0 0 2px var(--map-color,#8ea3c8),
+    0 0 0 5px rgba(240,199,94,.25),
+    0 0 14px rgba(240,199,94,.50),
+    0 2px 5px rgba(0,0,0,.38)!important;
+}
+.v25-theme #mapWorld .map-point.on,
+.v25-theme #mapWorld .map-point.available,
+.v25-theme #mapWorld .map-root.on,
+.v25-theme #mapWorld .map-gate.on,
+.v25-theme #mapWorld .map-gate.available{
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.v25-theme #mapWorld .map-node.locked{
+  opacity:.30!important;
+  filter:saturate(.42)!important;
+}
+.v25-theme #mapWorld .map-node.available::before{
+  animation:mapNodePulse1154 1.65s ease-in-out infinite!important;
+}
+
+/* 관문은 카드가 아니라 작은 문 실루엣 */
+.v25-theme #mapWorld .map-gate{
+  width:42px!important;
+  height:42px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:999px!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.v25-theme #mapWorld .map-gate::before{
+  content:''!important;
+  display:block!important;
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  width:27px!important;
+  height:25px!important;
+  transform:translate(-50%,-50%)!important;
+  border:0!important;
+  border-radius:0!important;
+  background:
+    linear-gradient(#f3e6b6,#ddc377) 50% 1px/25px 6px no-repeat,
+    linear-gradient(#fff7dd,#ead78d) 50% 9px/19px 4px no-repeat,
+    linear-gradient(#ead78d,#c9a956) 4px 12px/5px 12px no-repeat,
+    linear-gradient(#ead78d,#c9a956) calc(100% - 4px) 12px/5px 12px no-repeat!important;
+  box-shadow:none!important;
+  filter:
+    drop-shadow(1px 0 0 #18212b)
+    drop-shadow(-1px 0 0 #18212b)
+    drop-shadow(0 1px 0 #18212b)
+    drop-shadow(0 -1px 0 #18212b)
+    drop-shadow(0 0 5px rgba(234,215,141,.42))!important;
+}
+.v25-theme #mapWorld .map-gate::after{
+  content:''!important;
+  display:block!important;
+  position:absolute!important;
+  left:50%!important;
+  top:calc(50% - 8px)!important;
+  width:10px!important;
+  height:2px!important;
+  transform:translate(-50%,-50%)!important;
+  border-radius:2px!important;
+  background:rgba(255,255,255,.68)!important;
+  box-shadow:none!important;
+}
+.v25-theme #mapWorld .map-gate.available::before{
+  animation:mapGatePulse1154 1.65s ease-in-out infinite!important;
+}
+
+.v25-theme #mapWorld .map-point .rank,
+.v25-theme #mapWorld .map-root b,
+.v25-theme #mapWorld .area-symbol,
+.v25-theme #mapWorld .map-root-seal38,
+.v25-theme #mapWorld .map-root-name38,
+.v25-theme #mapWorld .map-point-glyph38,
+.v25-theme #mapWorld .map-gate-mark38,
+.v25-theme #mapWorld .map-gate-name38{
+  display:none!important;
+}
+
+@keyframes mapNodePulse1154{
+  0%,100%{filter:brightness(1) drop-shadow(0 0 0 transparent)}
+  50%{filter:brightness(1.08) drop-shadow(0 0 5px var(--map-color,#8ea3c8))}
+}
+@keyframes mapGatePulse1154{
+  0%,100%{
+    filter:
+      drop-shadow(1px 0 0 #18212b)
+      drop-shadow(-1px 0 0 #18212b)
+      drop-shadow(0 1px 0 #18212b)
+      drop-shadow(0 -1px 0 #18212b)
+      drop-shadow(0 0 4px rgba(234,215,141,.36));
+  }
+  50%{
+    filter:
+      drop-shadow(1px 0 0 #18212b)
+      drop-shadow(-1px 0 0 #18212b)
+      drop-shadow(0 1px 0 #18212b)
+      drop-shadow(0 -1px 0 #18212b)
+      drop-shadow(0 0 8px rgba(234,215,141,.58));
+  }
+}
 
 /* 수련/지도 상세정보: 트리 바깥 고정 패널 대신 누른 노드 곁의 작은 창 */
 .v25-theme .detail-popover38.v17float{
