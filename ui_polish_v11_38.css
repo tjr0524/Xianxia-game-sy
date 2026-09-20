@@ -426,8 +426,14 @@
   box-shadow:none!important;
 }
 .v25-theme #mapWorld .map-node.locked{
-  opacity:.30!important;
-  filter:saturate(.42)!important;
+  opacity:.76!important;
+  filter:grayscale(1) saturate(.08) brightness(.94)!important;
+}
+.v25-theme #mapWorld .map-node.locked::before{
+  box-shadow:
+    0 0 0 2px #b9bec2,
+    0 0 5px rgba(90,98,104,.24),
+    0 2px 4px rgba(0,0,0,.32)!important;
 }
 .v25-theme #mapWorld .map-node.available::before{
   animation:mapNodePulse1154 1.65s ease-in-out infinite!important;
