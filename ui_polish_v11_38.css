@@ -275,39 +275,54 @@
 
 /* 비경 선택: 한 글자씩 꺾이는 문제 제거, 후산은 좁은 버튼에서 생략 */
 .v25-theme .expedition-area-grid{
-  grid-template-columns:repeat(auto-fit,minmax(86px,1fr))!important;
-  gap:5px!important;
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:6px!important;
+  overflow:visible!important;
+  padding:2px 0 4px!important;
 }
-.v25-theme .expedition-area-btn{
+.v25-theme .expedition-area-grid>.expedition-area-btn{
   width:100%!important;
   min-width:0!important;
-  min-height:40px!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  gap:6px!important;
-  padding:5px 8px!important;
+  max-width:none!important;
+  min-height:58px!important;
+  display:grid!important;
+  grid-template-rows:24px auto;
+  place-items:center!important;
+  gap:3px!important;
+  padding:6px 3px!important;
   overflow:hidden!important;
-  font:700 10px/1.15 var(--v25-serif)!important;
+  font:700 9px/1.12 var(--v25-serif)!important;
   white-space:nowrap!important;
   word-break:keep-all!important;
 }
+.v25-theme .expedition-area-grid>.expedition-area-btn.locked,
+.v25-theme .expedition-area-grid>.expedition-area-btn:disabled{
+  border-color:#b8bcb7!important;
+  color:#888f8b!important;
+  background:#ecece7!important;
+  box-shadow:none!important;
+  filter:grayscale(1)!important;
+  opacity:.58!important;
+}
 .v25-theme .expedition-area-btn i{
-  flex:0 0 auto;
   display:grid!important;
   place-items:center;
-  width:23px;
-  height:23px;
+  width:22px;
+  height:22px;
   margin:0!important;
   border:1px solid currentColor;
   border-radius:50%;
   font:700 12px/1 var(--v25-serif)!important;
   opacity:.82;
 }
+.v25-theme .expedition-area-btn .area-symbol{width:24px!important;height:24px!important;margin:0 auto!important;object-fit:contain}
 .v25-theme .expedition-area-btn .area-label38{
+  width:100%;
   min-width:0;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  overflow:visible;
+  text-align:center;
+  text-overflow:clip;
   white-space:nowrap;
   word-break:keep-all;
 }
@@ -469,16 +484,16 @@
 
 @media(max-width:560px){
   body.v22-panel-mode .controls .panel.active[data-panel="skills"]{
-    display:block!important;
-    overflow-y:auto!important;
-    overscroll-behavior:contain;
-    -webkit-overflow-scrolling:touch;
+    display:flex!important;
+    flex-direction:column!important;
+    overflow:hidden!important;
   }
   body.v22-panel-mode [data-panel="skills"]>.section{
-    display:block!important;
-    height:auto!important;
-    min-height:min-content!important;
-    flex:none!important;
+    display:flex!important;
+    flex:1 1 auto!important;
+    flex-direction:column!important;
+    height:100%!important;
+    min-height:0!important;
   }
   .v25-theme [data-panel="skills"]{padding:6px!important}
   .v25-theme [data-panel="skills"]>.section{margin:0!important;padding:7px!important}
@@ -491,9 +506,9 @@
   .v25-theme .spell-desc38{margin:6px 0 7px;font-size:9.5px}
   .v25-theme .spell-action38{min-width:84px;min-height:32px;padding:5px 7px;font-size:8.5px!important}
   .v25-theme .spell-cost38 span{padding:3px 5px;font-size:7.5px}
-  .v25-theme .expedition-area-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
-  .v25-theme .expedition-area-grid>.expedition-area-btn:only-child{grid-column:1/-1}
-  .v25-theme .dialog.v17expedition .expedition-area-btn{min-height:38px!important;padding:5px 7px!important;font-size:9.5px!important}
+  .v25-theme .expedition-area-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:5px!important}
+  .v25-theme .expedition-area-grid>.expedition-area-btn{width:100%!important;min-width:0!important;max-width:none!important;min-height:56px!important}
+  .v25-theme .dialog.v17expedition .expedition-area-btn{min-height:56px!important;padding:5px 2px!important;font-size:8.8px!important}
   .v25-theme .expedition-records38{padding:6px!important}
   .v25-theme .detail-popover38.v17float{max-height:190px!important}
 }

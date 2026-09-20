@@ -1,7 +1,0 @@
-.v25-theme .game{background:#e4e9e1!important}
-.v25-theme .game canvas{filter:saturate(.96) contrast(1.025) brightness(1)!important}
-.v25-theme .v25-atmosphere{opacity:.11!important;mix-blend-mode:multiply!important;background:linear-gradient(180deg,rgba(255,255,255,.08),transparent 34%),url('assets/ink_mountains.svg') center bottom/100% 38% no-repeat!important}
-.v25-theme .v25-zone-watermark{color:rgba(47,72,68,.08)!important;text-shadow:none!important}
-@media(max-width:560px){
-  .v25-theme .v25-atmosphere{opacity:.08!important}
-}

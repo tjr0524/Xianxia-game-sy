@@ -1,7 +1,7 @@
 /* GENERATED FLAT RUNTIME 11.45 · source chain: exploration_mode_v11_33 -> worldscale_exploration_v11_34 */
 (()=>{
 'use strict';
-const VERSION='11.35.0';
+const VERSION='11.50.21';
 if(window.__xianxiaExplorationMode?.version===VERSION)return;
 
 const W=1800,H=2400;
@@ -164,10 +164,15 @@ function updateHud(s){
   const r=s.run||{},p=s.P||{hp:0,max:1};
   const stone=$('#v1133Stone'),herbs=$('#v1133Herbs'),hpText=$('#v1133HpText'),hpFill=$('#v1133HpFill'),timer=$('#v1133Timer'),objective=$('#v1133Objective');
   if(stone)stone.textContent=`영석 ${Math.floor(r.s||0)}`;
-  if(herbs)herbs.textContent=`영초 下${r.h0||0} · 中${r.h1||0} · 上${r.h2||0}`;
+  if(herbs){
+    const stage=+s.M?.realm?.stage||0,major=+s.M?.realm?.major||-1;
+    herbs.textContent=major>=1
+      ?stage<=3?`뢰흔 ${r.thunderMarks||0}`:stage<=6?`자운정수 ${r.purpleEssence||0}`:'후기 재료 미정'
+      :`영초 下${r.h0||0} · 中${r.h1||0} · 上${r.h2||0}`;
+  }
   if(hpText)hpText.textContent=`${Math.max(0,Math.ceil(p.hp||0))} / ${Math.max(1,Math.ceil(p.max||1))}`;
   if(hpFill)hpFill.style.width=`${clamp((p.hp||0)/Math.max(1,p.max||1)*100,0,100)}%`;
-  const total=window.__xianxiaDebug?.constants?.RUN_TIME||25,remaining=Math.max(0,total-(s.elapsed||0));
+  const total=s.run?.limit||window.__xianxiaDebug?.constants?.RUN_TIME||25,remaining=Math.max(0,total-(s.elapsed||0));
   if(timer){timer.textContent=`${remaining.toFixed(1)}초`;timer.classList.toggle('warn',remaining<=10)}
   if(objective){const source=$('#objective');objective.textContent=(source?.textContent||'').replace(/\s+/g,' ').trim()}
   updateReturnGuide(s,remaining);
@@ -175,9 +180,12 @@ function updateHud(s){
 
 function screenToWorld(e){return{x:clamp((e.clientX-state.left)/state.scale,11,W-11),y:clamp((e.clientY-state.top)/state.scale,11,H-11)}}
 function moveFromPointer(e){const D=window.__xianxiaDebug;if(!state.active||!D?.moveTo)return;state.returning=false;const p=screenToWorld(e);D.moveTo(p.x,p.y)}
+function isCombatUiTarget(target){
+  return !!target?.closest?.('#v1133Return,.foundation-arts,.foundation-art,[data-art],button,input,select,textarea,[role="button"]');
+}
 function interceptPointer(){
   game.addEventListener('pointerdown',e=>{
-    if(!state.active||e.target.closest?.('#v1133Return'))return;
+    if(!state.active||isCombatUiTarget(e.target))return;
     e.preventDefault();e.stopPropagation();state.pressed=true;state.pointerId=e.pointerId;game.setPointerCapture?.(e.pointerId);moveFromPointer(e);
   },{capture:true,passive:false});
   game.addEventListener('pointermove',e=>{

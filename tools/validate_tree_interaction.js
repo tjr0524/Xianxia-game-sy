@@ -7,6 +7,7 @@ const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const camera=read('tree_camera_gesture_v11_44.js');
 const progression=read('progression_runtime_v11_45.js');
 const touch=read('tree_touch_fix_v11_37_4.js');
+const mobile=read('systems_v11_22.js');
 
 if(camera.includes(".detail-close38,.asc-node,.map-node')"))
   throw new Error('shared tree camera still excludes node-started drags');
@@ -16,8 +17,20 @@ if(!camera.includes("Math.hypot(p.x-old.startX,p.y-old.startY)>7"))
   throw new Error('shared tree camera drag threshold missing');
 if(!camera.includes("performance.now()<c.dragUntil"))
   throw new Error('shared tree camera drag-click suppression missing');
-if(!progression.includes("closest('.camera,.v17float,.asc-node,.map-node')"))
-  throw new Error('legacy progression camera should stay excluded from node pointers; shared capture camera owns them');
+if(/view\.addEventListener\('pointer(?:down|move|up|cancel)'/.test(progression))
+  throw new Error('progression runtime must not own asc/map pointer gestures; shared camera is the sole owner');
+if(!camera.includes("document.addEventListener('xianxia:progression-rendered'"))
+  throw new Error('shared tree camera must reset stale pointer state after progression re-render');
+if(!camera.includes("c.dragUntil=0"))
+  throw new Error('shared tree camera render recovery must clear drag-click suppression');
+if(progression.includes("requestAnimationFrame(focusTraining)")||progression.includes("requestAnimationFrame(focusMap)"))
+  throw new Error('progression runtime still auto-focuses a camera after state changes');
+if(/train\.addEventListener\('click',[\s\S]*focusTraining/.test(progression)||/tree\.addEventListener\('click',[\s\S]*focusMap/.test(progression))
+  throw new Error('tab open still auto-focuses progression cameras');
+if(/querySelector\('\[data-[csm]="fit"\]'\)\?\.click\(\)/.test(mobile))
+  throw new Error('mobile panel still synthesizes camera fit clicks');
+if(camera.includes("blockAutoFitUntil")||camera.includes(".tab-btn[data-tab=\"train\"]"))
+  throw new Error('shared tree camera still contains tab-driven auto-focus state');
 
 const nodeDown=/if\(node\)\{[\s\S]*?pointers\.set\(event\.pointerId,\{kind:'node'[\s\S]*?return;\s*\}/.exec(touch)?.[0]||'';
 if(!nodeDown)throw new Error('tree touch node pointerdown guard missing');

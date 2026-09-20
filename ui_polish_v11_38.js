@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.39.0';
+const VERSION='11.51.6';
 if(window.__xianxiaUiPolishVersion===VERSION)return;
 window.__xianxiaUiPolishVersion=VERSION;
 
@@ -174,6 +174,8 @@ function decoratePicker(){
   pickerDecorating=true;
   for(const button of grid.querySelectorAll('.expedition-area-btn')){
     const raw=button.textContent.trim();
+    const icon=button.querySelector('img.area-symbol');
+    if(icon){const name=compactAreaName(raw);button.innerHTML=`${icon.outerHTML}<span class="area-label38">${name}</span>`;button.setAttribute('aria-label',name);continue}
     const glyph=button.querySelector('i')?.textContent.trim()||raw.slice(0,1);
     const name=compactAreaName(raw.replace(glyph,'').trim());
     button.innerHTML=`<i aria-hidden="true">${glyph}</i><span class="area-label38">${name}</span>`;
@@ -198,7 +200,8 @@ function decorateMap(){
     if(node.classList.contains('map-root')){
       const area=node.dataset.area||'';
       const name=compactAreaName(D.constants.AREAS.find(a=>a.id===area)?.name||node.textContent.replace(/^[青風血雷]\s*/,''));
-      node.innerHTML=`<span class="map-root-seal38" aria-hidden="true">${AREA_GLYPHS[area]||'境'}</span><span class="map-root-name38">${name}</span>`;
+      const icon=node.querySelector('img.area-symbol');
+      node.innerHTML=`${icon?icon.outerHTML:`<span class="map-root-seal38" aria-hidden="true">${AREA_GLYPHS[area]||'境'}</span>`}<span class="map-root-name38">${name}</span>`;
       node.setAttribute('aria-label',`${name} 비경`);
     }else if(node.classList.contains('map-point')){
       const id=node.dataset.affinity||'';

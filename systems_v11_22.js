@@ -33,14 +33,18 @@ function css(){
   .controls .panel{display:none!important;height:100%!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:contain;padding:7px 7px 18px!important;scroll-padding-bottom:18px}
   body.v22-panel-mode .controls .panel.active{display:block!important}
   body.v22-panel-mode .controls .panel.active[data-panel="train"],body.v22-panel-mode .controls .panel.active[data-panel="skills"],body.v22-panel-mode .controls .panel.active[data-panel="tree"]{display:flex!important;flex-direction:column!important;overflow:hidden!important}
-  body.v22-panel-mode [data-panel="train"] .asc-section,body.v22-panel-mode [data-panel="skills"] .skill17,body.v22-panel-mode [data-panel="tree"]>.section{display:flex!important;flex:1 1 auto!important;flex-direction:column!important;min-height:0!important;height:100%!important;margin:0!important}
+  body.v22-panel-mode [data-panel="train"] .asc-section,body.v22-panel-mode [data-panel="skills"]>.section,body.v22-panel-mode [data-panel="tree"]>.section{display:flex!important;flex:1 1 auto!important;flex-direction:column!important;min-height:0!important;height:100%!important;margin:0!important}
   body.v22-panel-mode #ascViewport,body.v22-panel-mode #mapViewport,body.v22-panel-mode #skillTreeViewport{flex:1 1 auto!important;min-height:0!important;height:auto!important}
+  body.v22-panel-mode [data-panel="skills"] #skillTree,body.v22-panel-mode [data-panel="skills"] .formation-board49{display:flex!important;flex:1 1 auto!important;flex-direction:column!important;min-height:0!important;height:100%!important}
+  body.v22-panel-mode [data-panel="skills"] .fs49-topline{flex:0 0 auto!important}
+  body.v22-panel-mode [data-panel="skills"] .fs49-viewport{flex:1 1 auto!important;width:100%!important;max-width:none!important;height:auto!important;min-height:0!important;aspect-ratio:auto!important;margin:0!important}
+  body.v22-panel-mode [data-panel="skills"] .fs49-board{inset:0 auto auto 0!important;width:100%!important;height:auto!important;aspect-ratio:1!important}
   body.v22-expedition-mode .controls .panel,body.v22-expedition-mode .controls details{display:none!important}
   .v22-expedition-tab{display:flex!important;min-height:50px!important;margin-top:-8px!important;border-color:#8e763e!important;border-radius:13px 5px 13px 5px!important;background:#f7f0dc!important;color:#30453e!important;box-shadow:0 5px 14px #33463e30,inset 0 -3px #9b7f3f70!important;font-weight:800!important}
   .v22-expedition-tab::before{background-position:25% 0!important;filter:sepia(.25) saturate(.8)!important}
   .v22-expedition-tab.active{background:#e6d6ab!important;border-color:#9e8040!important;color:#243a33!important}
   .v22-close-handle{display:none!important}
-  body.v22-expedition-mode:not(.v22-combat-mode) .arena-head{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:start!important;height:auto!important;min-height:0!important;margin:0 2px 12px!important;padding-bottom:4px!important;overflow:visible!important}
+  body.v22-expedition-mode:not(.v22-combat-mode) .arena-head{display:none!important}
   body.v22-expedition-mode:not(.v22-combat-mode) .arena-head>div{min-width:0!important;overflow:visible!important}
   body.v22-expedition-mode:not(.v22-combat-mode) .arena-head p{display:block!important;height:auto!important;margin:0!important;padding-bottom:2px!important;white-space:normal!important;overflow:visible!important;line-height:1.45!important}
   body.v22-expedition-mode:not(.v22-combat-mode) .game{border:0!important;border-radius:0!important;overflow:visible!important;background:transparent!important;box-shadow:none!important}
@@ -105,7 +109,6 @@ function showPanel(tab){
   document.body.classList.add('v22-panel-mode');
   $('.v22-expedition-tab')?.classList.remove('active');
   settleClosed();syncAria();window.scrollTo?.({top:0,behavior:'smooth'});
-  requestAnimationFrame(()=>requestAnimationFrame(()=>tab.dataset.tab==='train'?tab.closest('body')?.querySelector('[data-c="fit"]')?.click():tab.dataset.tab==='skills'?tab.closest('body')?.querySelector('[data-s="fit"]')?.click():tab.dataset.tab==='tree'?tab.closest('body')?.querySelector('[data-m="fit"]')?.click():null));
 }
 
 function enterCombat(){
