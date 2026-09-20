@@ -13,15 +13,17 @@ const PLAYER_GROUND_OFFSET=23;
 const EXIT_APPROACH={x:EXIT.x,y:EXIT.y-PLAYER_GROUND_OFFSET};
 const RUN_TIME=25;
 const FOUNDATION_ECONOMY={
-  1:{gross:1359.38,efficiency:.93,targetRuns:16,killStone:210},
-  2:{gross:1625,efficiency:.93,targetRuns:16,killStone:250},
-  3:{gross:1950,efficiency:.93,targetRuns:17,killStone:300},
-  4:{gross:2400,efficiency:.93,targetRuns:17,killStone:369},
-  5:{gross:2950,efficiency:.93,targetRuns:18,killStone:454},
-  6:{gross:3600,efficiency:.93,targetRuns:18,killStone:554},
-  7:{gross:4400,efficiency:.93,targetRuns:18,killStone:677},
-  8:{gross:5400,efficiency:.93,targetRuns:19,killStone:831},
-  9:{gross:6600,efficiency:.93,targetRuns:20,killStone:1015}
+  // 축기권은 적혈비경보다 전투 부담이 크게 높으므로 개체 영석 보상을 2배로 상향.
+  // 소경지 돌파 영석 비용도 별도 대형 sink로 올려 저레벨 비경 반복 파밍을 억제한다.
+  1:{gross:2718.76,efficiency:.93,targetRuns:16,killStone:420},
+  2:{gross:3250,efficiency:.93,targetRuns:16,killStone:500},
+  3:{gross:3900,efficiency:.93,targetRuns:17,killStone:600},
+  4:{gross:4800,efficiency:.93,targetRuns:17,killStone:738},
+  5:{gross:5900,efficiency:.93,targetRuns:18,killStone:908},
+  6:{gross:7200,efficiency:.93,targetRuns:18,killStone:1108},
+  7:{gross:8800,efficiency:.93,targetRuns:18,killStone:1354},
+  8:{gross:10800,efficiency:.93,targetRuns:19,killStone:1662},
+  9:{gross:13200,efficiency:.93,targetRuns:20,killStone:2030}
 };
 const MAJORS=['연기','축기','결단','원영'];
 const HN=['하급','중급','상급'];
@@ -67,9 +69,9 @@ const AREAS=[
   {id:'blackwind',name:'흑풍곡',desc:'무리 요수와 산수의 전리품 경쟁이 시작되는 골짜기.',enemy:1,reward:1,killStone:34,herbs:10,env:{move:.86,pick:.75},baseStage:3,rec:'연기 3~6층',req:{major:0,stage:3,prev:'qingyun',nodes:2},palette:['#191f22','#34342a','#6d6042']},
   {id:'blood',name:'적혈비경',desc:'영맥 점유와 정예 수호전이 핵심인 고위 비경.',enemy:1,reward:1,killStone:90,herbs:9,env:{move:.77,pick:.60},baseStage:6,rec:'연기 6~9층',req:{major:0,stage:6,prev:'blackwind',nodes:3},palette:['#291719','#532127','#8c493b']},
   {id:'foundation_trial',name:'축기 시련',desc:'축기에 오르기 전 수문장과 맞서는 단일 보스 시련.',enemy:1,reward:1,rewardTier:2,killStone:90,herbs:9,env:{move:.77,pick:.60},baseStage:9,rec:'연기 9층',req:{major:0,stage:9,prev:'blood',nodes:0},palette:['#171d1c','#32403a','#708574']},
-  {id:'thunder',name:'천뢰봉',desc:'낙뢰 전조와 돌진 요수를 함께 읽는 축기 첫 비경.',enemy:1,reward:1,rewardTier:2,killStone:210,herbs:9,env:{move:.77,pick:.60},baseStage:1,rec:'축기 1층 이상',req:{major:1,stage:1,prev:'foundation_trial',nodes:0},palette:['#11182b','#24284b','#555c91']},
-  {id:'marsh',name:'자운택',desc:'폭발·호령·수호 특수몹 조합을 공략하는 습지 비경.',enemy:1,reward:1,rewardTier:2,killStone:369,herbs:9,env:{move:.77,pick:.60},baseStage:4,rec:'축기 4층 이상',req:{major:1,stage:4,prev:'thunder',nodes:0},palette:['#172422','#31483f','#758c79']},
-  {id:'taixu',name:'태허유적',desc:'움직이는 진법과 수호령, 태허진령이 지키는 최종 비경.',enemy:1,reward:1,rewardTier:2,killStone:677,herbs:9,env:{move:.77,pick:.60},baseStage:7,rec:'축기 7층 이상',req:{major:1,stage:7,prev:'marsh',nodes:0},palette:['#171a24','#30354a','#747b9a']}
+  {id:'thunder',name:'천뢰봉',desc:'낙뢰 전조와 돌진 요수를 함께 읽는 축기 첫 비경.',enemy:1,reward:1,rewardTier:2,killStone:420,herbs:9,env:{move:.77,pick:.60},baseStage:1,rec:'축기 1층 이상',req:{major:1,stage:1,prev:'foundation_trial',nodes:0},palette:['#11182b','#24284b','#555c91']},
+  {id:'marsh',name:'자운택',desc:'폭발·호령·수호 특수몹 조합을 공략하는 습지 비경.',enemy:1,reward:1,rewardTier:2,killStone:738,herbs:9,env:{move:.77,pick:.60},baseStage:4,rec:'축기 4층 이상',req:{major:1,stage:4,prev:'thunder',nodes:0},palette:['#172422','#31483f','#758c79']},
+  {id:'taixu',name:'태허유적',desc:'움직이는 진법과 수호령, 태허진령이 지키는 최종 비경.',enemy:1,reward:1,rewardTier:2,killStone:1354,herbs:9,env:{move:.77,pick:.60},baseStage:7,rec:'축기 7층 이상',req:{major:1,stage:7,prev:'marsh',nodes:0},palette:['#171a24','#30354a','#747b9a']}
 ];
 
 const TREE={
@@ -175,7 +177,7 @@ const fresh=()=>({
   area:'qingyun',
   unlocked:{qingyun:1},
   zones:Object.fromEntries(AREAS.map(area=>[area.id,zoneBlank()])),
-  events:{foundationInsight:0},
+  events:{foundationInsight:0,foundationTrialCompleted:0},
   settings:{plan:'harvest',tab:'train'},
   stats:{totalRuns:0,totalSafe:0,totalKills:0}
 });
@@ -413,7 +415,7 @@ function swordCandidateScore(enemy,origin=P){
 function swordCandidates(range,origin=P){
   return enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&distance(origin,e)<range).sort((a,b)=>swordCandidateScore(b,origin)-swordCandidateScore(a,origin));
 }
-function swordHit(enemy,baseDamage,scale=1,source='sword',meta={},from=P){
+function swordHit(enemy,baseDamage,scale=1,source='sword',meta={},from=P,visual=true){
   if(!enemy||enemy.hp<=0)return 0;
   let damage=baseDamage*scale;
   if(hasFormationTrait('sword','mark')){
@@ -426,7 +428,7 @@ function swordHit(enemy,baseDamage,scale=1,source='sword',meta={},from=P){
     enemy._swordMarkCount=(enemy._swordMarkCount||0)+1;
     if(enemy._swordMarkCount>=3){enemy._swordMarkCount=0;enemy._swordMarkPrimed=1}
   }
-  emitProjectileVisual('sword',from,enemy,{duration:.11,color:source==='sword'?'#eef6ff':'#c9efff'});
+  if(visual)emitProjectileVisual('sword',from,enemy,{duration:.11,color:source==='sword'?'#eef6ff':'#c9efff'});
   return dealt;
 }
 function swordTraitMeta(parent,traitId,source){
@@ -920,10 +922,13 @@ function nodeCost(node){
     hg:Math.min(2,areaIndex())
   };
 }
+function foundationTrialCompleted(){return !!M.events?.foundationTrialCompleted}
 function areaReady(area){
+  if(area.id==='thunder'&&!foundationTrialCompleted())return false;
   return !!M.unlocked[area.id]||(meets(area.req)&&(!area.req.prev||treeCount(area.req.prev)>=area.req.nodes));
 }
 function areaRequirement(area){
+  if(area.id==='thunder'&&!foundationTrialCompleted())return '축기 시련 완료 필요';
   if(M.unlocked[area.id])return `개척 ${treeCount(area.id)}노드 · 강화 ${treeLevels(area.id)}`;
   if(!meets(area.req))return `${MAJORS[area.req.major]} ${area.req.stage}층 필요`;
   if(area.req.prev&&treeCount(area.req.prev)<area.req.nodes){
@@ -1156,11 +1161,11 @@ function renderAreas(){
     const unlocked=!!M.unlocked[area.id];
     const ready=areaReady(area);
     const button=document.createElement('button');
-    button.className='area-btn'+(M.area===area.id?' active':'')+(!unlocked&&!ready?' locked':'')+(ready&&!unlocked?' ready':'');
+    button.className='area-btn'+(M.area===area.id?' active':'')+(!ready?' locked':'')+(ready&&!unlocked?' ready':'');
     button.innerHTML=`<strong>${M.area===area.id?'▶ ':''}${area.name}</strong><span class="meta">${area.rec}</span><small>${areaRequirement(area)}</small>`;
     button.disabled=phase==='run';
     button.onclick=()=>{
-      if(!unlocked&&!ready){
+      if(!ready){
         UI.notice.textContent=areaRequirement(area);
         return;
       }
@@ -1628,6 +1633,12 @@ function foundationApi(){
 
 function begin(){
   if(phase==='run')return;
+  if(M.area==='thunder'&&!foundationTrialCompleted()){
+    M.area='foundation_trial';
+    syncPreparation();
+    UI.notice.textContent='천뢰봉에 입장하려면 축기 시련을 먼저 완료해야 합니다.';
+    render();draw();return;
+  }
   ensurePlan();
   phase='run';
   elapsed=0;
@@ -1638,8 +1649,13 @@ function begin(){
   vein=null;
   const plan=currentPlan();
   const foundationEra=M.realm.major>=1;
-  const herbTotal=foundationEra?0:Math.max(3,Math.round(A().herbs*plan.herbCount));
-  const herbInitial=foundationEra?0:Math.ceil(herbTotal*.72);
+  // 축기 이후에도 연기권 비경(청운산/흑풍곡/적혈비경)에 내려오면
+  // 기존 영초가 그대로 자란다. 도행록의 과거 비경 채집 기록도
+  // 경지가 오른 뒤 소급 달성할 수 있어야 한다.
+  const legacyHerbArea=['qingyun','blackwind','blood'].includes(M.area);
+  const herbsEnabled=!foundationEra||legacyHerbArea;
+  const herbTotal=herbsEnabled?Math.max(3,Math.round(A().herbs*plan.herbCount)):0;
+  const herbInitial=herbsEnabled?Math.ceil(herbTotal*.72):0;
   const beastTotal=0,beastInitial=0;
   run={
     s:0,h0:0,h1:0,h2:0,thunderMarks:0,purpleEssence:0,taixuSigils:0,taixuTrials:0,left:0,minHp:1,kills:0,beastKills:0,elite:0,
@@ -1675,8 +1691,10 @@ function begin(){
   window.__xianxiaMastery?.onBegin?.(foundationApi());
   UI.ov.classList.add('hide');
   if(window.matchMedia?.('(max-width:920px)').matches)setMenuOpen(false);
-  UI.ret.disabled=false;
-  UI.notice.textContent=`${planCopy(plan)[0]} 시작. 배치를 읽고 목표와 귀환 동선을 함께 잡으세요.`;
+  UI.ret.disabled=!!foundationContent()?.bossOnly?.(M.area,M.realm);
+  UI.notice.textContent=foundationContent()?.bossOnly?.(M.area,M.realm)
+    ?`${planCopy(plan)[0]} 시작. 수문장을 격파하면 즉시 시련이 종료됩니다.`
+    :`${planCopy(plan)[0]} 시작. 배치를 읽고 목표와 귀환 동선을 함께 잡으세요.`;
   syncHud();
   window.__xianxiaFrameHub?.wake?.();
 }
@@ -1719,10 +1737,25 @@ function reward(enemy){
   }else if(['basic','guard','chaser','attacker'].includes(enemy.type)){
     gainStone(Math.ceil(killStoneBase()*plan.reward*uniqueReward*(enemy.rewardMult||1)),enemy.x,enemy.y);
   }else if(enemy.type==='elite'){
-    run.elite=1;gainStone(Math.ceil(killStoneBase()*6*plan.reward*uniqueReward),enemy.x,enemy.y);gainHerb(2+rank('res3'),Math.min(2,areaIndex()),enemy.x+10,enemy.y);if(vein){vein.cleared=1;vein.stock+=20+rank('res3')*8}
+    run.elite=1;
+    gainStone(Math.ceil(killStoneBase()*6*plan.reward*uniqueReward),enemy.x,enemy.y);
+    // 적혈비경 이상 정예 수호수는 상급 영초를 확정 지급한다.
+    const eliteHerbGrade=areaIndex()>=2?2:Math.min(2,areaIndex());
+    gainHerb(2+rank('res3'),eliteHerbGrade,enemy.x+10,enemy.y);
+    if(vein){vein.cleared=1;vein.stock+=20+rank('res3')*8}
   }else if(enemy.type==='rogue'||enemy.type==='rat'){
-    run.thieves++;spillCarry(enemy);gainStone(Math.ceil((enemy.type==='rogue'?killStoneBase()*.65:killStoneBase()*.28)*plan.reward*uniqueReward),enemy.x,enemy.y);
-    if(enemy.type==='rogue'&&enemy.treasure){const bonus=Math.ceil(killStoneBase()*(1.2+rank('fate2')*.35));gainStone(bonus,enemy.x+8,enemy.y-5);gainHerb(1+Math.floor(rank('fate2')/3),Math.min(2,areaIndex()),enemy.x-8,enemy.y);run.treasures++;pop(enemy.x,enemy.y-20,'✦ 비보 확보','#ffe28a',1.25)}
+    run.thieves++;
+    spillCarry(enemy);
+    gainStone(Math.ceil((enemy.type==='rogue'?killStoneBase()*.65:killStoneBase()*.28)*plan.reward*uniqueReward),enemy.x,enemy.y);
+    // 적혈비경 이상에서는 산수와 탐보서도 상급 영초를 기본 전리품으로 1개 지급한다.
+    if(areaIndex()>=2)gainHerb(1,2,enemy.x+(enemy.type==='rogue'?-10:10),enemy.y-6);
+    if(enemy.type==='rogue'&&enemy.treasure){
+      const bonus=Math.ceil(killStoneBase()*(1.2+rank('fate2')*.35));
+      gainStone(bonus,enemy.x+8,enemy.y-5);
+      gainHerb(1+Math.floor(rank('fate2')/3),Math.min(2,areaIndex()),enemy.x-8,enemy.y);
+      run.treasures++;
+      pop(enemy.x,enemy.y-20,'✦ 비보 확보','#ffe28a',1.25)
+    }
   }
   if(enemy.type!=='spirit'&&enemy.type!=='formation_node'){
     for(const other of enemies){if(other!==enemy&&other.rareTrait==='devour'&&other.hp>0&&distance(other,enemy)<150)other.hp=Math.min(other.max,other.hp+other.max*.12)}
@@ -1775,13 +1808,26 @@ function cast(skill,options={}){
         if(swordHit(target,damage,scale,source,meta,P)>0){hits++;used.set(target.id,dup+1)}
       }
     }else if(t1==='pierce'){
-      const dx=primary.x-P.x,dy=primary.y-P.y,n=Math.hypot(dx,dy)||1,ux=dx/n,uy=dy/n;
-      const lineEnd={x:P.x+ux*range,y:P.y+uy*range};
-      const pierced=targets.filter(e=>{
-        const vx=lineEnd.x-P.x,vy=lineEnd.y-P.y,wx=e.x-P.x,wy=e.y-P.y,ll=vx*vx+vy*vy,t=ll?clamp((wx*vx+wy*vy)/ll,0,1):0;
-        return Math.hypot(e.x-(P.x+vx*t),e.y-(P.y+vy*t))<Math.max(18,e.r+8);
-      }).sort((a,b)=>distance(P,a)-distance(P,b)).slice(0,3);
-      for(const target of pierced)if(swordHit(target,damage,.90,source,meta,P)>0)hits++;
+      const dx=primary.x-P.x,dy=primary.y-P.y,primaryDist=Math.hypot(dx,dy)||1,ux=dx/primaryDist,uy=dy/primaryDist;
+      const pierceEndDist=primaryDist+220;
+      const lineEnd={x:P.x+ux*pierceEndDist,y:P.y+uy*pierceEndDist};
+      // 관통검은 첫 대상을 정상 위력으로 맞힌 뒤, 그 뒤쪽 직선 경로를 계속 비행한다.
+      if(swordHit(primary,damage,1,source,meta,P,false)>0)hits++;
+      const extras=enemies.filter(e=>{
+        if(e===primary||e.type==='spirit'||e.hp<=0)return false;
+        const wx=e.x-P.x,wy=e.y-P.y,along=wx*ux+wy*uy;
+        if(along<=primaryDist+4||along>pierceEndDist)return false;
+        const side=Math.abs(wx*uy-wy*ux);
+        return side<Math.max(20,e.r+10);
+      }).sort((a,b)=>{
+        const aa=(a.x-P.x)*ux+(a.y-P.y)*uy;
+        const bb=(b.x-P.x)*ux+(b.y-P.y)*uy;
+        return aa-bb;
+      }).slice(0,2);
+      for(const target of extras)if(swordHit(target,damage,.85,source,meta,P,false)>0)hits++;
+      // 개별 적에게 새 비검을 생성하지 않고 한 자루가 끝까지 뚫고 가는 궤적으로 보인다.
+      emitProjectileVisual('sword',P,lineEnd,{duration:.18,color:'#eef6ff'});
+      slash(P.x,P.y,lineEnd.x,lineEnd.y,'#dff3ff');
     }else{
       const scale=t1==='heavy'?1.55:1;
       if(swordHit(primary,damage,scale,source,meta,P)>0)hits++;
@@ -2001,7 +2047,12 @@ function update(dt){
   const artSpeed=foundationContent()?.playerSpeedMultiplier?.(foundationApi())??1;const speed=(isMortal()?150:(M.cult.mov||150))*areaMoveScale()*(1+run.combo*.005)*artSpeed;
   const horizontal=(keys.has('arrowright')||keys.has('d')?1:0)-(keys.has('arrowleft')||keys.has('a')?1:0),vertical=(keys.has('arrowdown')||keys.has('s')?1:0)-(keys.has('arrowup')||keys.has('w')?1:0);
   if(horizontal||vertical){P.target=null;const norm=Math.hypot(horizontal,vertical)||1;P.dirX=horizontal/norm;P.dirY=vertical/norm;P.x+=P.dirX*speed*dt;P.y+=P.dirY*speed*dt;P.tx=P.x;P.ty=P.y}else moveToward(P,P.tx,P.ty,speed,dt);P.x=clamp(P.x,11,W-11);P.y=clamp(P.y,11,H-11);
-  const exitDistance=Math.hypot(P.x-EXIT.x,P.y+PLAYER_GROUND_OFFSET-EXIT.y);if(exitDistance>68)run.left=1;if(run.left&&exitDistance<EXIT.r+9){finish('return');return}
+  const bossEncounter=!!foundationContent()?.bossOnly?.(M.area,M.realm);
+  if(!bossEncounter){
+    const exitDistance=Math.hypot(P.x-EXIT.x,P.y+PLAYER_GROUND_OFFSET-EXIT.y);
+    if(exitDistance>68)run.left=1;
+    if(run.left&&exitDistance<EXIT.r+9){finish('return');return}
+  }
   run.herbTimer-=dt;if(run.herbLeft>0&&run.herbTimer<=0){randomHerb();run.herbLeft--;run.herbTimer=7+Math.random()*3}
   updateEncounterPacks(dt);
   if(branches().includes('fate')&&rank('fate1')>0){
@@ -2026,17 +2077,19 @@ function update(dt){
     vein.status=guardsAlive?'guard':defenseAlive?'defense':nearVein?'mining':'approach';
     if(nearVein&&vein.cleared){
       if(r3>=5&&!vein.defenseCleared){
-        if(defenseAlive){
+        // R5 영맥 폭주는 처치 게이트가 아니라 압박 요소다.
+        // 영맥 곁을 지키고 있으면 적이 살아 있어도 채굴은 계속 진행된다.
+        vein.progress+=dt;
+        vein.status=defenseAlive?'defense':'mining';
+        const thresholds=[.20,.50,.80];
+        if(vein.defenseWave<3&&vein.progress>=vein.required*thresholds[vein.defenseWave]){
+          startNextVeinDefenseWave();
           vein.status='defense';
-        }else{
-          vein.progress+=dt;
+        }
+        if(vein.defenseWave>=3&&vein.progress>=vein.required){
+          vein.defenseCleared=1;
           vein.status='mining';
-          const thresholds=[.20,.50,.80];
-          if(vein.defenseWave<3&&vein.progress>=vein.required*thresholds[vein.defenseWave]){
-            startNextVeinDefenseWave();vein.defenseWait=.35;vein.status='defense';
-          }else if(vein.defenseWave>=3&&vein.progress>=vein.required){
-            vein.defenseCleared=1;vein.status='mining';pop(vein.x,vein.y-34,'영맥 폭주 진압','#c6f0df',.9);
-          }
+          pop(vein.x,vein.y-34,'영맥 폭주 돌파 · 채굴 완료','#c6f0df',.9);
         }
       }else{
         vein.progress+=dt;
@@ -2122,6 +2175,9 @@ function update(dt){
     }
     return true;
   });
+  // Boss-only encounters end at the kill itself: rewards are already accounted above,
+  // so there is no portal walk-back step.
+  if(phase==='run'&&bossEncounter&&run?.foundation?.bossKilled){finish('return');return}
   if(!isMortal()&&P.cd<=0){const range=basicAttackRange(),targets=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&distance(P,e)<range).sort((a,b)=>distance(P,a)-distance(P,b)).slice(0,basicAttackTargets());if(targets.length){const dmg=basicDamage()*combatPower(),scales=[1,.62,.48,.36];targets.forEach((target,i)=>{dealEnemyDamage(target,dmg*(scales[i]||.32),'basic');slash(P.x,P.y,target.x,target.y,i?'#e8d6a5':'#f7e5ad')});run.skillCasts.basic=(run.skillCasts.basic||0)+1;P.cd=basicInterval()}}
   for(const skill of SKILLS){const st=skillState(skill.id);if(!st.u)continue;if(run.skillCooldowns[skill.id]<=0&&cast(skill)){run.skillCasts[skill.id]=(run.skillCasts[skill.id]||0)+1;run.skillCooldowns[skill.id]=effectiveSkillCooldown(skill.id)}}
   updateHazards(dt);updateNonCombatRecovery(dt);if(P.hp<=0){P.hp=0;finish('dead');return}syncHud();
@@ -2148,12 +2204,26 @@ function finish(reason){
   const safe=reason==='return';
   const ratio=safe?1:.4;
   const stone=Math.floor(run.s*ratio);
-  const h0=Math.floor(run.h0*ratio);
-  const h1=Math.floor(run.h1*ratio);
-  const h2=Math.floor(run.h2*ratio);
+  let h0=Math.floor(run.h0*ratio);
+  let h1=Math.floor(run.h1*ratio);
+  let h2=Math.floor(run.h2*ratio);
   const thunderMarks=Math.floor((run.thunderMarks||0)*ratio);
   const purpleEssence=Math.floor((run.purpleEssence||0)*ratio);
   const taixuSigils=Math.floor((run.taixuSigils||0)*ratio);
+
+  // 채집 수행 보너스는 별도 후처리가 아니라 최종 귀환 전리품에 직접 합산한다.
+  // 이렇게 해야 적혈비경의 '상급 영초 +4'도 실제 보유량과 결과창 숫자에 동일하게 반영된다.
+  const objectiveComplete=safe&&objectiveMet();
+  const objectiveInfo=objectiveComplete?objectiveData():null;
+  let harvestRewardText='';
+  if(objectiveComplete&&M.settings.plan==='harvest'){
+    const index=areaIndex(),grade=Math.min(2,index),amount=2+index;
+    if(grade===0)h0+=amount;
+    else if(grade===1)h1+=amount;
+    else h2+=amount;
+    harvestRewardText=`${HN[grade]} 영초 +${amount}`;
+  }
+
   M.stone+=stone;
   M.herb+=h0;
   M.herb2+=h1;
@@ -2177,9 +2247,10 @@ function finish(reason){
   event+=fortune(reason);
 
   let objective='';
-  if(safe&&objectiveMet()){
-    const rewardText=objectiveReward();
-    objective=`<div class="event"><b>수행 완수 · ${objectiveData().label}</b><br>${rewardText}</div>`;
+  if(objectiveComplete){
+    const rewardText=M.settings.plan==='harvest'?harvestRewardText:objectiveReward();
+    save();
+    objective=`<div class="event"><b>수행 완수 · ${objectiveInfo.label}</b><br>${rewardText}</div>`;
   }
 
   UI.ov.classList.remove('hide');
@@ -2196,7 +2267,10 @@ function finish(reason){
 function syncHud(){
   UI.hp.textContent=`${Math.ceil(P.hp)} / ${P.max}`;
   UI.hpFill.style.width=`${Math.max(0,P.hp/P.max)*100}%`;
-  UI.loot.textContent=M.realm.major>=1?`영석 ${run?.s||0}${run?.thunderMarks?` · 뢰흔 ${run.thunderMarks}`:''}${run?.purpleEssence?` · 자운정수 ${run.purpleEssence}`:''}${run?.taixuSigils?` · 태허진문 ${run.taixuSigils}`:''}`:`영석 ${run?.s||0} · 영초 ${totalHerbs(run)}`;
+  const lowRealmHerbRun=['qingyun','blackwind','blood'].includes(M.area);
+  UI.loot.textContent=M.realm.major>=1&&!lowRealmHerbRun
+    ?`영석 ${run?.s||0}${run?.thunderMarks?` · 뢰흔 ${run.thunderMarks}`:''}${run?.purpleEssence?` · 자운정수 ${run.purpleEssence}`:''}${run?.taixuSigils?` · 태허진문 ${run.taixuSigils}`:''}`
+    :`영석 ${run?.s||0} · 영초 ${totalHerbs(run)}`;
   const remaining=Math.max(0,(run?.limit||RUN_TIME)-elapsed);
   UI.time.textContent=`${remaining.toFixed(1)}초`;
   UI.time.style.color=phase==='run'&&remaining<=5?'#ff776c':phase==='run'&&remaining<=10?'#e8a06f':'';
@@ -2674,7 +2748,7 @@ function frameSnapshot(){
     elapsed,
     run:run?{...run}:null,
     P:{...P},
-    enemies:enemies.map(enemy=>({id:enemy.id,type:enemy.type,x:enemy.x,y:enemy.y,hp:enemy.hp,max:enemy.max,rare:enemy.rare,rareTrait:enemy.rareTrait,treasure:enemy.treasure,carryCount:enemy.carry?.length||0,bond:enemy.bond||0,captureRange:enemy.type==='spirit'?40:0,visualOwner:enemy.visualOwner||'',action:enemy.action||'idle',facing:enemy.facing||1,shield:enemy.shield||0,shieldMax:enemy.shieldMax||0,commandedUntil:enemy.commandedUntil||0,boss:enemy.boss||0,name:enemy.name||'',lastHitSource:enemy._lastHit?.source||'',...(foundationContent()?.snapshotEnemy?.(enemy)||{})})),
+    enemies:enemies.map(enemy=>({id:enemy.id,type:enemy.type,x:enemy.x,y:enemy.y,hp:enemy.hp,max:enemy.max,rare:enemy.rare,rareTrait:enemy.rareTrait,treasure:enemy.treasure,carryCount:enemy.carry?.length||0,carryHerbCount:enemy.carry?.filter(item=>item.type==='h').length||0,carryHerbGrade:Math.max(-1,...(enemy.carry||[]).filter(item=>item.type==='h').map(item=>Number(item.grade)||0)),bond:enemy.bond||0,captureRange:enemy.type==='spirit'?40:0,visualOwner:enemy.visualOwner||'',action:enemy.action||'idle',facing:enemy.facing||1,shield:enemy.shield||0,shieldMax:enemy.shieldMax||0,commandedUntil:enemy.commandedUntil||0,boss:enemy.boss||0,name:enemy.name||'',lastHitSource:enemy._lastHit?.source||'',...(foundationContent()?.snapshotEnemy?.(enemy)||{})})),
     objects:objects.map(object=>({type:object.type,x:object.x,y:object.y,value:object.value,grade:object.grade})),
     vein:vein?{...vein}:null,
     hazards:hazards.map(hazard=>({...hazard}))

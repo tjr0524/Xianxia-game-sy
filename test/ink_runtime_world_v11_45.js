@@ -5,7 +5,7 @@ if(window.__xianxiaInkRuntime?.version==='11.51.27')return;
 const W=1800,H=2400,EXIT={x:900,y:1200},BASE='assets/ink_v1/';
 const SCRIPT_URL=new URL(document.currentScript?.src||location.href);
 const ENV_BASE=new URL(/\/test\//.test(SCRIPT_URL.pathname)?'../assets/region_env_v1/':'assets/region_env_v1/',SCRIPT_URL).href;
-const CACHE=SCRIPT_URL.searchParams.get('v')||'dev';
+const CACHE='ink-v1.1-13'; // asset cache key: independent from code build
 const files={
  player:'source/player_core.png',objects:'source/world_objects.png',effects:'source/skill_effects.png',
  qingyun_guard:'source/qingyun_stone_boar.png',qingyun_chaser:'source/qingyun_wind_wolf.png',qingyun_basic:'source/qingyun_mist_goat_v1.png',
@@ -198,7 +198,57 @@ function visible(x,y,pad=120){
   return x>=b.x-pad&&x<=b.x+b.w+pad&&y>=b.y-pad&&y<=b.y+b.h+pad;
 }
 function drawGatherRings(s,t){const c=S.ctx;for(const o of s.objects||[]){if(o.type!=='h'||!visible(o.x,o.y,40))continue;const g=Math.max(0,Math.min(2,o.grade||0)),r=[16,18,20][g],pulse=1+Math.sin(t*3+o.x*.04+o.y*.03)*.04;c.save();c.globalAlpha=[.65,.72,.82][g];c.strokeStyle=['#4e8068','#4f7899','#8a609f'][g];c.lineWidth=[1.6,1.9,2.2][g];c.beginPath();c.ellipse(o.x,o.y+17,r*pulse,r*.42*pulse,0,0,Math.PI*2);c.stroke();c.globalAlpha=[.10,.13,.17][g];c.fillStyle=c.strokeStyle;c.fill();c.restore()}}
-function drawPortal(t){if(!visible(EXIT.x,EXIT.y,90))return;shadow(EXIT.x,EXIT.y+2,32,6,.18);centered('objects',3,6,frame(t,7,6),EXIT.x,EXIT.y-12,74,false,.9)}
+function drawPortal(s,t){
+  if(window.__xianxiaFoundationContent?.bossOnly?.(s?.M?.area,s?.M?.realm))return;
+  if(!visible(EXIT.x,EXIT.y,90))return;
+  shadow(EXIT.x,EXIT.y+2,32,6,.18);
+  centered('objects',3,6,frame(t,7,6),EXIT.x,EXIT.y-12,74,false,.9)
+}
+function cameraViewContains(target,margin=24){
+  const mode=window.__xianxiaExplorationMode;
+  if(!mode||!Number.isFinite(mode.camX)||!Number.isFinite(mode.camY)||!Number.isFinite(mode.viewW)||!Number.isFinite(mode.viewH))return true;
+  const halfW=mode.viewW/2,halfH=mode.viewH/2;
+  return target.x>=mode.camX-halfW+margin&&target.x<=mode.camX+halfW-margin&&target.y>=mode.camY-halfH+margin&&target.y<=mode.camY+halfH-margin;
+}
+function directionalGuide(player,target,t,{radius=104,label='목표',fill='#dff6e3',stroke='#376a4a',text='#efffe9'}={}){
+  if(!player||!target)return;
+  const dx=target.x-player.x,dy=target.y-player.y,n=Math.hypot(dx,dy)||1,ux=dx/n,uy=dy/n;
+  const x=player.x+ux*radius,y=player.y+uy*radius,angle=Math.atan2(uy,ux),pulse=.82+.18*Math.sin(t*5.2);
+  const c=S.ctx;c.save();c.translate(x,y);c.rotate(angle);c.globalAlpha=pulse;
+  c.fillStyle=fill;c.strokeStyle=stroke;c.lineWidth=2.2;
+  c.beginPath();c.moveTo(16,0);c.lineTo(-7,-9);c.lineTo(-2,0);c.lineTo(-7,9);c.closePath();c.fill();c.stroke();c.restore();
+  c.save();c.globalAlpha=.95;c.font='800 10px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';c.textAlign='center';c.textBaseline='middle';
+  c.strokeStyle='rgba(18,34,29,.90)';c.lineWidth=3.2;c.fillStyle=text;c.strokeText(label,x,y-17);c.fillText(label,x,y-17);c.restore();
+}
+function drawSpecialTargetGuide(s,t){
+  if(s.phase!=='run'||!s.M?.trainingNodes?.q5_spirit||!s.P)return;
+  const p=s.P,candidates=[];
+  for(const e of s.enemies||[]){
+    if(e.hp<=0||cameraViewContains(e))continue;
+    const d=Math.hypot(e.x-p.x,e.y-p.y);if(d>750)continue;
+    if((e.type==='rogue'||e.type==='rat')&&e.carryCount>0)candidates.push({target:e,priority:7,d,label:e.carryHerbCount?'도난 영초':'도난 전리품',fill:'#e8f3c8',stroke:'#52793d',text:'#f2ffdf'});
+    else if(e.type==='rogue'&&e.treasure)candidates.push({target:e,priority:6,d,label:'비보 산수',fill:'#ffe5a8',stroke:'#8a6330',text:'#fff0c9'});
+    else if(e.type==='spirit')candidates.push({target:e,priority:5,d,label:'영수',fill:'#bcefeb',stroke:'#397d78',text:'#eaffff'});
+  }
+  if(s.vein&&!cameraViewContains(s.vein)){
+    const d=Math.hypot(s.vein.x-p.x,s.vein.y-p.y);if(d<=750)candidates.push({target:s.vein,priority:4,d,label:'영맥',fill:'#cbdff5',stroke:'#476d96',text:'#eef7ff'});
+  }
+  if(!candidates.length)return;
+  candidates.sort((a,b)=>b.priority-a.priority||a.d-b.d);
+  directionalGuide(p,candidates[0].target,t,{radius:106,label:candidates[0].label,fill:candidates[0].fill,stroke:candidates[0].stroke,text:candidates[0].text});
+}
+function drawThreatGuide(s,t){
+  if(s.phase!=='run'||!s.M?.trainingNodes?.q7_spirit||!s.P)return;
+  const p=s.P,candidates=[];
+  for(const e of s.enemies||[]){
+    if(e.hp<=0||cameraViewContains(e)||!(e.rare||e.type==='elite'||e.boss))continue;
+    const d=Math.hypot(e.x-p.x,e.y-p.y);if(d<=600)candidates.push({target:e,d});
+  }
+  if(!candidates.length)return;
+  candidates.sort((a,b)=>a.d-b.d);
+  directionalGuide(p,candidates[0].target,t,{radius:72,label:'위협',fill:'#ffd0c8',stroke:'#8f3f35',text:'#fff0ea'});
+}
+
 function drawMortalHerbGuide(s,t){
   if((s.M?.realm?.major??-1)>=0||s.phase!=='run'||(s.run?.limit||25)-(+s.elapsed||0)<=10)return;
   const p=s.P,herbs=(s.objects||[]).filter(o=>o.type==='h');
@@ -215,7 +265,7 @@ function drawMortalHerbGuide(s,t){
   c.strokeStyle='rgba(20,48,34,.88)';c.lineWidth=3.2;c.fillStyle='#efffe9';c.strokeText('영초',x,y-17);c.fillText('영초',x,y-17);c.restore();
 }
 function drawReturnGuide(s,t){
-  if(s.phase!=='run'||(s.run?.limit||25)-(+s.elapsed||0)>10)return;
+  if(s.phase!=='run'||window.__xianxiaFoundationContent?.bossOnly?.(s.M?.area,s.M?.realm)||(s.run?.limit||25)-(+s.elapsed||0)>10)return;
   const p=s.P;if(!p)return;
   const target=EXIT,best=Math.hypot(target.x-p.x,target.y-p.y);
   if(best<34)return;
@@ -250,7 +300,7 @@ function drawVeinProgress(s,t){
   c.strokeStyle='rgba(20,34,42,.9)';c.lineWidth=3.5;c.fillStyle='#effbff';
   let label='영맥 · 접근해 채굴';
   if(v.status==='guard')label='수호수 처치 후 채굴';
-  else if(v.status==='defense')label='영맥 폭주 방어 '+Math.min(3,+v.defenseWave||0)+'/3';
+  else if(v.status==='defense')label='영맥 폭주 · 채굴 지속 '+Math.min(3,+v.defenseWave||0)+'/3';
   else if(mining)label='채굴 '+Math.round(progress*100)+'%';
   else if(progress>0)label='채굴 대기 '+Math.round(progress*100)+'%';
   c.strokeText(label,v.x,barY-9);c.fillText(label,v.x,barY-9);
@@ -320,6 +370,18 @@ function drawTraitFx(tr,t,x,y,h){
 }
 function drawBar(x,y,w,ratio,elite=false){const c=S.ctx;c.save();c.fillStyle='rgba(32,29,24,.68)';c.fillRect(x-w/2,y,w,5);c.fillStyle=elite?'#9b3e34':'#d5cba7';c.fillRect(x-w/2+1,y+1,(w-2)*Math.max(0,Math.min(1,ratio)),3);c.strokeStyle='rgba(244,238,215,.82)';c.lineWidth=.7;c.strokeRect(x-w/2+.5,y+.5,w-1,4);c.restore()}
 function drawEnemyMarker(x,y,h,elite=false,rare=false){const c=S.ctx;c.save();c.globalAlpha=.88;c.strokeStyle=rare?'#b78c45':elite?'#9b3e34':'rgba(244,238,215,.88)';c.lineWidth=elite?2.3:1.5;c.beginPath();c.ellipse(x,y+20,elite?31:25,elite?9:7,0,0,Math.PI*2);c.stroke();c.globalAlpha=.35;c.strokeStyle='#1c2925';c.lineWidth=4;c.beginPath();c.ellipse(x,y+20,elite?34:28,elite?11:9,0,0,Math.PI*2);c.stroke();c.restore()}
+function drawStolenHerbMarker(e,x,y,h){
+  const count=Math.max(0,+e.carryHerbCount||0);if(!count)return;
+  const grade=Math.max(0,Math.min(2,+e.carryHerbGrade||0)),colors=['#78c98e','#70c9bd','#c69ae3'],y0=y-h-29;
+  const c=S.ctx,w=count>1?36:24;c.save();
+  c.globalAlpha=.96;c.fillStyle='rgba(20,31,27,.82)';c.strokeStyle=colors[grade];c.lineWidth=1.4;
+  c.beginPath();c.roundRect(x-w/2,y0-8,w,16,8);c.fill();c.stroke();
+  c.fillStyle=colors[grade];c.font='900 12px serif';c.textAlign='center';c.textBaseline='middle';
+  c.fillText('❧',x-(count>1?7:0),y0);
+  if(count>1){c.fillStyle='#f5f0df';c.font='800 9px sans-serif';c.fillText('×'+count,x+8,y0+.5)}
+  c.restore();
+}
+
 function drawSpiritCapture(e,x,y,h,s,t){
   const c=S.ctx,bond=Math.max(0,e.bond||0),progress=Math.max(0,Math.min(1,bond/1.3)),d=dist(e,s.P),near=d<(e.captureRange||40),w=72,barY=y-h-18;
   c.save();
@@ -358,6 +420,7 @@ function drawEnemies(s,t,now){
     drawTraitFx(tr,t,x,y,h);
     const hit=now<tr.hitUntil,filter=hit?'brightness(2.15) saturate(.3)':'none';
     anchored(key,row,6,idx,x,ground,h,tr.facing<0,1,'body',filter);
+    if(e.type==='rogue'||e.type==='rat')drawStolenHerbMarker(e,x,ground,h);
     const hpRatio=(e.hp||0)/(tr.maxHp||e.hp||1);
     if(e.type!=='spirit'&&(e.type==='elite'||hit||dist(e,s.P)<145))drawBar(x,ground-h-9,e.type==='elite'?52:e.type==='rat'?30:40,hpRatio,e.type==='elite');
   }
@@ -606,7 +669,7 @@ function drawFrame(s,meta){
   clearViewport();
   setWorldTransform(m);
   drawEnvironment(area,t);
-  drawPortal(t);
+  drawPortal(s,t);
   drawLightningTraces(s);
   drawHazards(s);
   drawPersistentSpellZones(s,t);
@@ -622,6 +685,8 @@ function drawFrame(s,meta){
   drawProjectiles(s,now);
   drawPlayer(s,t);
   drawPlayerShield(s,t);
+  drawSpecialTargetGuide(s,t);
+  drawThreatGuide(s,t);
   drawMortalHerbGuide(s,t);
   drawReturnGuide(s,t);
   drawImpacts(now);

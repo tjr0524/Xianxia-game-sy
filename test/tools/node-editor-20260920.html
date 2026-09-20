@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>수선비경 노드 편집기</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b0e12;color:#f4f6f8;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}button,label{font:inherit}
+#app{position:fixed;inset:0;display:flex;flex-direction:column}
+#top{z-index:30;padding:calc(env(safe-area-inset-top) + 7px) 8px 7px;background:#101419f2;border-bottom:1px solid #ffffff26;display:flex;gap:6px;align-items:center}
+#info{flex:1;min-width:0}#title{font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#coord{font-size:11px;color:#aeb6bf;margin-top:2px;font-variant-numeric:tabular-nums}
+.btn{height:34px;border:1px solid #ffffff2c;background:#232932;color:#fff;border-radius:9px;padding:0 10px;font-size:12px;font-weight:750}.fileBtn{display:grid;place-items:center;white-space:nowrap}#bgFile{display:none}
+#viewport{position:relative;flex:1;min-height:0;overflow:hidden;touch-action:none;background:#171b20}
+#world{position:absolute;left:0;top:0;width:1536px;height:751px;transform-origin:0 0;will-change:transform;background:linear-gradient(135deg,#1c2229,#101419)}
+#bgimg{position:absolute;inset:0;width:1536px;height:751px;object-fit:fill;pointer-events:none;-webkit-user-drag:none;user-select:none;display:none}
+#empty{position:absolute;inset:0;display:grid;place-items:center;color:#bfc6cd;text-align:center;font-size:18px;line-height:1.5}
+.node{--s:42px;position:absolute;-webkit-user-select:none;-webkit-touch-callout:none;width:var(--s);height:var(--s);margin-left:calc(var(--s)/-2);margin-top:calc(var(--s)/-2);border-radius:50%;border:3px solid #f4f0dd;background:#252a29e8;display:grid;place-items:center;box-shadow:0 0 0 2px #000a,0 0 14px #e7cd6f7a;color:#fff;font-size:14px;font-weight:900;touch-action:none;user-select:none}
+.node.root{--s:50px;background:#83651de8;border-color:#ffe7a1}.node.gate{--s:44px;border-radius:8px;transform:rotate(45deg);background:#9a6918eb;border-color:#ffd47c}.node.gate>span{transform:rotate(-45deg)}
+.node.eco{background:#315b3de9}.node.fate{background:#72562de9}.node.res{background:#315b68e9}.node.storm{background:#3c4788e9}.node.miasma{background:#6f4183e9}.node.formation{background:#625440e9}
+.node.selected{outline:4px solid #fff;outline-offset:4px;z-index:5000!important;box-shadow:0 0 0 3px #000c,0 0 24px #fff7}
+.lab{position:absolute;left:50%;top:calc(100% + 4px);transform:translateX(-50%);white-space:nowrap;font-size:16px;font-weight:900;color:#fff;text-shadow:0 1px 3px #000,0 0 4px #000,0 0 7px #000;pointer-events:none}
+#bottom{z-index:30;background:#101419f2;border-top:1px solid #ffffff26;padding:7px 8px calc(env(safe-area-inset-bottom) + 7px)}
+#controls{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}.ctrl{height:38px;min-width:0;border:1px solid #ffffff28;background:#222831;color:#fff;border-radius:9px;font-size:11px;font-weight:750;padding:0 2px}.ctrl.primary{background:#efc45c;color:#171208;border-color:#ffe29e}
+#movePanel{display:flex;align-items:center;gap:10px;margin-top:7px}
+#stepRow{display:flex;align-items:center;gap:5px;flex:1;min-width:0}
+#stepRow>span{font-size:11px;color:#aeb6bf;white-space:nowrap}
+.stepBtn{height:36px;min-width:48px;border:1px solid #ffffff28;background:#222831;color:#fff;border-radius:9px;font-size:11px;font-weight:800}
+.stepBtn.active{background:#efc45c;color:#171208;border-color:#ffe29e}
+#dpad{display:grid;grid-template-columns:44px 44px 44px;grid-template-rows:40px 40px 40px;gap:4px;grid-template-areas:". up ." "left center right" ". down ."}
+.moveBtn{border:1px solid #ffffff32;background:#2a313a;color:#fff;border-radius:9px;font-size:18px;font-weight:900;touch-action:manipulation}
+.moveBtn:active{background:#3a4551;transform:scale(.96)}
+.moveBtn.up{grid-area:up}.moveBtn.left{grid-area:left}.moveBtn.center{grid-area:center;font-size:10px;color:#8f98a2}.moveBtn.right{grid-area:right}.moveBtn.down{grid-area:down}
+#msg{display:flex;gap:8px;margin-top:5px;font-size:10px;color:#aeb6bf}#msg span:first-child{flex:1}
+#sheet{display:none;position:fixed;inset:0;z-index:100;background:#07090def;padding:calc(env(safe-area-inset-top) + 10px) 10px calc(env(safe-area-inset-bottom) + 10px);flex-direction:column}#sheet.open{display:flex}#sheet h2{margin:0 0 7px;font-size:16px}
+#out{flex:1;min-height:0;width:100%;resize:none;border:1px solid #ffffff28;border-radius:10px;background:#11161c;color:#eef2f6;padding:9px;font:10px ui-monospace,SFMono-Regular,Menlo,monospace}
+#sheetBtns{display:flex;gap:6px;margin-top:7px}#sheetBtns button{flex:1}
+#toast{pointer-events:none;position:fixed;z-index:200;left:50%;top:calc(env(safe-area-inset-top) + 64px);transform:translateX(-50%);background:#000d;border:1px solid #ffffff24;border-radius:99px;padding:7px 11px;font-size:11px;opacity:0;transition:.18s}#toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="top"><div id="info"><div id="title">노드를 눌러 직접 이동</div><div id="coord">배경 이미지부터 선택하세요</div></div><label class="btn fileBtn">배경 선택<input id="bgFile" type="file" accept="image/*"></label><button class="btn" id="prev">◀</button><button class="btn" id="next">▶</button></div>
+<div id="viewport"><div id="world"><img id="bgimg" alt=""><div id="empty">배경 선택<br><small>이 대화에서 사용한 1번 지도를 사진에서 선택</small></div><div id="nodes"></div></div></div>
+<div id="bottom">
+  <div id="controls">
+    <button class="ctrl" id="fit">전체</button>
+    <button class="ctrl" id="zin">확대+</button>
+    <button class="ctrl" id="zout">축소-</button>
+    <button class="ctrl" id="undo">되돌림</button>
+    <button class="ctrl" id="reset">좌표초기화</button>
+    <button class="ctrl primary" id="export">내보내기</button>
+  </div>
+  <div id="movePanel">
+    <div id="stepRow">
+      <span>이동폭</span>
+      <button class="stepBtn active" data-step="10">10px</button>
+      <button class="stepBtn" data-step="30">30px</button>
+      <button class="stepBtn" data-step="60">60px</button>
+    </div>
+    <div id="dpad">
+      <button class="moveBtn up" data-dx="0" data-dy="-1">▲</button>
+      <button class="moveBtn left" data-dx="-1" data-dy="0">◀</button>
+      <button class="moveBtn center" disabled>이동</button>
+      <button class="moveBtn right" data-dx="1" data-dy="0">▶</button>
+      <button class="moveBtn down" data-dx="0" data-dy="1">▼</button>
+    </div>
+  </div>
+  <div id="msg"><span>노드 선택 → 방향 버튼으로 이동 · 자동 저장</span><span id="zoom"></span></div>
+</div>
+</div>
+<div id="sheet"><h2>최종 MAP 좌표</h2><textarea id="out" readonly></textarea><div id="sheetBtns"><button class="btn" id="copy">전체 복사</button><button class="btn" id="share">공유</button><button class="btn" id="close">닫기</button></div></div>
+<div id="toast"></div>
+<script>
+var IMG_W=1536,IMG_H=751,GAME_W=1760,GAME_H=860;
+var INITIAL={
+qingyun:{name:"청운산 후산",root:[86,583],branches:{eco:[[155,556],[223,500],[291,437]]},gate:{blackwind:[350,330]}},
+blackwind:{name:"흑풍곡",root:[394,307],branches:{eco:[[351,290],[306,266],[257,247]],fate:[[455,305],[528,286],[603,244]]},gate:{blood:[473,360]}},
+blood:{name:"적혈비경",root:[668,442],branches:{eco:[[624,402],[569,356],[514,305]],fate:[[608,485],[553,539],[488,579]],res:[[734,456],[811,493],[876,542]]},gate:{foundation_trial:[773,421]}},
+foundation_trial:{name:"축기 시련",root:[819,324],branches:{},gate:{thunder:[851,259]}},
+thunder:{name:"천뢰봉",root:[968,213],branches:{eco:[[911,228],[858,214],[787,188]],fate:[[938,171],[888,132],[829,63]],res:[[1024,171],[1082,128],[1132,63]],storm:[[1026,227],[1114,228],[1187,187]]},gate:{marsh:[1130,286]}},
+marsh:{name:"자운택",root:[1241,377],branches:{eco:[[1178,369],[1105,333],[1020,281]],fate:[[1301,373],[1368,342],[1450,296]],res:[[1318,404],[1410,421],[1497,412]],miasma:[[1284,437],[1334,510],[1339,594]]},gate:{taixu:[1305,602]}},
+taixu:{name:"태허유적",root:[1353,632],branches:{eco:[[1267,633],[1195,642],[1145,693]],fate:[[1298,617],[1248,598],[1171,573]],res:[[1423,605],[1473,565],[1512,507]],formation:[[1403,650],[1452,664],[1512,689]]},gate:{}}
+};
+var glyph={eco:"獸",fate:"緣",res:"脈",storm:"雷",miasma:"氣",formation:"陣"},KEY="xianxia_node_editor_positions_v2",BGKEY="xianxia_node_editor_bg_v2";
+function q(s){return document.querySelector(s)}
+var viewport=q("#viewport"),world=q("#world"),nodes=q("#nodes"),title=q("#title"),coord=q("#coord"),zoom=q("#zoom"),toast=q("#toast"),bgimg=q("#bgimg"),empty=q("#empty");
+var state=load(),items=[],selected=-1,scale=1,tx=0,ty=0,history=[],pointers=new Map(),pan=null,pinch=null,drag=null;
+function clone(v){return JSON.parse(JSON.stringify(v))}
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||clone(INITIAL)}catch(e){return clone(INITIAL)}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+function notify(t){toast.textContent=t;toast.classList.add("show");clearTimeout(notify.t);notify.t=setTimeout(function(){toast.classList.remove("show")},1000)}
+function transform(){world.style.transform="translate("+tx+"px,"+ty+"px) scale("+scale+")";zoom.textContent=Math.round(scale*100)+"%"}
+function fit(){var r=viewport.getBoundingClientRect();scale=Math.min(r.width/IMG_W,r.height/IMG_H);tx=(r.width-IMG_W*scale)/2;ty=(r.height-IMG_H*scale)/2;transform()}
+function zoomAt(f,cx,cy){var old=scale,n=Math.max(.18,Math.min(5,old*f)),wx=(cx-tx)/old,wy=(cy-ty)/old;scale=n;tx=cx-wx*n;ty=cy-wy*n;transform()}
+function flatten(){
+items=[];
+Object.entries(state).forEach(function(pair){var area=pair[0],a=pair[1];items.push({id:area+":root",area:area,type:"root",ref:a.root});
+Object.entries(a.branches||{}).forEach(function(bp){var branch=bp[0],pts=bp[1];pts.forEach(function(p,i){items.push({id:area+":"+branch+(i+1),area:area,type:"branch",branch:branch,ref:p})})});
+Object.entries(a.gate||{}).forEach(function(gp){items.push({id:area+":gate→"+gp[0],area:area,type:"gate",dst:gp[0],ref:gp[1]})})})}
+function render(){
+flatten();nodes.replaceChildren();
+items.forEach(function(it,i){var e=document.createElement("div");e.className="node "+(it.type==="root"?"root":it.type==="gate"?"gate":it.branch)+(i===selected?" selected":"");e.style.left=it.ref[0]+"px";e.style.top=it.ref[1]+"px";e.style.zIndex=100+i;e.dataset.i=i;
+var sp=document.createElement("span");sp.textContent=it.type==="root"?"●":it.type==="gate"?"門":glyph[it.branch];e.appendChild(sp);
+var lab=document.createElement("div");lab.className="lab";lab.textContent=it.type==="root"?state[it.area].name:(it.type==="gate"?"관문":it.branch+(it.id.match(/\d+$/)||[""])[0]);e.appendChild(lab);e.addEventListener("click",function(ev){ev.preventDefault();ev.stopPropagation();choose(i)});nodes.appendChild(e)});info()}
+function info(){if(selected<0||!items[selected]){title.textContent="노드를 눌러 직접 이동";coord.textContent="노드 선택 → 아래 ▲▼◀▶ 버튼으로 이동";return}var it=items[selected],x=it.ref[0],y=it.ref[1];title.textContent=it.id;coord.textContent="image ("+x+", "+y+") · game ("+Math.round(x*GAME_W/IMG_W)+", "+Math.round(y*GAME_H/IMG_H)+")"}
+function syncSelection(){
+ var es=nodes.querySelectorAll(".node");
+ for(var k=0;k<es.length;k++)es[k].classList.toggle("selected",k===selected);
+ info();
+}
+function choose(i){
+ selected=((i%items.length)+items.length)%items.length;
+ var it=items[selected],r=viewport.getBoundingClientRect();
+ if(scale<0.55)scale=0.55;
+ tx=r.width/2-it.ref[0]*scale;
+ ty=r.height/2-it.ref[1]*scale;
+ transform();
+ syncSelection();
+ notify("선택: "+it.id);
+}
+function nodeDown(e){}
+function nodeTouchStart(e){}
+window.addEventListener("pointermove",function(){});
+window.addEventListener("pointerup",function(){});
+viewport.addEventListener("pointerdown",function(e){if(e.target.closest(".node"))return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1)pan={x:e.clientX,y:e.clientY,tx:tx,ty:ty};else if(pointers.size===2){var a=Array.from(pointers.values()),dx=a[0].x-a[1].x,dy=a[0].y-a[1].y;pinch={dist:Math.hypot(dx,dy),scale:scale,tx:tx,ty:ty,cx:(a[0].x+a[1].x)/2,cy:(a[0].y+a[1].y)/2};pan=null}});
+viewport.addEventListener("pointermove",function(e){if(!pointers.has(e.pointerId)||drag)return;e.preventDefault();pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===2&&pinch){var a=Array.from(pointers.values()),dx=a[0].x-a[1].x,dy=a[0].y-a[1].y,d=Math.hypot(dx,dy),ns=Math.max(.18,Math.min(5,pinch.scale*d/pinch.dist)),cx=(a[0].x+a[1].x)/2,cy=(a[0].y+a[1].y)/2,wx=(pinch.cx-pinch.tx)/pinch.scale,wy=(pinch.cy-pinch.ty)/pinch.scale;scale=ns;tx=cx-wx*ns;ty=cy-wy*ns;transform()}else if(pointers.size===1&&pan){tx=pan.tx+e.clientX-pan.x;ty=pan.ty+e.clientY-pan.y;transform()}},{passive:false});
+function pend(e){pointers.delete(e.pointerId);if(!pointers.size){pan=null;pinch=null}else if(pointers.size===1){var p=Array.from(pointers.values())[0];pan={x:p.x,y:p.y,tx:tx,ty:ty};pinch=null}}
+viewport.addEventListener("pointerup",pend);viewport.addEventListener("pointercancel",pend);
+q("#bgFile").addEventListener("change",function(e){var f=e.target.files&&e.target.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){bgimg.src=rd.result;bgimg.style.display="block";empty.style.display="none";try{localStorage.setItem(BGKEY,rd.result)}catch(err){}fit();notify("배경 불러옴")};rd.readAsDataURL(f)});
+try{var storedBg=localStorage.getItem(BGKEY);if(storedBg){bgimg.src=storedBg;bgimg.style.display="block";empty.style.display="none"}}catch(e){}
+q("#fit").onclick=fit;q("#zin").onclick=function(){var r=viewport.getBoundingClientRect();zoomAt(1.3,r.width/2,r.height/2)};q("#zout").onclick=function(){var r=viewport.getBoundingClientRect();zoomAt(.77,r.width/2,r.height/2)};
+q("#prev").onclick=function(){choose(selected<0?0:selected-1)};q("#next").onclick=function(){choose(selected<0?0:selected+1)};
+q("#undo").onclick=function(){if(!history.length){notify("되돌릴 내용 없음");return}state=JSON.parse(history.pop());save();render();notify("되돌림")};
+q("#reset").onclick=function(){if(!confirm("노드 좌표를 초기값으로 되돌릴까요?"))return;history.push(JSON.stringify(state));state=clone(INITIAL);save();selected=-1;render();fit();notify("좌표 초기화")};
+var moveStep=10;
+function setMoveStep(v){
+ moveStep=v;
+ document.querySelectorAll(".stepBtn").forEach(function(b){b.classList.toggle("active",+b.dataset.step===moveStep)});
+}
+function moveSelected(dx,dy){
+ if(selected<0||!items[selected]){choose(0)}
+ history.push(JSON.stringify(state));if(history.length>60)history.shift();
+ var p=items[selected].ref;
+ p[0]=Math.max(0,Math.min(IMG_W,p[0]+dx*moveStep));
+ p[1]=Math.max(0,Math.min(IMG_H,p[1]+dy*moveStep));
+ var el=nodes.querySelector('[data-i="'+selected+'"]');
+ if(el){el.style.left=p[0]+"px";el.style.top=p[1]+"px"}
+ info();save();
+ notify((dx<0?"←":dx>0?"→":dy<0?"↑":"↓")+" "+moveStep+"px");
+}
+document.querySelectorAll(".stepBtn").forEach(function(b){b.addEventListener("click",function(){setMoveStep(+b.dataset.step)})});
+document.querySelectorAll(".moveBtn[data-dx]").forEach(function(b){
+ b.addEventListener("click",function(e){e.preventDefault();moveSelected(+b.dataset.dx,+b.dataset.dy)});
+});
+function exportText(){var game={};Object.entries(state).forEach(function(pair){var area=pair[0],a=pair[1];function C(p){return{x:Math.round(p[0]*GAME_W/IMG_W),y:Math.round(p[1]*GAME_H/IMG_H)}}var branches={},gates={};Object.entries(a.branches||{}).forEach(function(bp){branches[bp[0]]=bp[1].map(C)});Object.entries(a.gate||{}).forEach(function(gp){gates[gp[0]]=C(gp[1])});game[area]={root:C(a.root),branches:branches,gate:gates}});return "const MAP = "+JSON.stringify(game,null,2)+";\n\n// raw image coordinates\nconst MAP_IMAGE_COORDS = "+JSON.stringify(state,null,2)+";"}
+q("#export").onclick=function(){q("#out").value=exportText();q("#sheet").classList.add("open")};q("#close").onclick=function(){q("#sheet").classList.remove("open")};
+q("#copy").onclick=async function(){var t=q("#out").value;try{await navigator.clipboard.writeText(t);notify("전체 복사 완료")}catch(e){q("#out").select();document.execCommand("copy");notify("전체 복사 완료")}};
+q("#share").onclick=async function(){var t=q("#out").value;if(navigator.share){try{await navigator.share({title:"수선비경 MAP 좌표",text:t})}catch(e){}}else notify("공유 기능 미지원")};
+render();requestAnimationFrame(function(){fit();setTimeout(function(){choose(0)},80)});
+</script>
+</body>
+</html>

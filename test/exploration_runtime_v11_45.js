@@ -151,10 +151,12 @@ function guidePosition(player,target,vw,vh){
 }
 function updateReturnGuide(s,remaining){
   const guide=$('#v1133Guide'),button=$('#v1133Return');
+  const bossFight=!!window.__xianxiaFoundationContent?.bossOnly?.(s?.M?.area,s?.M?.realm);
   const danger=remaining<=10||game.classList.contains('danger');
   if(button){
-    button.classList.toggle('returning',state.returning);
-    button.classList.toggle('urgent',danger);
+    button.style.display=bossFight?'none':'';
+    button.classList.toggle('returning',!bossFight&&state.returning);
+    button.classList.toggle('urgent',!bossFight&&danger);
     button.textContent=state.returning?'귀환 중':'귀환';
   }
   if(guide)guide.style.display='none';

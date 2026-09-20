@@ -601,7 +601,7 @@ function rewardEnemy(enemy,api){
 }
 function onFinish(reason,api){
   if(controls)controls.classList.remove('on');
-  if(reason==='return'&&api.state.area==='foundation_trial'&&api.run?.foundation?.bossKilled&&!api.state.events.foundationInsight){api.state.events.foundationInsight=1;api.save();return '<div class="event"><b>시련 완수 · 축기의 실마리</b><br>수문장을 넘어 축기의 문을 열었습니다.</div>'}
+  if(reason==='return'&&api.state.area==='foundation_trial'&&api.run?.foundation?.bossKilled){const first=!api.state.events.foundationTrialCompleted;api.state.events.foundationTrialCompleted=1;api.state.events.foundationInsight=1;api.save();if(first)return '<div class="event"><b>시련 완수 · 축기의 실마리</b><br>수문장을 넘어 천뢰봉으로 향할 자격을 얻었습니다.</div>'}
   return '';
 }
 function snapshotEnemy(enemy){return{chargeWindup:enemy.chargeWindup||0,chargeTime:enemy.chargeTime||0,mechanicCd:enemy.mechanicCd||0,detonating:enemy.detonating||0,formationNode:enemy.formationNode||0,trialNode:enemy.trialNode||0,nodeEffect:enemy.nodeEffect||'',nodeIndex:enemy.nodeIndex??-1,taixuBrokenUntil:enemy.taixuBrokenUntil||0}}
