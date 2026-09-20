@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.49.5';
+const VERSION='11.49.6';
 const ACTIVE_FPS=60;
 const IDLE_FPS=0;
 const FRAME_MS=1000/ACTIVE_FPS;
@@ -17,6 +17,7 @@ let skipped=0;
 let lastSnapshot=null;
 let orderSeq=0;
 let lastDispatch=0;
+let lastFrameWall=Date.now();
 let forceNext=true;
 
 function rebuild(){
@@ -59,6 +60,7 @@ function frame(now){
   rafId=0;
   if(document.hidden)return;
   rafCallbacks++;
+  lastFrameWall=Date.now();
 
   const wasActive=lastSnapshot?.phase==='run';
   if(wasActive&&!forceNext&&lastDispatch&&now-lastDispatch<FRAME_MS-.35){
@@ -95,14 +97,29 @@ for(const type of ['pointerdown','click','keydown']){
   document.addEventListener(type,()=>{if(lastSnapshot?.phase!=='run')wake()},{capture:true,passive:true});
 }
 window.addEventListener('resize',wake,{passive:true});
-document.addEventListener('visibilitychange',()=>{
-  if(document.hidden){
-    if(rafId)cancelAnimationFrame(rafId);
-    rafId=0;lastDispatch=0;
+function suspend(){
+  if(rafId)cancelAnimationFrame(rafId);
+  rafId=0;lastDispatch=0;
+}
+function resume(){
+  lastDispatch=0;lastFrameWall=Date.now();forceNext=true;schedule();
+}
+document.addEventListener('visibilitychange',()=>document.hidden?suspend():resume());
+window.addEventListener('pagehide',suspend,{passive:true});
+window.addEventListener('pageshow',resume,{passive:true});
+window.addEventListener('focus',resume,{passive:true});
+
+// Safari에서 navigation/BFCache 뒤 rAF가 드물게 멈춘 채 남는 경우를 복구한다.
+setInterval(()=>{
+  if(document.hidden)return;
+  const stale=Date.now()-lastFrameWall>1400;
+  if(rafId&&stale){
+    cancelAnimationFrame(rafId);
+    rafId=0;forceNext=true;schedule();
     return;
   }
-  lastDispatch=0;forceNext=true;schedule();
-});
+  if(!rafId&&lastSnapshot?.phase==='run')schedule();
+},700);
 
 window.__xianxiaFrameHub={
   version:VERSION,subscribe,wake,stats,
