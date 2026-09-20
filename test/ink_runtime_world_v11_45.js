@@ -502,10 +502,17 @@ function drawPersistentSpellZones(s,t){
   const center=z.follow?s.P:z;if(!center)return;
   const r=+z.r||0,c=S.ctx,pulse=.5+.5*Math.sin(t*3.2);
   if(!visible(center.x,center.y,r+80))return;
-  c.save();
-  c.globalAlpha=.045+.018*pulse;c.fillStyle='#d8c98e';c.beginPath();c.arc(center.x,center.y,r,0,Math.PI*2);c.fill();
-  c.globalAlpha=.34+.08*pulse;c.strokeStyle='#d9c77e';c.lineWidth=1.8;c.setLineDash([12,10]);c.beginPath();c.arc(center.x,center.y,r,0,Math.PI*2);c.stroke();
-  c.globalAlpha=.20;c.setLineDash([]);c.beginPath();c.arc(center.x,center.y,r*.70,0,Math.PI*2);c.stroke();
+  // This is a gameplay-active array zone for 만검귀종/만법공명, not a lingering
+  // cast sprite. Keep it crisp and outline-only so it cannot look like a stuck
+  // yellow afterimage of the sword-rain animation.
+  c.save();c.translate(center.x,center.y);
+  c.globalAlpha=.38+.08*pulse;c.strokeStyle='#d7c47a';c.lineWidth=1.7;c.setLineDash([11,9]);
+  c.beginPath();c.arc(0,0,r,0,Math.PI*2);c.stroke();
+  c.setLineDash([]);c.globalAlpha=.30;c.lineWidth=1.35;
+  for(let k=0;k<4;k++){
+    const a=k*Math.PI/2+t*.18,x1=Math.cos(a)*(r-8),y1=Math.sin(a)*(r-8),x2=Math.cos(a)*(r+5),y2=Math.sin(a)*(r+5);
+    c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();
+  }
   c.restore();
 }
 function drawPlayerShield(s,t){
