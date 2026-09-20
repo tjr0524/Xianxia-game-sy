@@ -84,15 +84,16 @@ const BREAKTHROUGH_COST={
   q7:{s:1300,h:15,hg:2,mat:'herb3'},
   q8:{s:1800,h:20,hg:2,mat:'herb3'},
   q9:{s:2600,h:28,hg:2,mat:'herb3'},
+  // 축기 진입비는 그대로 두고, 천뢰봉 수익을 받기 시작한 뒤의 소경지 돌파 영석을 4배로 상향.
   f1:{s:4500,h:40,hg:2,mat:'herb3',major:true},
-  f2:{s:5400,h:8,hg:2,mat:'thunderMark'},
-  f3:{s:6800,h:12,hg:2,mat:'thunderMark'},
-  f4:{s:8400,h:16,hg:2,mat:'thunderMark'},
-  f5:{s:11000,h:8,hg:2,mat:'purpleEssence'},
-  f6:{s:13400,h:12,hg:2,mat:'purpleEssence'},
-  f7:{s:16300,h:16,hg:2,mat:'purpleEssence'},
-  f8:{s:21100,h:6,hg:2,mat:'taixuSigil'},
-  f9:{s:27200,h:12,hg:2,mat:'taixuSigil'}
+  f2:{s:21600,h:8,hg:2,mat:'thunderMark'},
+  f3:{s:27200,h:12,hg:2,mat:'thunderMark'},
+  f4:{s:33600,h:16,hg:2,mat:'thunderMark'},
+  f5:{s:44000,h:8,hg:2,mat:'purpleEssence'},
+  f6:{s:53600,h:12,hg:2,mat:'purpleEssence'},
+  f7:{s:65200,h:16,hg:2,mat:'purpleEssence'},
+  f8:{s:84400,h:6,hg:2,mat:'taixuSigil'},
+  f9:{s:108800,h:12,hg:2,mat:'taixuSigil'}
 };
 function breakthroughCost(target){
   const stage=typeof target==='number'?TRAIN[target]:target;
@@ -223,9 +224,9 @@ function renderMapDetail(){const M=ensure(state()),b=$('#mapDetail'),s=selectedM
 function areaPicker(){const plans=$('#planChoices');if(!plans)return null;let w=$('#expeditionAreaPicker');if(!w){w=document.createElement('div');w.id='expeditionAreaPicker';w.className='expedition-area-picker';w.innerHTML='<div class="expedition-area-head"><b>원정 비경</b></div><div class="expedition-area-grid"></div>';plans.parentNode.insertBefore(w,plans);const l=document.createElement('div');l.className='expedition-plan-label';l.textContent='탐색 방법 선택';plans.parentNode.insertBefore(l,plans)}return w}function renderAreaPicker(force=false){const w=areaPicker();if(!w)return;const sh=snap(),M=sh.M,areas=C.AREAS,sig=`${M.area}|${sh.phase}|${M.events?.foundationTrialCompleted?1:0}|${areas.map(a=>`${a.id}:${M.unlocked?.[a.id]?1:0}`).join(',')}`;if(!force&&sig===pickerSignature)return;pickerSignature=sig;const g=w.querySelector('.expedition-area-grid');g.replaceChildren();for(const a of areas){const[accessible,why]=canUnlockArea(M,a.id),unlocked=!!M.unlocked?.[a.id]&&accessible,b=document.createElement('button');b.className='expedition-area-btn'+(M.area===a.id?' active':'')+(unlocked?'':' locked');b.disabled=sh.phase==='run'||!unlocked;b.setAttribute('aria-disabled',String(b.disabled));if(!unlocked)b.title=why||'비경 지도에서 관문을 개방하면 선택할 수 있습니다.';b.innerHTML=`${areaIcon(a.id)}${a.name}`;b.onclick=()=>{if(!unlocked)return;debug.selectArea(a.id);pickerSignature='';scheduleRender()};g.appendChild(b)}}
 function applyRunBalance(){}function restoreRunBalance(){}function bindRunBalance(){}
 const FOUNDATION_TIMING=[
-  {id:'f1',stage:1,area:'thunder',gross:1359.38,targetRuns:16},{id:'f2',stage:2,area:'thunder',gross:1625,targetRuns:16},{id:'f3',stage:3,area:'thunder',gross:1950,targetRuns:17},
-  {id:'f4',stage:4,area:'marsh',gross:2400,targetRuns:17},{id:'f5',stage:5,area:'marsh',gross:2950,targetRuns:18},{id:'f6',stage:6,area:'marsh',gross:3600,targetRuns:18},
-  {id:'f7',stage:7,area:'taixu',gross:4400,targetRuns:18},{id:'f8',stage:8,area:'taixu',gross:5400,targetRuns:19},{id:'f9',stage:9,area:'taixu',gross:6600,targetRuns:20}
+  {id:'f1',stage:1,area:'thunder',gross:2718.76,targetRuns:16},{id:'f2',stage:2,area:'thunder',gross:3250,targetRuns:16},{id:'f3',stage:3,area:'thunder',gross:3900,targetRuns:17},
+  {id:'f4',stage:4,area:'marsh',gross:4800,targetRuns:17},{id:'f5',stage:5,area:'marsh',gross:5900,targetRuns:18},{id:'f6',stage:6,area:'marsh',gross:7200,targetRuns:18},
+  {id:'f7',stage:7,area:'taixu',gross:8800,targetRuns:18},{id:'f8',stage:8,area:'taixu',gross:10800,targetRuns:19},{id:'f9',stage:9,area:'taixu',gross:13200,targetRuns:20}
 ];
 const PRESETS={q1:{label:'연기 1층',idx:0,area:'qingyun',unlocked:['qingyun'],stone:180,herbs:[45,0,0]},q3:{label:'연기 3층',idx:2,area:'blackwind',unlocked:['qingyun','blackwind'],stone:1100,herbs:[90,25,0]},q5:{label:'연기 5층',idx:4,area:'blackwind',unlocked:['qingyun','blackwind'],stone:3500,herbs:[130,65,15]},q7:{label:'연기 7층',idx:6,area:'blood',unlocked:['qingyun','blackwind','blood'],stone:11000,herbs:[170,110,60]},q9:{label:'연기 9층 · 축기 시련',idx:8,area:'foundation_trial',unlocked:['qingyun','blackwind','blood','foundation_trial'],stone:32000,herbs:[230,180,140]},...Object.fromEntries(FOUNDATION_TIMING.map(row=>[row.id,{...row,label:`축기 ${row.stage}층 · ${{thunder:'천뢰봉',marsh:'자운택',taixu:'태허유적'}[row.area]}`,idx:8+row.stage,unlocked:['qingyun','blackwind','blood','foundation_trial','thunder',...(row.stage>=4?['marsh']:[]),...(row.stage>=7?['taixu']:[])],stone:500000,herbs:[999,999,999],thunderMark:999,purpleEssence:999,taixuSigil:999,insight:1,fullSkills:1,formationTest:1}]))};
 function localRanks(local){return[local>=1?Math.min(5,local+2):0,local>=2?Math.min(5,local+1):0,local>=3?5:0]}
