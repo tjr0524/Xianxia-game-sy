@@ -191,9 +191,9 @@ function addCss(){
 .map-gate.available .gate-mark{animation:mapGatePulse 1.65s ease-in-out infinite}
 .map-gate.on .gate-mark{filter:drop-shadow(0 0 8px #ead78daa)}
 
-.map-point .rank,.map-root b,.area-symbol,
-.map-point-glyph38,.map-root-seal38,.map-root-name38,
-.map-gate-mark38,.map-gate-name38{display:none!important}
+#mapWorld .map-point .rank,#mapWorld .map-root b,#mapWorld .area-symbol,
+#mapWorld .map-point-glyph38,#mapWorld .map-root-seal38,#mapWorld .map-root-name38,
+#mapWorld .map-gate-mark38,#mapWorld .map-gate-name38{display:none!important}
 
 @keyframes mapNodePulse{
   0%,100%{filter:brightness(1.04) drop-shadow(0 0 2px var(--map-color,#8ea3c8))}
