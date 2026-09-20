@@ -18,9 +18,10 @@ const rank=(api,id,area=api.state.area)=>Math.max(0,Math.min(5,Math.round(+api.s
 const FOUNDATION_AREAS=new Set(['thunder','marsh','taixu']);
 const daoReward=area=>FOUNDATION_AREAS.has(area)?3:1;
 const daoCompletionBonus=area=>FOUNDATION_AREAS.has(area)?0:2;
+const rawMarks=(M,area)=>M?.mastery?.areas?.[area]?.marks?.reduce((a,b)=>a+(b?1:0),0)||0;
 const maxDaoMarks=AREAS.reduce((sum,area)=>sum+daoReward(area)*5+daoCompletionBonus(area),0);
-const earnedDaoMarks=M=>AREAS.reduce((sum,area)=>{const n=marks(M,area);return sum+n*daoReward(area)+(n>=5?daoCompletionBonus(area):0)},0);
-const legacyEarnedDaoMarks=M=>AREAS.reduce((sum,area)=>sum+marks(M,area)*(FOUNDATION_AREAS.has(area)?2:1),0);
+const earnedDaoMarks=M=>AREAS.reduce((sum,area)=>{const n=rawMarks(M,area);return sum+n*daoReward(area)+(n>=5?daoCompletionBonus(area):0)},0);
+const legacyEarnedDaoMarks=M=>AREAS.reduce((sum,area)=>sum+rawMarks(M,area)*(FOUNDATION_AREAS.has(area)?2:1),0);
 function ensure(M){
   M.mastery||={version:1,areas:{}};
   M.mastery.version=1;M.mastery.areas||={};
@@ -34,7 +35,7 @@ function ensure(M){
   }
   return M.mastery;
 }
-function marks(M,area){ensure(M);return M.mastery.areas[area]?.marks?.reduce((a,b)=>a+(b?1:0),0)||0}
+function marks(M,area){ensure(M);return rawMarks(M,area)}
 function daoists(M){return AREAS.reduce((sum,area)=>sum+(marks(M,area)>=5?1:0),0)}
 function killed(run,type){return +run?.mastery?.kills?.[type]||0}
 function anyRare(run){return !!run?.mastery?.rareKill}
