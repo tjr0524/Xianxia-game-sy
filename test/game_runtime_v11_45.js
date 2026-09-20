@@ -1754,7 +1754,7 @@ function emitProjectileVisual(id,from,to,{delay=0,duration=.12,color=''}={}){
   run.visualProjectileSeq=(run.visualProjectileSeq||0)+1;
   run.visualProjectiles??=[];
   run.visualProjectiles.push({
-    seq:run.visualProjectileSeq,id,
+    seq:run.visualProjectileSeq,id,targetId:to.id??null,
     fromX:+from.x||0,fromY:+from.y||0,toX:+to.x||0,toY:+to.y||0,
     duration:Math.max(.06,+duration||.12),color,at:elapsed+Math.max(0,+delay||0)
   });
@@ -1801,8 +1801,15 @@ function cast(skill,options={}){
     if(t1==='wide')radius*=1.45;
     if(t1==='vortex'){
       const vmeta=copyTriggerMeta(meta),duration=2.5,pulses=5,interval=duration/(pulses-1);
-      for(let i=0;i<pulses;i++)scheduleAreaHit({t:.05+i*interval,x:target.x,y:target.y,r:radius,damage:base*.22,source:'wave:vortex',family:'wave',meta:vmeta,color:'#9fdfff'});
-      fieldFx(target.x,target.y,radius,'#9fdfff',duration+.08);emitSkillVisual('wave',target.x,target.y,{r:radius,duration,kind:'vortex'});return done({target,hits:1});
+      for(let i=0;i<pulses;i++){
+        const t=.05+i*interval;
+        scheduleAreaHit({t,x:target.x,y:target.y,r:radius,damage:base*.22,source:'wave:vortex',family:'wave',meta:vmeta,color:'#9fdfff'});
+        emitSkillVisual('wave',target.x,target.y,{r:radius,duration:.34,kind:'vortex-pulse',delay:t});
+      }
+      fieldFx(target.x,target.y,radius,'#9fdfff',duration+.08);
+      emitSkillVisual('wave',target.x,target.y,{r:radius,duration,kind:'vortex'});
+      pop(target.x,target.y,'회오리 · 2.5초','#9fdfff');
+      return done({target,hits:1});
     }
     if(t1==='double'){
       const dx=target.x-P.x,dy=target.y-P.y,n=Math.hypot(dx,dy)||1,px=-dy/n,py=dx/n,offset=radius*.55,centers=[{x:target.x+px*offset,y:target.y+py*offset},{x:target.x-px*offset,y:target.y-py*offset}],seen=new Set();
@@ -1879,9 +1886,17 @@ function cast(skill,options={}){
     if(t1==='focus')radius*=.65;if(t1==='wide')radius*=1.50;
     const follow=t1==='follow',center=follow?{x:P.x,y:P.y}:{x:target.x,y:target.y},base=currentArrayBaseDamage()*powerScale,pulse=base/3,pull=hasFormationTrait('array','pull')?100/3:0;
     for(const t of [0.02,.36,follow ? .84 : .70])scheduleAreaHit({t,x:center.x,y:center.y,r:radius,damage:pulse,source,family:'array',meta,pull,followPlayer:follow,color:'#ffe9a8'});
-    const tr=traitRuntime();tr.arrayZone={x:center.x,y:center.y,r:radius,follow,until:elapsed+effectiveSkillCooldown('array'),nextReturn:elapsed+3};
-    const pulseWindow=follow?.84:.70;
-    pop(center.x,center.y,'만검진','#ffe9a8');ring(center.x,center.y,radius,'#ffe9a8',.24);emitSkillVisual('array',center.x,center.y,{r:radius,duration:pulseWindow+.20});return done({target,hits:1});
+    const pulseWindow=follow?.84:.70,persistent=hasFormationTrait('array','return')||hasFormationTrait('array','resonate');
+    const tr=traitRuntime();tr.arrayZone={
+      x:center.x,y:center.y,r:radius,follow,
+      activeUntil:elapsed+pulseWindow+.14,
+      until:elapsed+(persistent?effectiveSkillCooldown('array'):pulseWindow+.14),
+      persistent:persistent?1:0,
+      nextReturn:elapsed+3
+    };
+    pop(center.x,center.y,'만검진 · 3회','#ffe9a8');ring(center.x,center.y,radius,'#ffe9a8',.24);
+    emitSkillVisual('array',center.x,center.y,{r:radius,duration:pulseWindow+.20,kind:'array-active'});
+    return done({target,hits:1});
   }
   return false;
 }
