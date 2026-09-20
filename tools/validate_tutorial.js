@@ -7,15 +7,15 @@ const index=read('index.html');
 const tutorial=read('tutorial_runtime_v11_49.js');
 
 if(!index.includes('tutorial_runtime_v11_49.js'))throw new Error('tutorial runtime is not loaded');
-if(!tutorial.includes("const VERSION='11.49.17-tutorial'"))throw new Error('guided tutorial version mismatch');
+if(!tutorial.includes("const VERSION='11.51.25-dao-journal'"))throw new Error('guided tutorial version mismatch');
 if(!tutorial.includes("const META_KEY='xianxia_tutorial_guided_v2'"))throw new Error('guided tutorial resume state missing');
 if(!tutorial.includes("const GUIDE_DONE_KEY='blackwind-first-entry'"))throw new Error('tutorial graduation state missing');
 if(!tutorial.includes("return Math.max(0,+s?.M?.herb||0)+Math.max(0,+s?.run?.h0||0)"))
   throw new Error('combined persistent + run herb progress missing');
 if(!tutorial.includes("progress:'하급 영초 '+lowerHerbs(s)+'/8'")&&!tutorial.includes("하급 영초 8"))
   throw new Error('mortal eight-herb onboarding target missing');
-if(!tutorial.includes('초입의 발자취')||!tutorial.includes('생환지인'))
-  throw new Error('journal reward guidance missing');
+if(!tutorial.includes('청운산 후산 숙련 Ⅰ')||!tutorial.includes('첫 도흔을 수령하세요')||!tutorial.includes("journalClaimTarget('qingyun',0)"))
+  throw new Error('Dao Journal reward guidance missing');
 if(!tutorial.includes('요수를 잡아 영석을 모으세요')||!tutorial.includes("k>=3&&h>=1"))
   throw new Error('post-cultivation hunt guidance missing');
 if(!tutorial.includes("M.skillUnlocks?.sword")||!tutorial.includes('어검술'))
