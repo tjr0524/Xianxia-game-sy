@@ -2170,12 +2170,26 @@ function finish(reason){
   const safe=reason==='return';
   const ratio=safe?1:.4;
   const stone=Math.floor(run.s*ratio);
-  const h0=Math.floor(run.h0*ratio);
-  const h1=Math.floor(run.h1*ratio);
-  const h2=Math.floor(run.h2*ratio);
+  let h0=Math.floor(run.h0*ratio);
+  let h1=Math.floor(run.h1*ratio);
+  let h2=Math.floor(run.h2*ratio);
   const thunderMarks=Math.floor((run.thunderMarks||0)*ratio);
   const purpleEssence=Math.floor((run.purpleEssence||0)*ratio);
   const taixuSigils=Math.floor((run.taixuSigils||0)*ratio);
+
+  // 채집 수행 보너스는 별도 후처리가 아니라 최종 귀환 전리품에 직접 합산한다.
+  // 이렇게 해야 적혈비경의 '상급 영초 +4'도 실제 보유량과 결과창 숫자에 동일하게 반영된다.
+  const objectiveComplete=safe&&objectiveMet();
+  const objectiveInfo=objectiveComplete?objectiveData():null;
+  let harvestRewardText='';
+  if(objectiveComplete&&M.settings.plan==='harvest'){
+    const index=areaIndex(),grade=Math.min(2,index),amount=2+index;
+    if(grade===0)h0+=amount;
+    else if(grade===1)h1+=amount;
+    else h2+=amount;
+    harvestRewardText=`${HN[grade]} 영초 +${amount}`;
+  }
+
   M.stone+=stone;
   M.herb+=h0;
   M.herb2+=h1;
@@ -2199,13 +2213,10 @@ function finish(reason){
   event+=fortune(reason);
 
   let objective='';
-  if(safe&&objectiveMet()){
-    const rewardText=objectiveReward();
-    // Persist objective rewards immediately. Mastery saves just before this block,
-    // so relying only on render()'s trailing save can lose the bonus if later UI
-    // rendering aborts or another layer reloads the previously saved state.
+  if(objectiveComplete){
+    const rewardText=M.settings.plan==='harvest'?harvestRewardText:objectiveReward();
     save();
-    objective=`<div class="event"><b>수행 완수 · ${objectiveData().label}</b><br>${rewardText}</div>`;
+    objective=`<div class="event"><b>수행 완수 · ${objectiveInfo.label}</b><br>${rewardText}</div>`;
   }
 
   UI.ov.classList.remove('hide');
