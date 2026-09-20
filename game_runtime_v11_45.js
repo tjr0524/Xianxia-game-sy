@@ -2070,17 +2070,19 @@ function update(dt){
     vein.status=guardsAlive?'guard':defenseAlive?'defense':nearVein?'mining':'approach';
     if(nearVein&&vein.cleared){
       if(r3>=5&&!vein.defenseCleared){
-        if(defenseAlive){
+        // R5 영맥 폭주는 처치 게이트가 아니라 압박 요소다.
+        // 영맥 곁을 지키고 있으면 적이 살아 있어도 채굴은 계속 진행된다.
+        vein.progress+=dt;
+        vein.status=defenseAlive?'defense':'mining';
+        const thresholds=[.20,.50,.80];
+        if(vein.defenseWave<3&&vein.progress>=vein.required*thresholds[vein.defenseWave]){
+          startNextVeinDefenseWave();
           vein.status='defense';
-        }else{
-          vein.progress+=dt;
+        }
+        if(vein.defenseWave>=3&&vein.progress>=vein.required){
+          vein.defenseCleared=1;
           vein.status='mining';
-          const thresholds=[.20,.50,.80];
-          if(vein.defenseWave<3&&vein.progress>=vein.required*thresholds[vein.defenseWave]){
-            startNextVeinDefenseWave();vein.defenseWait=.35;vein.status='defense';
-          }else if(vein.defenseWave>=3&&vein.progress>=vein.required){
-            vein.defenseCleared=1;vein.status='mining';pop(vein.x,vein.y-34,'영맥 폭주 진압','#c6f0df',.9);
-          }
+          pop(vein.x,vein.y-34,'영맥 폭주 돌파 · 채굴 완료','#c6f0df',.9);
         }
       }else{
         vein.progress+=dt;
