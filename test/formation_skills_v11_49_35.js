@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.51.20';
+const VERSION='11.51.23';
 if(window.__xianxiaFormationSkillsVersion===VERSION)return;
 window.__xianxiaFormationSkillsVersion=VERSION;
 
@@ -13,7 +13,7 @@ const $=s=>document.querySelector(s);
 const REALMS=['연기','축기','결단','원영'];
 const HERB_KEYS=['herb','herb2','herb3'];
 const HERB_NAMES=['하급','중급','상급'];
-const DAO_MARK_COST=0;
+const DAO_MARK_COST=1;
 
 const A='assets/ink_v1/foundation_trial_v1/ui/node_icons/';
 const F='assets/ink_v1/runtime/ui/formation_skills/';
@@ -265,6 +265,12 @@ function artState(M,create=false){
 }
 function daoMarks(M){return Math.max(0,+artState(M).daoMarks||0)}
 function daoists(M){return window.__xianxiaMastery?.daoists?.(M)||0}
+function traitDaoCost(t){return (t?.req?.major??-1)>=1?DAO_MARK_COST:0}
+function daoSourceSummary(M){
+  const s=window.__xianxiaMastery?.summary?.(M);
+  const earned=+s?.earnedDaoMarks||0,max=+s?.maxDaoMarks||45;
+  return {earned,max,text:`도흔 수급 · 청운산/흑풍곡/적혈비경 숙련은 단계당 +1 · 천뢰봉/자운택/태허유적은 단계당 +2 · 총 ${max}개`};
+}
 function artRank(M,id){return Math.max(0,Math.min(5,+artState(M).ranks?.[id]||0))}
 function artCap(M,id){
   const rows=ART_RANKS[id]||[];
@@ -370,16 +376,11 @@ function chooseTrait(id,tier,optId){
     if(st.owned.includes(optId)){
       st.selected=optId;notice(`${s.name} Tier ${tier} 특성을 교체했습니다.`);return true;
     }
-    if(st.owned.length===0){
-      st.owned.push(optId);st.selected=optId;
-      notice(`${s.name} Tier ${tier} 첫 특성을 무료로 영구 해금했습니다.`);
-      return true;
-    }
-    const f=artState(M,true),cost=DAO_MARK_COST;
-    if(cost>0&&(+f.daoMarks||0)<cost){notice(`추가 선택지 해금에는 도흔 ${cost}개가 필요합니다.`);return false}
+    const f=artState(M,true),cost=traitDaoCost(t);
+    if(cost>0&&(+f.daoMarks||0)<cost){notice(`${realmLabel(t.req)} 이후 선택 노드 해금에는 도흔 ${cost}개가 필요합니다.`);return false}
     if(cost>0)f.daoMarks-=cost;
     st.owned.push(optId);st.selected=optId;
-    notice(cost>0?`${s.name} 특성을 도흔 ${cost}개로 영구 해금하고 장착했습니다.`:`${s.name} 특성을 무료로 영구 해금하고 장착했습니다.`);
+    notice(cost>0?`${s.name} Tier ${tier} 특성을 도흔 ${cost}개로 영구 해금하고 장착했습니다.`:`${s.name} Tier ${tier} 특성을 무료로 영구 해금했습니다.`);
     return true;
   });
 }
@@ -438,8 +439,10 @@ function summaryPanel(M){
     }
     if(bits.length)selected.push(`<div><b>${s.short}</b><span>${bits.join(' · ')}</span></div>`);
   }
+  const ds=daoSourceSummary(M);
   return `<div class="fs49-detail-head"><b>팔괘 진반</b><span>도흔 ${daoMarks(M)} · 도인 ${daoists(M)}/6</span></div>
-    <p class="fs49-detail-copy">큰 본체 노드를 누르면 Rank를 강화하고, 각 팔각형 변의 세 점에서 Tier 특성을 선택합니다. 모든 점이 항상 보여서 이 화면 한 장으로 현재 세팅을 확인할 수 있습니다.</p>
+    <p class="fs49-detail-copy">큰 본체 노드는 경지·재료로 성장하고, 축기 이후의 선택 노드는 미보유 노드마다 도흔 1개를 사용합니다. 이미 보유한 특성은 비경 밖에서 무료 교체됩니다.</p>
+    <div class="fs49-detail-copy" style="margin-top:6px"><b>도흔 ${ds.earned}/${ds.max} 획득</b> · ${ds.text}</div>
     <div class="fs49-build-summary">${selected.join('')||'<small>아직 선택된 특성이 없습니다.</small>'}</div>`;
 }
 function mainPanel(M,s,phase){
@@ -526,20 +529,20 @@ function traitPanel(M,s,tier,opt,phase){
   const owned=st.owned?.includes(opt[0]);
   const lockReason=traitLockReason(M,s,tier-1);
   let action='',disabled='';
+  const daoCost=traitDaoCost(t);
   if(status==='locked'||t.reserved){action=t.reserved?'후기 슬롯':'잠김';disabled='disabled'}
   else if(status==='selected'){action='선택 중';disabled='disabled'}
   else if(owned){action='장착'}
-  else if((st.owned?.length||0)===0){action='무료 해금 · 장착'}
-  else{action=`도흔 ${DAO_MARK_COST} · 해금`}
+  else{action=daoCost>0?`도흔 ${daoCost} · 해금`:'무료 해금 · 장착'}
   if(phase==='run')disabled='disabled';
-  if(!owned&&(st.owned?.length||0)>0&&daoMarks(M)<DAO_MARK_COST)disabled='disabled';
+  if(!owned&&daoCost>0&&daoMarks(M)<daoCost)disabled='disabled';
   const statusLabel={locked:'봉인',available:'해금 가능',owned:'보유',selected:'장착 중'}[status]||status;
   const condition=status==='locked'||t.reserved
     ?`<small class="fs49-lock-reason"><b>잠금 조건</b> · ${lockReason||'조건 확인 필요'}</small>`
     :`<small>${realmLabel(t.req)} 개방 · 조건 충족</small>`;
   return `<div class="fs49-detail-head"><b>${s.name} · Tier ${['Ⅰ','Ⅱ','Ⅲ'][tier-1]}</b><span>${statusLabel}</span></div>
     <div class="fs49-detail-main fs49-detail-trait"><img src="${traitIcon(s.id,opt[1])}" alt=""><div><strong>${opt[1]}</strong>${effectPresentation(opt[2])}${condition}</div></div>
-    <div class="fs49-detail-actions"><span>${owned?'영구 보유 · 비경 밖 무료 교체':(st.owned?.length?`추가 선택지 비용: 도흔 ${DAO_MARK_COST}`:'해당 Tier 첫 선택 무료')}</span>
+    <div class="fs49-detail-actions"><span>${owned?'영구 보유 · 비경 밖 무료 교체':(daoCost>0?`축기 이후 선택 노드 · 도흔 ${daoCost}`:'연기 단계 선택 노드 · 무료 해금')}</span>
     <button type="button" data-act="choose" data-id="${s.id}" data-tier="${tier}" data-opt="${opt[0]}" ${disabled}>${action}</button></div>`;
 }
 function renderDetail(M,phase){
@@ -566,7 +569,7 @@ function render(){
     });
   });
   root.innerHTML=`<div class="formation-board49">
-    <div class="fs49-topline"><span>팔괘 진반</span><small>본체=Rank · 내/중/외환=Tier Ⅰ/Ⅱ/Ⅲ · 도흔 ${daoMarks(M)} · 도인 ${daoists(M)}/6</small></div>
+    <div class="fs49-topline"><span>팔괘 진반</span><small>본체=Rank · 축기 이후 선택 노드=도흔 1 · 도흔 ${daoMarks(M)} · 도인 ${daoists(M)}/6</small></div>
     <div class="fs49-viewport" id="fs49Viewport">
       <div class="fs49-board" id="fs49Board">
       <svg class="fs49-lines" viewBox="0 0 1000 1000" aria-hidden="true">
