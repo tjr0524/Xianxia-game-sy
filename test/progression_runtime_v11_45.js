@@ -344,7 +344,7 @@ function renderAll(){
 function scheduleRender(){if(renderQueued)return;renderQueued=true;requestAnimationFrame(()=>{renderQueued=false;renderAll()})}
 function observe(){for(const e of[$('#realm'),$('#stone'),$('#herb'),$('#area')])if(e)new MutationObserver(scheduleRender).observe(e,{childList:true,characterData:true,subtree:true})}
 function exposeProgression(){
-  window.__xianxiaProgression={version:'11.51.1',trainingPath:TRAIN,render:renderAll,buyStageTraining:buyTrain,breakthroughStage:breakthrough,buyAffinity,unlockArea,focusStageTraining:focusTraining,focusCurrentRealm:focusMap,jumpMilestone:jumpPreset,timingReport,costHtml,effectText,guidance,spellList:SPELLS,BASIC_ID};
+  window.__xianxiaProgression={version:'11.51.2',trainingPath:TRAIN,render:renderAll,buyStageTraining:buyTrain,breakthroughStage:breakthrough,breakthroughCost,stageStatus,buyAffinity,unlockArea,focusStageTraining:focusTraining,focusCurrentRealm:focusMap,jumpMilestone:jumpPreset,timingReport,costHtml,effectText,guidance,spellList:SPELLS,BASIC_ID};
 }
 addCss();
 try{setupTabs()}catch(err){console.error('[progression] initial shell setup failed',err)}
