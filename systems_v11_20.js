@@ -40,23 +40,14 @@ function css(){
   document.head.appendChild(s);
 }
 
-let lastStrippedRun=-1;
 function stripLegacyMissionReward(){
   const ox=$('#ox');
   if(!ox)return;
   const event=[...ox.querySelectorAll('.event')].find(e=>e.querySelector('b')?.textContent?.trim().startsWith('수행 완수'));
   if(!event)return;
-  const sh=D.snapshot();
-  const runNo=Number(sh.M.stats?.totalRuns)||0;
-  if(lastStrippedRun!==runNo){
-    const idx=Math.max(0,C.AREAS.findIndex(a=>a.id===sh.M.area));
-    const amount=2+idx;
-    const key=idx===0?'herb':idx===1?'herb2':'herb3';
-    const m=clone(sh.M);
-    m[key]=Math.max(0,(Number(m[key])||0)-amount);
-    lastStrippedRun=runNo;
-    D.replaceState(m);
-  }
+  // The current game runtime already folds the objective reward into the final
+  // expedition loot. This compatibility layer must never subtract that reward.
+  // Keep only the old duplicate-card cleanup.
   event.remove();
 }
 
