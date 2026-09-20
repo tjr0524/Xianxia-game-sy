@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>수선비경 좌표 편집기 v6</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101318;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif}
+#app{height:100%;display:flex;flex-direction:column}
+#top{padding:calc(env(safe-area-inset-top) + 8px) 8px 8px;background:#151a20;border-bottom:1px solid #ffffff22;display:flex;gap:6px;align-items:center}
+#status{flex:1;min-width:0;font-size:12px;font-weight:800}
+#coord{font-size:11px;color:#b7c0c9;margin-top:3px}
+button,label{border:1px solid #ffffff30;background:#262d36;color:#fff;border-radius:9px;font-weight:800}
+.topbtn{height:36px;padding:0 10px;font-size:12px}
+#file{display:none}
+.filelab{display:grid;place-items:center}
+#view{flex:1;min-height:0;position:relative;overflow:auto;-webkit-overflow-scrolling:touch;background:#191e24}
+#world{position:relative;width:1536px;height:751px;transform-origin:0 0;background:#252b31}
+#bg{position:absolute;inset:0;width:1536px;height:751px;object-fit:fill;display:none;pointer-events:none}
+#empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#b9c1ca;font-size:17px}
+.node{position:absolute;width:42px;height:42px;margin:-21px 0 0 -21px;border-radius:50%;border:3px solid #fff;background:#30483cdd;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:900;z-index:3}
+.node.root{width:50px;height:50px;margin:-25px 0 0 -25px;background:#9b7729dd;border-color:#ffe69b}
+.node.gate{border-radius:8px;background:#a66f22dd}
+.node.selected{outline:5px solid #ffef85;outline-offset:4px;z-index:100}
+#bottom{padding:8px 10px calc(env(safe-area-inset-bottom) + 8px);background:#151a20;border-top:1px solid #ffffff22}
+#nodeNav{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px}
+.nav{height:38px}
+#step{display:flex;gap:6px;align-items:center;margin-bottom:8px;font-size:12px;color:#bcc4cc}
+.step{height:36px;min-width:58px}
+.step.on{background:#f1c65a;color:#161108}
+#pad{width:196px;margin:0 auto;display:grid;grid-template-columns:60px 60px 60px;grid-template-rows:52px 52px 52px;gap:5px;grid-template-areas:". u ." "l c r" ". d ."}
+.mv{font-size:22px}
+#u{grid-area:u}#l{grid-area:l}#r{grid-area:r}#d{grid-area:d}#c{grid-area:c;font-size:10px;color:#9aa3ad}
+#export{width:100%;height:42px;margin-top:8px;background:#f1c65a;color:#161108}
+#debug{margin-top:6px;text-align:center;font-size:11px;color:#8fb6ff;font-variant-numeric:tabular-nums}
+#sheet{display:none;position:fixed;inset:0;z-index:999;background:#080a0dec;padding:calc(env(safe-area-inset-top) + 10px) 10px calc(env(safe-area-inset-bottom) + 10px);flex-direction:column}
+#sheet.open{display:flex}
+#out{flex:1;min-height:0;background:#12171c;color:#fff;border:1px solid #ffffff30;border-radius:10px;padding:8px;font:10px monospace}
+#sheetBtns{display:flex;gap:6px;margin-top:7px}#sheetBtns button{flex:1;height:40px}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="top">
+ <div id="status"><div id="name">첫 노드 자동 선택</div><div id="coord"></div></div>
+ <label class="topbtn filelab">배경<input id="file" type="file" accept="image/*"></label>
+ <button class="topbtn" onclick="fitWorld()">전체</button>
+</div>
+<div id="view"><div id="world"><img id="bg"><div id="empty">배경 버튼 → 지도 이미지 선택</div><div id="nodes"></div></div></div>
+<div id="bottom">
+ <div id="nodeNav">
+  <button class="nav" onclick="prevNode()">이전 노드</button>
+  <button class="nav" onclick="centerSelected()">선택 중앙</button>
+  <button class="nav" onclick="nextNode()">다음 노드</button>
+ </div>
+ <div id="step">이동폭
+  <button id="s20" class="step on" onclick="setStep(20)">20px</button>
+  <button id="s50" class="step" onclick="setStep(50)">50px</button>
+  <button id="s100" class="step" onclick="setStep(100)">100px</button>
+ </div>
+ <div id="pad">
+  <button id="u" class="mv" onclick="moveNode(0,-1)">▲</button>
+  <button id="l" class="mv" onclick="moveNode(-1,0)">◀</button>
+  <button id="c" disabled>MOVE</button>
+  <button id="r" class="mv" onclick="moveNode(1,0)">▶</button>
+  <button id="d" class="mv" onclick="moveNode(0,1)">▼</button>
+ </div>
+ <button id="export" onclick="showExport()">좌표 내보내기</button>
+ <div id="debug">버튼 테스트: <span id="count">0</span> · step <span id="stepText">20</span>px</div>
+</div>
+</div>
+<div id="sheet"><textarea id="out" readonly></textarea><div id="sheetBtns"><button onclick="copyOut()">복사</button><button onclick="document.getElementById('sheet').classList.remove('open')">닫기</button></div></div>
+<script>
+var IW=1536,IH=751,GW=1760,GH=860,step=20,selected=0,count=0;
+var DATA={
+qingyun:{name:"청운산 후산",root:[86,583],branches:{eco:[[155,556],[223,500],[291,437]]},gate:{blackwind:[350,330]}},
+blackwind:{name:"흑풍곡",root:[394,307],branches:{eco:[[351,290],[306,266],[257,247]],fate:[[455,305],[528,286],[603,244]]},gate:{blood:[473,360]}},
+blood:{name:"적혈비경",root:[668,442],branches:{eco:[[624,402],[569,356],[514,305]],fate:[[608,485],[553,539],[488,579]],res:[[734,456],[811,493],[876,542]]},gate:{foundation_trial:[773,421]}},
+foundation_trial:{name:"축기 시련",root:[819,324],branches:{},gate:{thunder:[851,259]}},
+thunder:{name:"천뢰봉",root:[968,213],branches:{eco:[[911,228],[858,214],[787,188]],fate:[[938,171],[888,132],[829,63]],res:[[1024,171],[1082,128],[1132,63]],storm:[[1026,227],[1114,228],[1187,187]]},gate:{marsh:[1130,286]}},
+marsh:{name:"자운택",root:[1241,377],branches:{eco:[[1178,369],[1105,333],[1020,281]],fate:[[1301,373],[1368,342],[1450,296]],res:[[1318,404],[1410,421],[1497,412]],miasma:[[1284,437],[1334,510],[1339,594]]},gate:{taixu:[1305,602]}},
+taixu:{name:"태허유적",root:[1353,632],branches:{eco:[[1267,633],[1195,642],[1145,693]],fate:[[1298,617],[1248,598],[1171,573]],res:[[1423,605],[1473,565],[1512,507]],formation:[[1403,650],[1452,664],[1512,689]]},gate:{}}
+};
+var KEY="node_editor_v6_positions";
+try{var z=localStorage.getItem(KEY);if(z)DATA=JSON.parse(z)}catch(e){}
+var items=[];
+function rebuildItems(){
+ items=[];
+ Object.keys(DATA).forEach(function(area){
+  var a=DATA[area];
+  items.push({id:area+":root",type:"root",ref:a.root,label:a.name});
+  Object.keys(a.branches||{}).forEach(function(b){a.branches[b].forEach(function(p,i){items.push({id:area+":"+b+(i+1),type:b,ref:p,label:b+(i+1)})})});
+  Object.keys(a.gate||{}).forEach(function(g){items.push({id:area+":gate→"+g,type:"gate",ref:a.gate[g],label:"관문"})});
+ });
+}
+function render(){
+ rebuildItems();
+ var box=document.getElementById("nodes");box.innerHTML="";
+ items.forEach(function(it,i){
+  var e=document.createElement("button");
+  e.className="node "+(it.type==="root"?"root":it.type==="gate"?"gate":"")+(i===selected?" selected":"");
+  e.style.left=it.ref[0]+"px";e.style.top=it.ref[1]+"px";e.textContent=i+1;
+  e.onclick=function(ev){ev.stopPropagation();selected=i;render();updateInfo();centerSelected()};
+  box.appendChild(e);
+ });
+ updateInfo();
+}
+function updateInfo(){
+ var it=items[selected];if(!it)return;
+ document.getElementById("name").textContent=(selected+1)+"/"+items.length+" "+it.id;
+ document.getElementById("coord").textContent="image "+it.ref[0]+","+it.ref[1]+" · game "+Math.round(it.ref[0]*GW/IW)+","+Math.round(it.ref[1]*GH/IH);
+}
+function setStep(v){
+ step=v;document.getElementById("stepText").textContent=v;
+ [20,50,100].forEach(function(n){document.getElementById("s"+n).classList.toggle("on",n===v)});
+}
+function moveNode(dx,dy){
+ count++;document.getElementById("count").textContent=count;
+ var it=items[selected];if(!it){alert("선택 노드 없음");return}
+ it.ref[0]=Math.max(0,Math.min(IW,it.ref[0]+dx*step));
+ it.ref[1]=Math.max(0,Math.min(IH,it.ref[1]+dy*step));
+ try{localStorage.setItem(KEY,JSON.stringify(DATA))}catch(e){}
+ var es=document.querySelectorAll(".node"),el=es[selected];
+ if(el){el.style.left=it.ref[0]+"px";el.style.top=it.ref[1]+"px"}
+ updateInfo();
+}
+function prevNode(){selected=(selected-1+items.length)%items.length;render();centerSelected()}
+function nextNode(){selected=(selected+1)%items.length;render();centerSelected()}
+function centerSelected(){
+ var it=items[selected],v=document.getElementById("view");
+ if(!it)return;
+ v.scrollLeft=Math.max(0,it.ref[0]-v.clientWidth/2);
+ v.scrollTop=Math.max(0,it.ref[1]-v.clientHeight/2);
+}
+function fitWorld(){
+ var v=document.getElementById("view"),w=document.getElementById("world");
+ var s=Math.min(v.clientWidth/IW,v.clientHeight/IH);
+ w.style.transform="scale("+s+")";
+ w.style.width=IW+"px";w.style.height=IH+"px";
+ v.scrollLeft=0;v.scrollTop=0;
+}
+document.getElementById("file").onchange=function(e){
+ var f=e.target.files&&e.target.files[0];if(!f)return;
+ var r=new FileReader();r.onload=function(){var img=document.getElementById("bg");img.src=r.result;img.style.display="block";document.getElementById("empty").style.display="none"};r.readAsDataURL(f);
+};
+function exportData(){
+ var game={};
+ Object.keys(DATA).forEach(function(area){
+  var a=DATA[area],br={},ga={};
+  function C(p){return{x:Math.round(p[0]*GW/IW),y:Math.round(p[1]*GH/IH)}}
+  Object.keys(a.branches||{}).forEach(function(b){br[b]=a.branches[b].map(C)});
+  Object.keys(a.gate||{}).forEach(function(g){ga[g]=C(a.gate[g])});
+  game[area]={root:C(a.root),branches:br,gate:ga};
+ });
+ return "const MAP = "+JSON.stringify(game,null,2)+";\n\nconst MAP_IMAGE_COORDS = "+JSON.stringify(DATA,null,2)+";";
+}
+function showExport(){document.getElementById("out").value=exportData();document.getElementById("sheet").classList.add("open")}
+function copyOut(){var o=document.getElementById("out");o.select();try{navigator.clipboard.writeText(o.value)}catch(e){document.execCommand("copy")}}
+render();
+setTimeout(centerSelected,100);
+</script>
+</body>
+</html>
