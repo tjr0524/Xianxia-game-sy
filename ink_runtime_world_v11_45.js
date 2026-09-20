@@ -300,7 +300,7 @@ function drawVeinProgress(s,t){
   c.strokeStyle='rgba(20,34,42,.9)';c.lineWidth=3.5;c.fillStyle='#effbff';
   let label='영맥 · 접근해 채굴';
   if(v.status==='guard')label='수호수 처치 후 채굴';
-  else if(v.status==='defense')label='영맥 폭주 방어 '+Math.min(3,+v.defenseWave||0)+'/3';
+  else if(v.status==='defense')label='영맥 폭주 · 채굴 지속 '+Math.min(3,+v.defenseWave||0)+'/3';
   else if(mining)label='채굴 '+Math.round(progress*100)+'%';
   else if(progress>0)label='채굴 대기 '+Math.round(progress*100)+'%';
   c.strokeText(label,v.x,barY-9);c.fillText(label,v.x,barY-9);
