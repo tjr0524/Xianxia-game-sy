@@ -17,7 +17,7 @@ function addCss(){
   isolation:isolate!important;
   background:
     linear-gradient(#00000010,#00000010),
-    url('assets/ink_v1/runtime/ui/bigeong_map_world_v2.webp') center/100% 100% no-repeat!important;
+    url('assets/ink_v1/runtime/ui/bigeong_map_world_v2.webp?v=11.51.34') center/100% 100% no-repeat!important;
 }
 .map-svg{position:absolute!important;inset:0!important;z-index:2!important;overflow:visible!important;pointer-events:none!important}
 .map-zone,.map-art-svg,.map-art-fog,.map-art-deco,.map-art-compass{display:none!important}
@@ -66,7 +66,7 @@ function addCss(){
   border:3px solid #111820;
   box-shadow:
     0 0 0 2px var(--map-color,#8ea3c8),
-    0 0 10px color-mix(in srgb,var(--map-color,#8ea3c8) 82%,transparent),
+    0 0 10px var(--map-color,#8ea3c8),
     0 3px 7px #0008;
   transition:transform .12s,filter .12s,opacity .12s;
 }
@@ -78,7 +78,7 @@ function addCss(){
   box-shadow:
     0 0 0 3px #111820,
     0 0 0 5px var(--map-color,#8ea3c8),
-    0 0 14px color-mix(in srgb,var(--map-color,#8ea3c8) 88%,transparent),
+    0 0 14px var(--map-color,#8ea3c8),
     0 4px 9px #0009;
 }
 .map-node::after{
