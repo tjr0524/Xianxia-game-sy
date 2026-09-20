@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.51.6';
+const VERSION='11.51.7';
 if(window.__xianxiaUiPolishVersion===VERSION)return;
 window.__xianxiaUiPolishVersion=VERSION;
 
