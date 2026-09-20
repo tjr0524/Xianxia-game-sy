@@ -7,7 +7,7 @@ const index=read('index.html');
 const tutorial=read('tutorial_runtime_v11_49.js');
 
 if(!index.includes('tutorial_runtime_v11_49.js'))throw new Error('tutorial runtime is not loaded');
-if(!tutorial.includes("const VERSION='11.51.25-dao-journal'"))throw new Error('guided tutorial version mismatch');
+if(!tutorial.includes("const VERSION='11.51.31-dev-preset-sync'"))throw new Error('guided tutorial version mismatch');
 if(!tutorial.includes("const META_KEY='xianxia_tutorial_guided_v2'"))throw new Error('guided tutorial resume state missing');
 if(!tutorial.includes("const GUIDE_DONE_KEY='blackwind-first-entry'"))throw new Error('tutorial graduation state missing');
 if(!tutorial.includes("return Math.max(0,+s?.M?.herb||0)+Math.max(0,+s?.run?.h0||0)"))
@@ -26,6 +26,10 @@ if(!tutorial.includes("mapGateTarget('blackwind')")||!tutorial.includes("areaPic
   throw new Error('Blackwind gate/selection guidance missing');
 if(!tutorial.includes("hub.subscribe('guided-onboarding-tutorial',frame,95)"))
   throw new Error('guided tutorial is not on shared frame hub');
+if(!tutorial.includes("xianxia:dev-preset-applied")||!tutorial.includes("function syncDevPreset(detail={})"))
+  throw new Error('developer milestone tutorial synchronization missing');
+if(!tutorial.includes("(M.realm?.major??-1)>=1")||!tutorial.includes("if(major>0)return null"))
+  throw new Error('Foundation realm alias guard missing');
 if(!tutorial.includes("key:'feature-spirit'")||!tutorial.includes('포획 게이지를 100%'))
   throw new Error('spirit capture feature tutorial missing');
 if(!tutorial.includes("key:'feature-vein'")||!tutorial.includes('총 3초'))

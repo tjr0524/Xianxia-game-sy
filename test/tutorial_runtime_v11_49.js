@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.51.25-dao-journal';
+const VERSION='11.51.31-dev-preset-sync';
 if(window.__xianxiaFirstRunTutorial?.version===VERSION)return;
 
 const D=window.__xianxiaDebug;
@@ -282,12 +282,43 @@ function markSwordRunSeen(s){
 
 function maybeGraduate(s){
   if(meta[GUIDE_DONE_KEY])return true;
-  if(s?.phase==='run'&&s?.M?.area==='blackwind'){
+  const M=s?.M||{};
+  // Realm stage numbers restart at Foundation 1, so a stale tutorial must never
+  // interpret Foundation 1/2 as Yeongi 1/2.
+  if((M.realm?.major??-1)>=1){
+    meta[GUIDE_DONE_KEY]=1;
+    meta.mandatoryDone=1;
+    meta.postCultHuntComplete=1;
+    meta.swordRunSeen=1;
+    meta.graduationShown=1;
+    saveMeta();
+    return true;
+  }
+  if(s?.phase==='run'&&M.area==='blackwind'){
     meta[GUIDE_DONE_KEY]=1;
     saveMeta();
     return true;
   }
   return false;
+}
+
+function syncDevPreset(detail={}){
+  const s=snap(),M=s?.M||{},realm=detail.realm||M.realm||{},major=realm.major??-1,stage=+realm.stage||0;
+  if(major>=0){
+    meta.moved=1;
+    meta.mandatoryDone=1;
+    meta.postCultHuntComplete=1;
+    meta.swordRunSeen=1;
+  }
+  // Dev milestones at Yeongi 3+ already represent a point beyond the onboarding
+  // route to Blackwind. Foundation presets must always graduate the old guide.
+  if(major>=1||(major===0&&stage>=3)){
+    meta[GUIDE_DONE_KEY]=1;
+    meta.graduationShown=1;
+  }
+  lastKey='';closedKey='';
+  saveMeta();
+  setTimeout(()=>{const next=snap();if(next)frame(next)},0);
 }
 
 function markFeatureTutorialProgress(s){
@@ -608,7 +639,8 @@ function softGuide(s){
   const q2=trainingCount(M,'q2_');
   const eco1=rank(M,'qingyun','eco1');
   const eco2=rank(M,'qingyun','eco2');
-  const stage=+M.realm?.stage||0;
+  const major=M.realm?.major??-1,stage=+M.realm?.stage||0;
+  if(major>0)return null;
 
   if(!meta.mandatoryDone){
     meta.mandatoryDone=1;
@@ -806,6 +838,7 @@ function bindClicks(){
 function boot(){
   ensureUi();
   bindClicks();
+  document.addEventListener('xianxia:dev-preset-applied',e=>syncDevPreset(e.detail||{}),true);
   const s=snap();
   if(s)frame(s);
 
