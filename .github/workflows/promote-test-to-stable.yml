@@ -1,0 +1,93 @@
+name: Promote test to stable
+
+on:
+  push:
+    branches: [main]
+    paths: ['.promote-test']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: promote-test-to-stable
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout stable main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: stable
+          fetch-depth: 1
+
+      - name: Read promotion target
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_SHA="$(jq -r '.source_sha' stable/.promote-test)"
+          BUILD="$(jq -r '.build' stable/.promote-test)"
+          test -n "$SOURCE_SHA" && test "$SOURCE_SHA" != "null"
+          test -n "$BUILD" && test "$BUILD" != "null"
+          echo "SOURCE_SHA=$SOURCE_SHA" >> "$GITHUB_ENV"
+          echo "BUILD=$BUILD" >> "$GITHUB_ENV"
+
+      - name: Checkout approved test source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+          path: testsrc
+          fetch-depth: 1
+
+      - name: Validate release source
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(jq -r '.build' testsrc/version.json)"
+          test "$actual" = "$BUILD"
+          node --check testsrc/game_runtime_v11_45.js
+          node --check testsrc/ink_runtime_world_v11_45.js
+          node --check testsrc/progression_runtime_v11_45.js
+          node --check testsrc/systems21_runtime_v11_45.js
+          node --check testsrc/progression_extras_runtime_v11_45.js
+          node --check testsrc/exploration_runtime_v11_45.js
+          node --check testsrc/runtime_preflight_v11_45_flat.js
+          node --check testsrc/runtime_postflight_v11_45_flat.js
+          node --check testsrc/runtime_frame_hub_v11_47.js
+          node --check testsrc/tree_camera_gesture_v11_44.js
+          node --check testsrc/tree_touch_fix_v11_37_4.js
+          node --check testsrc/tutorial_runtime_v11_49.js
+          node --check testsrc/ui_runtime_v11_48.js
+          node --check testsrc/ui_polish_v11_38.js
+          node testsrc/tools/validate_flat_runtime.js testsrc
+          node testsrc/tools/validate_frame_ownership.js testsrc
+          node testsrc/tools/validate_ui_ownership.js testsrc
+          node testsrc/tools/validate_tutorial.js testsrc
+          node testsrc/tools/validate_desktop_entry.js testsrc
+          node testsrc/tools/validate_tree_interaction.js testsrc
+          node testsrc/tools/validate_cache_versions.js testsrc
+
+      - name: Promote test source into stable root
+        shell: bash
+        run: |
+          set -euo pipefail
+          rsync -a --delete             --exclude '.git'             --exclude '.github'             --exclude 'test'             --exclude '.promote-test'             testsrc/ stable/
+
+      - name: Commit stable release
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd stable
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git reset -- .github test .promote-test
+          if git diff --cached --quiet; then
+            echo "Stable root already matches approved test source."
+            exit 0
+          fi
+          git commit -m "Release $BUILD from test $SOURCE_SHA"
+          git push origin HEAD:main
