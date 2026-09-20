@@ -175,7 +175,7 @@ const fresh=()=>({
   area:'qingyun',
   unlocked:{qingyun:1},
   zones:Object.fromEntries(AREAS.map(area=>[area.id,zoneBlank()])),
-  events:{foundationInsight:0},
+  events:{foundationInsight:0,foundationTrialCompleted:0},
   settings:{plan:'harvest',tab:'train'},
   stats:{totalRuns:0,totalSafe:0,totalKills:0}
 });
@@ -920,10 +920,13 @@ function nodeCost(node){
     hg:Math.min(2,areaIndex())
   };
 }
+function foundationTrialCompleted(){return !!M.events?.foundationTrialCompleted}
 function areaReady(area){
+  if(area.id==='thunder'&&!foundationTrialCompleted())return false;
   return !!M.unlocked[area.id]||(meets(area.req)&&(!area.req.prev||treeCount(area.req.prev)>=area.req.nodes));
 }
 function areaRequirement(area){
+  if(area.id==='thunder'&&!foundationTrialCompleted())return '축기 시련 완료 필요';
   if(M.unlocked[area.id])return `개척 ${treeCount(area.id)}노드 · 강화 ${treeLevels(area.id)}`;
   if(!meets(area.req))return `${MAJORS[area.req.major]} ${area.req.stage}층 필요`;
   if(area.req.prev&&treeCount(area.req.prev)<area.req.nodes){
@@ -1156,11 +1159,11 @@ function renderAreas(){
     const unlocked=!!M.unlocked[area.id];
     const ready=areaReady(area);
     const button=document.createElement('button');
-    button.className='area-btn'+(M.area===area.id?' active':'')+(!unlocked&&!ready?' locked':'')+(ready&&!unlocked?' ready':'');
+    button.className='area-btn'+(M.area===area.id?' active':'')+(!ready?' locked':'')+(ready&&!unlocked?' ready':'');
     button.innerHTML=`<strong>${M.area===area.id?'▶ ':''}${area.name}</strong><span class="meta">${area.rec}</span><small>${areaRequirement(area)}</small>`;
     button.disabled=phase==='run';
     button.onclick=()=>{
-      if(!unlocked&&!ready){
+      if(!ready){
         UI.notice.textContent=areaRequirement(area);
         return;
       }
@@ -1628,6 +1631,12 @@ function foundationApi(){
 
 function begin(){
   if(phase==='run')return;
+  if(M.area==='thunder'&&!foundationTrialCompleted()){
+    M.area='foundation_trial';
+    syncPreparation();
+    UI.notice.textContent='천뢰봉에 입장하려면 축기 시련을 먼저 완료해야 합니다.';
+    render();draw();return;
+  }
   ensurePlan();
   phase='run';
   elapsed=0;
