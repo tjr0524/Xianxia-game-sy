@@ -413,7 +413,7 @@ function swordCandidateScore(enemy,origin=P){
 function swordCandidates(range,origin=P){
   return enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&distance(origin,e)<range).sort((a,b)=>swordCandidateScore(b,origin)-swordCandidateScore(a,origin));
 }
-function swordHit(enemy,baseDamage,scale=1,source='sword',meta={},from=P){
+function swordHit(enemy,baseDamage,scale=1,source='sword',meta={},from=P,visual=true){
   if(!enemy||enemy.hp<=0)return 0;
   let damage=baseDamage*scale;
   if(hasFormationTrait('sword','mark')){
@@ -426,7 +426,7 @@ function swordHit(enemy,baseDamage,scale=1,source='sword',meta={},from=P){
     enemy._swordMarkCount=(enemy._swordMarkCount||0)+1;
     if(enemy._swordMarkCount>=3){enemy._swordMarkCount=0;enemy._swordMarkPrimed=1}
   }
-  emitProjectileVisual('sword',from,enemy,{duration:.11,color:source==='sword'?'#eef6ff':'#c9efff'});
+  if(visual)emitProjectileVisual('sword',from,enemy,{duration:.11,color:source==='sword'?'#eef6ff':'#c9efff'});
   return dealt;
 }
 function swordTraitMeta(parent,traitId,source){
@@ -1784,13 +1784,26 @@ function cast(skill,options={}){
         if(swordHit(target,damage,scale,source,meta,P)>0){hits++;used.set(target.id,dup+1)}
       }
     }else if(t1==='pierce'){
-      const dx=primary.x-P.x,dy=primary.y-P.y,n=Math.hypot(dx,dy)||1,ux=dx/n,uy=dy/n;
-      const lineEnd={x:P.x+ux*range,y:P.y+uy*range};
-      const pierced=targets.filter(e=>{
-        const vx=lineEnd.x-P.x,vy=lineEnd.y-P.y,wx=e.x-P.x,wy=e.y-P.y,ll=vx*vx+vy*vy,t=ll?clamp((wx*vx+wy*vy)/ll,0,1):0;
-        return Math.hypot(e.x-(P.x+vx*t),e.y-(P.y+vy*t))<Math.max(18,e.r+8);
-      }).sort((a,b)=>distance(P,a)-distance(P,b)).slice(0,3);
-      for(const target of pierced)if(swordHit(target,damage,.90,source,meta,P)>0)hits++;
+      const dx=primary.x-P.x,dy=primary.y-P.y,primaryDist=Math.hypot(dx,dy)||1,ux=dx/primaryDist,uy=dy/primaryDist;
+      const pierceEndDist=primaryDist+220;
+      const lineEnd={x:P.x+ux*pierceEndDist,y:P.y+uy*pierceEndDist};
+      // 관통검은 첫 대상을 정상 위력으로 맞힌 뒤, 그 뒤쪽 직선 경로를 계속 비행한다.
+      if(swordHit(primary,damage,1,source,meta,P,false)>0)hits++;
+      const extras=enemies.filter(e=>{
+        if(e===primary||e.type==='spirit'||e.hp<=0)return false;
+        const wx=e.x-P.x,wy=e.y-P.y,along=wx*ux+wy*uy;
+        if(along<=primaryDist+4||along>pierceEndDist)return false;
+        const side=Math.abs(wx*uy-wy*ux);
+        return side<Math.max(20,e.r+10);
+      }).sort((a,b)=>{
+        const aa=(a.x-P.x)*ux+(a.y-P.y)*uy;
+        const bb=(b.x-P.x)*ux+(b.y-P.y)*uy;
+        return aa-bb;
+      }).slice(0,2);
+      for(const target of extras)if(swordHit(target,damage,.85,source,meta,P,false)>0)hits++;
+      // 개별 적에게 새 비검을 생성하지 않고 한 자루가 끝까지 뚫고 가는 궤적으로 보인다.
+      emitProjectileVisual('sword',P,lineEnd,{duration:.18,color:'#eef6ff'});
+      slash(P.x,P.y,lineEnd.x,lineEnd.y,'#dff3ff');
     }else{
       const scale=t1==='heavy'?1.55:1;
       if(swordHit(primary,damage,scale,source,meta,P)>0)hits++;
