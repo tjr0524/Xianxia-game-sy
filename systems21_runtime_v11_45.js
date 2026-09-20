@@ -17,25 +17,14 @@ function currentStageIndex(m){
   return idx;
 }
 function completed(m,stage){return stage?.nodes?.filter(n=>m.trainingNodes?.[n.id]).length||0}
-function needCount(i){return Math.min(4,2+Math.floor(i/3))}
+
+// 돌파 비용/조건은 progression runtime 하나만 소유한다.
+// UI 레이어가 자체 가격표를 가지면 축기 이후 단계가 마지막 구형 값으로 fallback될 수 있다.
 function breakthroughCost(i){
-  const t=[{s:0,h:8,hg:0},{s:80,h:10,hg:0},{s:180,h:14,hg:0},{s:300,h:10,hg:1},{s:450,h:14,hg:1},{s:800,h:18,hg:1},{s:1300,h:15,hg:2},{s:1800,h:20,hg:2},{s:2600,h:28,hg:2},{s:4500,h:40,hg:2,major:true}];
-  return t[i]||t[t.length-1];
+  return P.breakthroughCost?.(i)||null;
 }
 function stageStatus(i){
-  const sh=D.snapshot(),m=sh.M,cur=currentStageIndex(m),target=TRAIN[i];
-  if(!target)return{can:false,text:'경지 정보 없음'};
-  if(i<=cur)return{can:false,reached:true,text:i===cur?'현재 경지':'이미 개방한 경지'};
-  if(i!==cur+1)return{can:false,text:'바로 아래 경지를 먼저 개방해야 합니다.',price:breakthroughCost(i)};
-  const price=breakthroughCost(i);
-  if(sh.phase==='run')return{can:false,text:'원정 중에는 돌파할 수 없습니다.',price};
-  if(i>0){
-    const prev=TRAIN[i-1],done=completed(m,prev),need=needCount(i-1);
-    if(done<need)return{can:false,text:`${prev.name} 수련 ${done}/${prev.nodes.length} · 최소 ${need}개 필요`,price};
-  }
-  if(price.major&&!m.events?.foundationInsight)return{can:false,text:'축기의 실마리가 필요합니다.',price};
-  if((+m.stone||0)<price.s||(+m[HKEY(price.hg)]||0)<price.h)return{can:false,text:'돌파 재료가 부족합니다.',price};
-  return{can:true,text:'개방 가능',price};
+  return P.stageStatus?.(i)||{can:false,text:'경지 상태를 불러오지 못했습니다.',price:breakthroughCost(i)};
 }
 function costHtml(c){
   if(P.costHtml)return P.costHtml(c);
