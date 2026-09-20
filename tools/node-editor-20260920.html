@@ -54,9 +54,9 @@
   <div id="movePanel">
     <div id="stepRow">
       <span>이동폭</span>
-      <button class="stepBtn active" data-step="1">1px</button>
-      <button class="stepBtn" data-step="5">5px</button>
-      <button class="stepBtn" data-step="10">10px</button>
+      <button class="stepBtn active" data-step="10">10px</button>
+      <button class="stepBtn" data-step="30">30px</button>
+      <button class="stepBtn" data-step="60">60px</button>
     </div>
     <div id="dpad">
       <button class="moveBtn up" data-dx="0" data-dy="-1">▲</button>
@@ -102,7 +102,7 @@ function render(){
 flatten();nodes.replaceChildren();
 items.forEach(function(it,i){var e=document.createElement("div");e.className="node "+(it.type==="root"?"root":it.type==="gate"?"gate":it.branch)+(i===selected?" selected":"");e.style.left=it.ref[0]+"px";e.style.top=it.ref[1]+"px";e.style.zIndex=100+i;e.dataset.i=i;
 var sp=document.createElement("span");sp.textContent=it.type==="root"?"●":it.type==="gate"?"門":glyph[it.branch];e.appendChild(sp);
-var lab=document.createElement("div");lab.className="lab";lab.textContent=it.type==="root"?state[it.area].name:(it.type==="gate"?"관문":it.branch+(it.id.match(/\d+$/)||[""])[0]);e.appendChild(lab);if(navigator.maxTouchPoints>0){e.addEventListener("touchstart",nodeTouchStart,{passive:false})}else{e.addEventListener("pointerdown",nodeDown)}nodes.appendChild(e)});info()}
+var lab=document.createElement("div");lab.className="lab";lab.textContent=it.type==="root"?state[it.area].name:(it.type==="gate"?"관문":it.branch+(it.id.match(/\d+$/)||[""])[0]);e.appendChild(lab);e.addEventListener("click",function(ev){ev.preventDefault();ev.stopPropagation();choose(i)});nodes.appendChild(e)});info()}
 function info(){if(selected<0||!items[selected]){title.textContent="노드를 눌러 직접 이동";coord.textContent="노드 선택 → 아래 ▲▼◀▶ 버튼으로 이동";return}var it=items[selected],x=it.ref[0],y=it.ref[1];title.textContent=it.id;coord.textContent="image ("+x+", "+y+") · game ("+Math.round(x*GAME_W/IMG_W)+", "+Math.round(y*GAME_H/IMG_H)+")"}
 function syncSelection(){
  var es=nodes.querySelectorAll(".node");
@@ -111,21 +111,16 @@ function syncSelection(){
 }
 function choose(i){
  selected=((i%items.length)+items.length)%items.length;
+ var it=items[selected],r=viewport.getBoundingClientRect();
+ if(scale<0.55)scale=0.55;
+ tx=r.width/2-it.ref[0]*scale;
+ ty=r.height/2-it.ref[1]*scale;
+ transform();
  syncSelection();
- var it=items[selected],r=viewport.getBoundingClientRect(),sx=tx+it.ref[0]*scale,sy=ty+it.ref[1]*scale;
- if(sx<50||sx>r.width-50||sy<50||sy>r.height-50){tx=r.width/2-it.ref[0]*scale;ty=r.height/2-it.ref[1]*scale;transform()}
+ notify("선택: "+it.id);
 }
-function nodeDown(e){
- e.preventDefault();e.stopPropagation();
- var i=+e.currentTarget.dataset.i;
- if(selected!==i)choose(i);
-}
-function nodeTouchStart(e){
- if(!e.touches||e.touches.length!==1)return;
- e.preventDefault();e.stopPropagation();
- var i=+e.currentTarget.dataset.i;
- if(selected!==i)choose(i);
-}
+function nodeDown(e){}
+function nodeTouchStart(e){}
 window.addEventListener("pointermove",function(){});
 window.addEventListener("pointerup",function(){});
 viewport.addEventListener("pointerdown",function(e){if(e.target.closest(".node"))return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1)pan={x:e.clientX,y:e.clientY,tx:tx,ty:ty};else if(pointers.size===2){var a=Array.from(pointers.values()),dx=a[0].x-a[1].x,dy=a[0].y-a[1].y;pinch={dist:Math.hypot(dx,dy),scale:scale,tx:tx,ty:ty,cx:(a[0].x+a[1].x)/2,cy:(a[0].y+a[1].y)/2};pan=null}});
@@ -138,13 +133,13 @@ q("#fit").onclick=fit;q("#zin").onclick=function(){var r=viewport.getBoundingCli
 q("#prev").onclick=function(){choose(selected<0?0:selected-1)};q("#next").onclick=function(){choose(selected<0?0:selected+1)};
 q("#undo").onclick=function(){if(!history.length){notify("되돌릴 내용 없음");return}state=JSON.parse(history.pop());save();render();notify("되돌림")};
 q("#reset").onclick=function(){if(!confirm("노드 좌표를 초기값으로 되돌릴까요?"))return;history.push(JSON.stringify(state));state=clone(INITIAL);save();selected=-1;render();fit();notify("좌표 초기화")};
-var moveStep=1;
+var moveStep=10;
 function setMoveStep(v){
  moveStep=v;
  document.querySelectorAll(".stepBtn").forEach(function(b){b.classList.toggle("active",+b.dataset.step===moveStep)});
 }
 function moveSelected(dx,dy){
- if(selected<0||!items[selected]){notify("먼저 노드를 선택하세요");return}
+ if(selected<0||!items[selected]){choose(0)}
  history.push(JSON.stringify(state));if(history.length>60)history.shift();
  var p=items[selected].ref;
  p[0]=Math.max(0,Math.min(IMG_W,p[0]+dx*moveStep));
@@ -152,17 +147,17 @@ function moveSelected(dx,dy){
  var el=nodes.querySelector('[data-i="'+selected+'"]');
  if(el){el.style.left=p[0]+"px";el.style.top=p[1]+"px"}
  info();save();
+ notify((dx<0?"←":dx>0?"→":dy<0?"↑":"↓")+" "+moveStep+"px");
 }
 document.querySelectorAll(".stepBtn").forEach(function(b){b.addEventListener("click",function(){setMoveStep(+b.dataset.step)})});
 document.querySelectorAll(".moveBtn[data-dx]").forEach(function(b){
- b.addEventListener("click",function(){moveSelected(+b.dataset.dx,+b.dataset.dy)});
- b.addEventListener("touchstart",function(e){e.preventDefault();moveSelected(+b.dataset.dx,+b.dataset.dy)},{passive:false});
+ b.addEventListener("click",function(e){e.preventDefault();moveSelected(+b.dataset.dx,+b.dataset.dy)});
 });
 function exportText(){var game={};Object.entries(state).forEach(function(pair){var area=pair[0],a=pair[1];function C(p){return{x:Math.round(p[0]*GAME_W/IMG_W),y:Math.round(p[1]*GAME_H/IMG_H)}}var branches={},gates={};Object.entries(a.branches||{}).forEach(function(bp){branches[bp[0]]=bp[1].map(C)});Object.entries(a.gate||{}).forEach(function(gp){gates[gp[0]]=C(gp[1])});game[area]={root:C(a.root),branches:branches,gate:gates}});return "const MAP = "+JSON.stringify(game,null,2)+";\n\n// raw image coordinates\nconst MAP_IMAGE_COORDS = "+JSON.stringify(state,null,2)+";"}
 q("#export").onclick=function(){q("#out").value=exportText();q("#sheet").classList.add("open")};q("#close").onclick=function(){q("#sheet").classList.remove("open")};
 q("#copy").onclick=async function(){var t=q("#out").value;try{await navigator.clipboard.writeText(t);notify("전체 복사 완료")}catch(e){q("#out").select();document.execCommand("copy");notify("전체 복사 완료")}};
 q("#share").onclick=async function(){var t=q("#out").value;if(navigator.share){try{await navigator.share({title:"수선비경 MAP 좌표",text:t})}catch(e){}}else notify("공유 기능 미지원")};
-render();requestAnimationFrame(fit);
+render();requestAnimationFrame(function(){fit();setTimeout(function(){choose(0)},80)});
 </script>
 </body>
 </html>
