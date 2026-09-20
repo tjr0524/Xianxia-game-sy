@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.51.21-taixu-economy';
+const VERSION='11.51.22-final-audit';
 if(window.__xianxiaFoundationContent?.version===VERSION)return;
 
 const TYPES=new Set(['charging_boar','ranged_toad','exploding_beetle','command_ape','shield_pangolin','sword_sentinel','formation_warden','formation_node','foundation_guardian','taixu_boss']);
@@ -320,7 +320,8 @@ function onFormationNodeDeath(enemy,api){
     api.pop(enemy.x,enemy.y-42,`결절 파괴 · 수성 -1.0초`,'#e9dcff',.8);
   }else api.pop(enemy.x,enemy.y-42,'결절 파괴','#e9dcff',.65);
   api.ring(enemy.x,enemy.y,52,'#e9dcff',.45);
-  if(trial.state==='complete'&&trial.nodesTotal>0&&trial.nodesDestroyed>=trial.nodesTotal&&!trial.nodeBonus){
+  const completionGrace=trial.state==='complete'&&now(api)-(+trial.completedAt||0)<=.12;
+  if(completionGrace&&trial.nodesTotal>0&&trial.nodesDestroyed>=trial.nodesTotal&&!trial.nodeBonus){
     trial.nodeBonus=1;api.run.taixuSigils=(api.run.taixuSigils||0)+1;
     api.pop(trial.x,trial.y-46,'완전 해체 · 태허진문 +1','#fff0b5',.9);
   }
@@ -497,6 +498,10 @@ function updateHazards(dt,api){
 function modifyEnemyDamage(enemy,amount,source,api){
   if(enemy?.type==='taixu_boss'&&api){
     const trial=taixuTrial(api);
+    if(trial?.state==='boss_wait'){
+      const gate=Math.max(1,enemy.max*.65);
+      if(enemy.hp>gate&&enemy.hp-amount<gate)amount=Math.max(0,enemy.hp-gate);
+    }
     if(trial?.state==='active'&&trial.bossMode){
       const alive=liveTrialNodes(api).length;
       amount*=Math.max(.40,1-alive*.15);
