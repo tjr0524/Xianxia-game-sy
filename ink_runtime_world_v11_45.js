@@ -198,7 +198,12 @@ function visible(x,y,pad=120){
   return x>=b.x-pad&&x<=b.x+b.w+pad&&y>=b.y-pad&&y<=b.y+b.h+pad;
 }
 function drawGatherRings(s,t){const c=S.ctx;for(const o of s.objects||[]){if(o.type!=='h'||!visible(o.x,o.y,40))continue;const g=Math.max(0,Math.min(2,o.grade||0)),r=[16,18,20][g],pulse=1+Math.sin(t*3+o.x*.04+o.y*.03)*.04;c.save();c.globalAlpha=[.65,.72,.82][g];c.strokeStyle=['#4e8068','#4f7899','#8a609f'][g];c.lineWidth=[1.6,1.9,2.2][g];c.beginPath();c.ellipse(o.x,o.y+17,r*pulse,r*.42*pulse,0,0,Math.PI*2);c.stroke();c.globalAlpha=[.10,.13,.17][g];c.fillStyle=c.strokeStyle;c.fill();c.restore()}}
-function drawPortal(t){if(!visible(EXIT.x,EXIT.y,90))return;shadow(EXIT.x,EXIT.y+2,32,6,.18);centered('objects',3,6,frame(t,7,6),EXIT.x,EXIT.y-12,74,false,.9)}
+function drawPortal(s,t){
+  if(window.__xianxiaFoundationContent?.bossOnly?.(s?.M?.area,s?.M?.realm))return;
+  if(!visible(EXIT.x,EXIT.y,90))return;
+  shadow(EXIT.x,EXIT.y+2,32,6,.18);
+  centered('objects',3,6,frame(t,7,6),EXIT.x,EXIT.y-12,74,false,.9)
+}
 function cameraViewContains(target,margin=24){
   const mode=window.__xianxiaExplorationMode;
   if(!mode||!Number.isFinite(mode.camX)||!Number.isFinite(mode.camY)||!Number.isFinite(mode.viewW)||!Number.isFinite(mode.viewH))return true;
@@ -260,7 +265,7 @@ function drawMortalHerbGuide(s,t){
   c.strokeStyle='rgba(20,48,34,.88)';c.lineWidth=3.2;c.fillStyle='#efffe9';c.strokeText('영초',x,y-17);c.fillText('영초',x,y-17);c.restore();
 }
 function drawReturnGuide(s,t){
-  if(s.phase!=='run'||(s.run?.limit||25)-(+s.elapsed||0)>10)return;
+  if(s.phase!=='run'||window.__xianxiaFoundationContent?.bossOnly?.(s.M?.area,s.M?.realm)||(s.run?.limit||25)-(+s.elapsed||0)>10)return;
   const p=s.P;if(!p)return;
   const target=EXIT,best=Math.hypot(target.x-p.x,target.y-p.y);
   if(best<34)return;
@@ -664,7 +669,7 @@ function drawFrame(s,meta){
   clearViewport();
   setWorldTransform(m);
   drawEnvironment(area,t);
-  drawPortal(t);
+  drawPortal(s,t);
   drawLightningTraces(s);
   drawHazards(s);
   drawPersistentSpellZones(s,t);
