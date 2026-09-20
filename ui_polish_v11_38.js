@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.51.7';
+const VERSION='11.51.8';
 if(window.__xianxiaUiPolishVersion===VERSION)return;
 window.__xianxiaUiPolishVersion=VERSION;
 
@@ -29,7 +29,6 @@ let pickerDecorating=false;
 function promoteStylesheet(){
   const link=$('#v1138-ui-polish');
   if(!link)return;
-  link.href=`ui_polish_v11_38.css?v=${VERSION}`;
   document.head.appendChild(link);
 }
 
