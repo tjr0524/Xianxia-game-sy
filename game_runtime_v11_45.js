@@ -13,15 +13,17 @@ const PLAYER_GROUND_OFFSET=23;
 const EXIT_APPROACH={x:EXIT.x,y:EXIT.y-PLAYER_GROUND_OFFSET};
 const RUN_TIME=25;
 const FOUNDATION_ECONOMY={
-  1:{gross:1359.38,efficiency:.93,targetRuns:16,killStone:210},
-  2:{gross:1625,efficiency:.93,targetRuns:16,killStone:250},
-  3:{gross:1950,efficiency:.93,targetRuns:17,killStone:300},
-  4:{gross:2400,efficiency:.93,targetRuns:17,killStone:369},
-  5:{gross:2950,efficiency:.93,targetRuns:18,killStone:454},
-  6:{gross:3600,efficiency:.93,targetRuns:18,killStone:554},
-  7:{gross:4400,efficiency:.93,targetRuns:18,killStone:677},
-  8:{gross:5400,efficiency:.93,targetRuns:19,killStone:831},
-  9:{gross:6600,efficiency:.93,targetRuns:20,killStone:1015}
+  // 축기권은 적혈비경보다 전투 부담이 크게 높으므로 개체 영석 보상을 2배로 상향.
+  // 소경지 돌파 영석 비용도 별도 대형 sink로 올려 저레벨 비경 반복 파밍을 억제한다.
+  1:{gross:2718.76,efficiency:.93,targetRuns:16,killStone:420},
+  2:{gross:3250,efficiency:.93,targetRuns:16,killStone:500},
+  3:{gross:3900,efficiency:.93,targetRuns:17,killStone:600},
+  4:{gross:4800,efficiency:.93,targetRuns:17,killStone:738},
+  5:{gross:5900,efficiency:.93,targetRuns:18,killStone:908},
+  6:{gross:7200,efficiency:.93,targetRuns:18,killStone:1108},
+  7:{gross:8800,efficiency:.93,targetRuns:18,killStone:1354},
+  8:{gross:10800,efficiency:.93,targetRuns:19,killStone:1662},
+  9:{gross:13200,efficiency:.93,targetRuns:20,killStone:2030}
 };
 const MAJORS=['연기','축기','결단','원영'];
 const HN=['하급','중급','상급'];
@@ -67,9 +69,9 @@ const AREAS=[
   {id:'blackwind',name:'흑풍곡',desc:'무리 요수와 산수의 전리품 경쟁이 시작되는 골짜기.',enemy:1,reward:1,killStone:34,herbs:10,env:{move:.86,pick:.75},baseStage:3,rec:'연기 3~6층',req:{major:0,stage:3,prev:'qingyun',nodes:2},palette:['#191f22','#34342a','#6d6042']},
   {id:'blood',name:'적혈비경',desc:'영맥 점유와 정예 수호전이 핵심인 고위 비경.',enemy:1,reward:1,killStone:90,herbs:9,env:{move:.77,pick:.60},baseStage:6,rec:'연기 6~9층',req:{major:0,stage:6,prev:'blackwind',nodes:3},palette:['#291719','#532127','#8c493b']},
   {id:'foundation_trial',name:'축기 시련',desc:'축기에 오르기 전 수문장과 맞서는 단일 보스 시련.',enemy:1,reward:1,rewardTier:2,killStone:90,herbs:9,env:{move:.77,pick:.60},baseStage:9,rec:'연기 9층',req:{major:0,stage:9,prev:'blood',nodes:0},palette:['#171d1c','#32403a','#708574']},
-  {id:'thunder',name:'천뢰봉',desc:'낙뢰 전조와 돌진 요수를 함께 읽는 축기 첫 비경.',enemy:1,reward:1,rewardTier:2,killStone:210,herbs:9,env:{move:.77,pick:.60},baseStage:1,rec:'축기 1층 이상',req:{major:1,stage:1,prev:'foundation_trial',nodes:0},palette:['#11182b','#24284b','#555c91']},
-  {id:'marsh',name:'자운택',desc:'폭발·호령·수호 특수몹 조합을 공략하는 습지 비경.',enemy:1,reward:1,rewardTier:2,killStone:369,herbs:9,env:{move:.77,pick:.60},baseStage:4,rec:'축기 4층 이상',req:{major:1,stage:4,prev:'thunder',nodes:0},palette:['#172422','#31483f','#758c79']},
-  {id:'taixu',name:'태허유적',desc:'움직이는 진법과 수호령, 태허진령이 지키는 최종 비경.',enemy:1,reward:1,rewardTier:2,killStone:677,herbs:9,env:{move:.77,pick:.60},baseStage:7,rec:'축기 7층 이상',req:{major:1,stage:7,prev:'marsh',nodes:0},palette:['#171a24','#30354a','#747b9a']}
+  {id:'thunder',name:'천뢰봉',desc:'낙뢰 전조와 돌진 요수를 함께 읽는 축기 첫 비경.',enemy:1,reward:1,rewardTier:2,killStone:420,herbs:9,env:{move:.77,pick:.60},baseStage:1,rec:'축기 1층 이상',req:{major:1,stage:1,prev:'foundation_trial',nodes:0},palette:['#11182b','#24284b','#555c91']},
+  {id:'marsh',name:'자운택',desc:'폭발·호령·수호 특수몹 조합을 공략하는 습지 비경.',enemy:1,reward:1,rewardTier:2,killStone:738,herbs:9,env:{move:.77,pick:.60},baseStage:4,rec:'축기 4층 이상',req:{major:1,stage:4,prev:'thunder',nodes:0},palette:['#172422','#31483f','#758c79']},
+  {id:'taixu',name:'태허유적',desc:'움직이는 진법과 수호령, 태허진령이 지키는 최종 비경.',enemy:1,reward:1,rewardTier:2,killStone:1354,herbs:9,env:{move:.77,pick:.60},baseStage:7,rec:'축기 7층 이상',req:{major:1,stage:7,prev:'marsh',nodes:0},palette:['#171a24','#30354a','#747b9a']}
 ];
 
 const TREE={
