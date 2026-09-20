@@ -1647,8 +1647,13 @@ function begin(){
   vein=null;
   const plan=currentPlan();
   const foundationEra=M.realm.major>=1;
-  const herbTotal=foundationEra?0:Math.max(3,Math.round(A().herbs*plan.herbCount));
-  const herbInitial=foundationEra?0:Math.ceil(herbTotal*.72);
+  // 축기 이후에도 연기권 비경(청운산/흑풍곡/적혈비경)에 내려오면
+  // 기존 영초가 그대로 자란다. 도행록의 과거 비경 채집 기록도
+  // 경지가 오른 뒤 소급 달성할 수 있어야 한다.
+  const legacyHerbArea=['qingyun','blackwind','blood'].includes(M.area);
+  const herbsEnabled=!foundationEra||legacyHerbArea;
+  const herbTotal=herbsEnabled?Math.max(3,Math.round(A().herbs*plan.herbCount)):0;
+  const herbInitial=herbsEnabled?Math.ceil(herbTotal*.72):0;
   const beastTotal=0,beastInitial=0;
   run={
     s:0,h0:0,h1:0,h2:0,thunderMarks:0,purpleEssence:0,taixuSigils:0,taixuTrials:0,left:0,minHp:1,kills:0,beastKills:0,elite:0,
@@ -2260,7 +2265,10 @@ function finish(reason){
 function syncHud(){
   UI.hp.textContent=`${Math.ceil(P.hp)} / ${P.max}`;
   UI.hpFill.style.width=`${Math.max(0,P.hp/P.max)*100}%`;
-  UI.loot.textContent=M.realm.major>=1?`영석 ${run?.s||0}${run?.thunderMarks?` · 뢰흔 ${run.thunderMarks}`:''}${run?.purpleEssence?` · 자운정수 ${run.purpleEssence}`:''}${run?.taixuSigils?` · 태허진문 ${run.taixuSigils}`:''}`:`영석 ${run?.s||0} · 영초 ${totalHerbs(run)}`;
+  const lowRealmHerbRun=['qingyun','blackwind','blood'].includes(M.area);
+  UI.loot.textContent=M.realm.major>=1&&!lowRealmHerbRun
+    ?`영석 ${run?.s||0}${run?.thunderMarks?` · 뢰흔 ${run.thunderMarks}`:''}${run?.purpleEssence?` · 자운정수 ${run.purpleEssence}`:''}${run?.taixuSigils?` · 태허진문 ${run.taixuSigils}`:''}`
+    :`영석 ${run?.s||0} · 영초 ${totalHerbs(run)}`;
   const remaining=Math.max(0,(run?.limit||RUN_TIME)-elapsed);
   UI.time.textContent=`${remaining.toFixed(1)}초`;
   UI.time.style.color=phase==='run'&&remaining<=5?'#ff776c':phase==='run'&&remaining<=10?'#e8a06f':'';
