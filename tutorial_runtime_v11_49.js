@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.49.17-tutorial';
+const VERSION='11.51.25-dao-journal';
 if(window.__xianxiaFirstRunTutorial?.version===VERSION)return;
 
 const D=window.__xianxiaDebug;
@@ -108,10 +108,15 @@ function findText(root,selector,text){
   return Array.from(root.querySelectorAll(selector)).find(el=>(el.textContent||'').indexOf(text)>=0)||null;
 }
 
-function journalClaimTarget(name){
-  const rows=$$('#v19Journal .v19-ach');
-  const row=rows.find(r=>(r.textContent||'').indexOf(name)>=0);
-  return row?.querySelector('button:not(:disabled)')||row||null;
+function journalAreaTarget(area){
+  return $('#v19Journal .v19-area[data-area="'+area+'"]')||$('#v19JournalPanel');
+}
+function journalClaimTarget(area,index){
+  const root=journalAreaTarget(area);
+  if(!root)return null;
+  return root.querySelector('.v19-goal[data-index="'+index+'"] button:not(:disabled)')||
+         root.querySelector('.v19-goal[data-index="'+index+'"]')||
+         root.querySelector('.v19-area-summary')||root;
 }
 
 function swordTarget(){
@@ -339,7 +344,6 @@ function featureGuide(s){
 function mandatoryGuide(s){
   const M=s.M||{};
   const mortal=(M.realm?.major??-1)<0;
-  const claims=M.daohang?.claimed||{};
   const low=lowerHerbs(s);
   const start=$('#start');
   const ret=$('#ret');
@@ -401,26 +405,38 @@ function mandatoryGuide(s){
       };
     }
 
-    if(!claims.first_run||!claims.first_safe){
+    const qingyunMastery=M.mastery?.areas?.qingyun;
+    const firstMasteryDone=!!qingyunMastery?.marks?.[0];
+    const firstMasteryClaimed=!!qingyunMastery?.claimed?.[0];
+    if(firstMasteryDone&&!firstMasteryClaimed){
       if(!$('.v19-ach-tab.active')){
         return {
           key:'mandatory-journal-tab',
           kicker:'필수 튜토리얼 · 6/11',
-          title:'도행록 보상을 받으세요',
-          body:'첫 원정의 행적이 도행록에 기록되었습니다. <strong>초입의 발자취</strong>와 <strong>생환지인</strong> 보상을 수령하면 다음 단계 재화가 맞춰집니다.',
-          progress:'예상 보상 · 영석 50 + 하급 영초 2',
+          title:'도행록에서 도흔을 받으세요',
+          body:'첫 무사 귀환으로 <strong>청운산 후산 숙련 Ⅰ</strong>이 기록되었습니다. 도행록은 이제 각 비경의 업적과 도흔 보상을 모아 보는 곳입니다.',
+          progress:'청운산 후산 숙련 Ⅰ · 도흔 +1 수령 가능',
           targets:[$('.v19-ach-tab')]
         };
       }
-      const targets=[];
-      if(!claims.first_run)targets.push(journalClaimTarget('초입의 발자취'));
-      if(!claims.first_safe)targets.push(journalClaimTarget('생환지인'));
+      const area=journalAreaTarget('qingyun');
+      if(area&&!area.open){
+        return {
+          key:'mandatory-journal-open',
+          kicker:'필수 튜토리얼 · 6/11',
+          title:'청운산 후산 업적을 펼치세요',
+          body:'비경별 업적은 접고 펼칠 수 있습니다. 접힌 상태에서도 <strong>숙련 진행도와 도흔 수령 현황</strong>을 확인할 수 있습니다.',
+          progress:'청운산 후산 · 숙련 1/5',
+          targets:[area.querySelector('.v19-area-summary')||area]
+        };
+      }
       return {
         key:'mandatory-journal-claim',
         kicker:'필수 튜토리얼 · 6/11',
-        title:'달성한 두 보상을 수령하세요',
-        body:'노란색으로 활성화된 <strong>보상 수령</strong> 버튼을 누르세요. 둘 다 받으면 수선 입문으로 이어집니다.',
-        targets:targets
+        title:'첫 도흔을 수령하세요',
+        body:'완료된 <strong>첫 무사 귀환</strong> 업적의 <strong>도흔 수령</strong> 버튼을 누르세요. 도흔은 팔괘 진반의 선택 노드를 영구 해금할 때 사용합니다.',
+        progress:'도흔 +1',
+        targets:[journalClaimTarget('qingyun',0)]
       };
     }
 
