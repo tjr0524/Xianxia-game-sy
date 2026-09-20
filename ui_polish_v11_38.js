@@ -195,26 +195,22 @@ function decorateMap(){
   const world=$('#mapWorld');
   if(!world||mapDecorating)return;
   mapDecorating=true;
-  for(const zone of world.querySelectorAll('.map-zone span'))zone.textContent=compactAreaName(zone.textContent);
   for(const node of world.querySelectorAll('.map-node')){
+    const area=node.dataset.area||'';
     if(node.classList.contains('map-root')){
-      const area=node.dataset.area||'';
-      const name=compactAreaName(D.constants.AREAS.find(a=>a.id===area)?.name||node.textContent.replace(/^[青風血雷]\s*/,''));
-      const icon=node.querySelector('img.area-symbol');
-      node.innerHTML=`${icon?icon.outerHTML:`<span class="map-root-seal38" aria-hidden="true">${AREA_GLYPHS[area]||'境'}</span>`}<span class="map-root-name38">${name}</span>`;
+      const name=compactAreaName(D.constants.AREAS.find(a=>a.id===area)?.name||'비경');
+      node.replaceChildren();
       node.setAttribute('aria-label',`${name} 비경`);
     }else if(node.classList.contains('map-point')){
       const id=node.dataset.affinity||'';
-      const rank=(node.textContent.match(/\d+\/5/)||['0/5'])[0];
-      node.innerHTML=`<span class="map-point-glyph38" aria-hidden="true">${branchGlyph(id)}</span><span class="rank">${rank}</span>`;
       const data=Object.values(D.constants.TREE||{}).flat().find(x=>x.id===id);
       const label=data?.n||'개척 노드';
-      node.setAttribute('aria-label',`${label} ${rank}`);
+      node.replaceChildren();
+      node.setAttribute('aria-label',label);
       if(label!=='개척 노드')node.dataset.v1140Label=label;
     }else if(node.classList.contains('map-gate')){
-      const area=node.dataset.area||'';
-      const name=compactAreaName(D.constants.AREAS.find(a=>a.id===area)?.name||node.textContent.replace(/^門\s*/,''));
-      node.innerHTML=`<span class="map-gate-mark38" aria-hidden="true">門</span><span class="map-gate-name38">${name}</span>`;
+      const name=compactAreaName(D.constants.AREAS.find(a=>a.id===area)?.name||'다음 비경');
+      node.replaceChildren();
       node.setAttribute('aria-label',`${name} 관문`);
     }
   }
