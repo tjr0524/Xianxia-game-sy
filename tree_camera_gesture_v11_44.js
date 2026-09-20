@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='11.51.5-pointer-recovery';
+const VERSION='11.51.30-render-recovery';
 if(window.__xianxiaTreeCameraGesture?.version===VERSION)return;
 window.__xianxiaTreeCameraGesture={version:VERSION};
 
@@ -263,6 +263,18 @@ if(document.readyState!=='loading')scheduleInitialFocus();
 else document.addEventListener('DOMContentLoaded',scheduleInitialFocus,{once:true});
 window.addEventListener('load',scheduleInitialFocus,{once:true});
 document.addEventListener('xianxia:panel-open',scheduleInitialFocus,true);
+document.addEventListener('xianxia:progression-rendered',()=>{
+  // Training/map nodes are replaced wholesale after purchases/breakthroughs.
+  // Any pointer/click suppression tied to the old DOM is invalid at that point.
+  for(const c of Object.values(cams)){
+    if(c.pointers.size)recoverStalePointers(c,'progression-render');
+    else clearPointers(c);
+    c.dragUntil=0;
+  }
+  requestAnimationFrame(()=>{
+    for(const c of Object.values(cams))syncFromDom(c,true);
+  });
+},true);
 setTimeout(scheduleInitialFocus,250);
 setTimeout(scheduleInitialFocus,800);
 })();
