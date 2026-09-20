@@ -16,8 +16,12 @@ if(!camera.includes("Math.hypot(p.x-old.startX,p.y-old.startY)>7"))
   throw new Error('shared tree camera drag threshold missing');
 if(!camera.includes("performance.now()<c.dragUntil"))
   throw new Error('shared tree camera drag-click suppression missing');
-if(!progression.includes("closest('.camera,.v17float,.asc-node,.map-node')"))
-  throw new Error('legacy progression camera should stay excluded from node pointers; shared capture camera owns them');
+if(/view\.addEventListener\('pointer(?:down|move|up|cancel)'/.test(progression))
+  throw new Error('progression runtime must not own asc/map pointer gestures; shared camera is the sole owner');
+if(!camera.includes("document.addEventListener('xianxia:progression-rendered'"))
+  throw new Error('shared tree camera must reset stale pointer state after progression re-render');
+if(!camera.includes("c.dragUntil=0"))
+  throw new Error('shared tree camera render recovery must clear drag-click suppression');
 
 const nodeDown=/if\(node\)\{[\s\S]*?pointers\.set\(event\.pointerId,\{kind:'node'[\s\S]*?return;\s*\}/.exec(touch)?.[0]||'';
 if(!nodeDown)throw new Error('tree touch node pointerdown guard missing');
