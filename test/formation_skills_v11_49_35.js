@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.51.24';
+const VERSION='11.51.25';
 if(window.__xianxiaFormationSkillsVersion===VERSION)return;
 window.__xianxiaFormationSkillsVersion=VERSION;
 
@@ -269,7 +269,7 @@ function traitDaoCost(t){return t?DAO_MARK_COST:0}
 function daoSourceSummary(M){
   const s=window.__xianxiaMastery?.summary?.(M);
   const earned=+s?.earnedDaoMarks||0,max=+s?.maxDaoMarks||45;
-  return {earned,max,text:`도흔 수급 · 연기 비경 숙련 단계당 +1, 각 비경 Ⅴ 완성 보너스 +2 · 축기 비경 숙련 단계당 +3 · 총 ${max}개`};
+  return {earned,max,text:`도행록에서 수령 · 연기 비경 숙련 단계당 +1, 각 비경 Ⅴ 완성 보너스 +2 · 축기 비경 숙련 단계당 +3 · 총 ${max}개`};
 }
 function artRank(M,id){return Math.max(0,Math.min(5,+artState(M).ranks?.[id]||0))}
 function artCap(M,id){

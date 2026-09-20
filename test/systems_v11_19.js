@@ -15,7 +15,7 @@ let wasDanger=false,bannerTimer=0;function dangerRefresh(){dangerUi();const sh=D
 const MASTERY=()=>window.__xianxiaMastery;
 const AREA_GLYPH={qingyun:'雲',blackwind:'風',blood:'血',thunder:'雷',marsh:'澤',taixu:'陣'};
 const ROMAN=['Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ'];
-let forceOpenArea='';
+let forceOpenArea='',journalSignature='';
 function journalUi(){
   const tabs=$('.tabs'),treeBtn=$('.tab-btn[data-tab="tree"]');if(!tabs||!treeBtn)return;
   tabs.classList.add('v19-four');
@@ -56,9 +56,15 @@ function renderJournal(){
   journalUi();
   const box=$('#v19Journal'),tab=$('.v19-ach-tab'),total=$('#v19JournalTotal'),api=MASTERY();
   if(!box||!api?.summary)return;
-  const oldOpen=new Set(Array.from(box.querySelectorAll('.v19-area[open]')).map(x=>x.dataset.area));
   const sh=D.snapshot(),m=sh.M,summary=api.summary(m),first=!box.dataset.ready;
   const pendingAreas=api.areas.filter(area=>(summary.areas?.[area]?.pendingReward||0)>0);
+  const sig=JSON.stringify({dao:summary.daoMarks,earned:summary.earnedDaoMarks,pending:summary.pendingDaoMarks,area:m.area,unlocked:m.unlocked,rows:api.areas.map(area=>{const a=summary.areas?.[area];return[a?.done,a?.claimedFlags]})});
+  if(!forceOpenArea&&box.dataset.ready&&sig===journalSignature){
+    tab?.classList.toggle('ready',summary.pendingDaoMarks>0);
+    return;
+  }
+  journalSignature=sig;
+  const oldOpen=new Set(Array.from(box.querySelectorAll('.v19-area[open]')).map(x=>x.dataset.area));
   if(forceOpenArea)oldOpen.add(forceOpenArea);
   else if(first)oldOpen.add(pendingAreas[0]||m.area||'qingyun');
   box.replaceChildren();box.dataset.ready='1';
