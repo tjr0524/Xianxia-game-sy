@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.51.20';
+const VERSION='11.51.23';
 const AREAS=['qingyun','blackwind','blood','thunder','marsh','taixu'];
 const AREA_NAME={qingyun:'청운산 후산',blackwind:'흑풍곡',blood:'적혈비경',thunder:'천뢰봉',marsh:'자운택',taixu:'태허유적'};
 const TYPE_NAME={charging_boar:'돌진형',ranged_toad:'원거리형',exploding_beetle:'폭렬형',command_ape:'호령형',shield_pangolin:'호체형',sword_sentinel:'검위',formation_warden:'진위',taixu_boss:'태허진령'};
@@ -15,6 +15,9 @@ const OBJECTIVES={
 };
 
 const rank=(api,id,area=api.state.area)=>Math.max(0,Math.min(5,Math.round(+api.state.zones?.[area]?.tree?.[id]||0)));
+const daoReward=area=>['thunder','marsh','taixu'].includes(area)?2:1;
+const maxDaoMarks=AREAS.reduce((sum,area)=>sum+daoReward(area)*5,0);
+const earnedDaoMarks=M=>AREAS.reduce((sum,area)=>sum+marks(M,area)*daoReward(area),0);
 function ensure(M){
   M.mastery||={version:1,areas:{}};
   M.mastery.version=1;M.mastery.areas||={};
@@ -61,13 +64,14 @@ function onFinish(reason,api){
   let gained=-1;
   for(let i=0;i<5;i++)if(!row.marks[i]&&checks[i]){row.marks[i]=1;gained=i;break}
   if(gained<0)return'';
-  M.formationSkills.daoMarks=(+M.formationSkills.daoMarks||0)+1;
+  const reward=daoReward(area);
+  M.formationSkills.daoMarks=(+M.formationSkills.daoMarks||0)+reward;
   api.save?.();
-  return `<div class="event"><b>비경 숙련 ${['Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ'][gained]} · 도흔 획득</b><br>${AREA_NAME[area]}: ${OBJECTIVES[area][gained]}<br>도흔 +1 · ${marks(M,area)}/5</div>`;
+  return `<div class="event"><b>비경 숙련 ${['Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ'][gained]} · 도흔 획득</b><br>${AREA_NAME[area]}: ${OBJECTIVES[area][gained]}<br>도흔 +${reward} · 숙련 ${marks(M,area)}/5</div>`;
 }
-function summary(M){ensure(M);return{daoMarks:+M.formationSkills.daoMarks||0,daoists:daoists(M),areas:Object.fromEntries(AREAS.map(area=>[area,{name:AREA_NAME[area],marks:marks(M,area),objectives:OBJECTIVES[area]}]))}}
+function summary(M){ensure(M);return{daoMarks:+M.formationSkills.daoMarks||0,earnedDaoMarks:earnedDaoMarks(M),maxDaoMarks,daoRewardByArea:Object.fromEntries(AREAS.map(area=>[area,daoReward(area)])),daoists:daoists(M),areas:Object.fromEntries(AREAS.map(area=>[area,{name:AREA_NAME[area],marks:marks(M,area),rewardPerMark:daoReward(area),objectives:OBJECTIVES[area]}]))}}
 
-window.__xianxiaMastery={version:VERSION,areas:AREAS,objectives:OBJECTIVES,ensure,marks,daoists,summary,onBegin,onKill,onFinish};
+window.__xianxiaMastery={version:VERSION,areas:AREAS,objectives:OBJECTIVES,ensure,marks,daoists,daoReward,maxDaoMarks,summary,onBegin,onKill,onFinish};
 })();
 
 //# sourceURL=mastery_runtime_v11_51.js
