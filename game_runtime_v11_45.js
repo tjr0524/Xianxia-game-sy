@@ -2188,6 +2188,10 @@ function finish(reason){
   let objective='';
   if(safe&&objectiveMet()){
     const rewardText=objectiveReward();
+    // Persist objective rewards immediately. Mastery saves just before this block,
+    // so relying only on render()'s trailing save can lose the bonus if later UI
+    // rendering aborts or another layer reloads the previously saved state.
+    save();
     objective=`<div class="event"><b>수행 완수 · ${objectiveData().label}</b><br>${rewardText}</div>`;
   }
 
