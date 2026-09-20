@@ -1728,10 +1728,25 @@ function reward(enemy){
   }else if(['basic','guard','chaser','attacker'].includes(enemy.type)){
     gainStone(Math.ceil(killStoneBase()*plan.reward*uniqueReward*(enemy.rewardMult||1)),enemy.x,enemy.y);
   }else if(enemy.type==='elite'){
-    run.elite=1;gainStone(Math.ceil(killStoneBase()*6*plan.reward*uniqueReward),enemy.x,enemy.y);gainHerb(2+rank('res3'),Math.min(2,areaIndex()),enemy.x+10,enemy.y);if(vein){vein.cleared=1;vein.stock+=20+rank('res3')*8}
+    run.elite=1;
+    gainStone(Math.ceil(killStoneBase()*6*plan.reward*uniqueReward),enemy.x,enemy.y);
+    // 적혈비경 이상 정예 수호수는 상급 영초를 확정 지급한다.
+    const eliteHerbGrade=areaIndex()>=2?2:Math.min(2,areaIndex());
+    gainHerb(2+rank('res3'),eliteHerbGrade,enemy.x+10,enemy.y);
+    if(vein){vein.cleared=1;vein.stock+=20+rank('res3')*8}
   }else if(enemy.type==='rogue'||enemy.type==='rat'){
-    run.thieves++;spillCarry(enemy);gainStone(Math.ceil((enemy.type==='rogue'?killStoneBase()*.65:killStoneBase()*.28)*plan.reward*uniqueReward),enemy.x,enemy.y);
-    if(enemy.type==='rogue'&&enemy.treasure){const bonus=Math.ceil(killStoneBase()*(1.2+rank('fate2')*.35));gainStone(bonus,enemy.x+8,enemy.y-5);gainHerb(1+Math.floor(rank('fate2')/3),Math.min(2,areaIndex()),enemy.x-8,enemy.y);run.treasures++;pop(enemy.x,enemy.y-20,'✦ 비보 확보','#ffe28a',1.25)}
+    run.thieves++;
+    spillCarry(enemy);
+    gainStone(Math.ceil((enemy.type==='rogue'?killStoneBase()*.65:killStoneBase()*.28)*plan.reward*uniqueReward),enemy.x,enemy.y);
+    // 적혈비경 이상에서는 산수와 탐보서도 상급 영초를 기본 전리품으로 1개 지급한다.
+    if(areaIndex()>=2)gainHerb(1,2,enemy.x+(enemy.type==='rogue'?-10:10),enemy.y-6);
+    if(enemy.type==='rogue'&&enemy.treasure){
+      const bonus=Math.ceil(killStoneBase()*(1.2+rank('fate2')*.35));
+      gainStone(bonus,enemy.x+8,enemy.y-5);
+      gainHerb(1+Math.floor(rank('fate2')/3),Math.min(2,areaIndex()),enemy.x-8,enemy.y);
+      run.treasures++;
+      pop(enemy.x,enemy.y-20,'✦ 비보 확보','#ffe28a',1.25)
+    }
   }
   if(enemy.type!=='spirit'&&enemy.type!=='formation_node'){
     for(const other of enemies){if(other!==enemy&&other.rareTrait==='devour'&&other.hp>0&&distance(other,enemy)<150)other.hp=Math.min(other.max,other.hp+other.max*.12)}
