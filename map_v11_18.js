@@ -63,13 +63,16 @@ function addCss(){
   stroke:#f7f4e9;
   opacity:.76;
 }
-.map-route.locked{opacity:.28}
+.map-route.locked{opacity:1}
+.map-route.locked .route-glow{stroke:#9da3a6;opacity:.10;filter:blur(1.6px)}
+.map-route.locked .route-color{stroke:#aeb4b7;opacity:.50;filter:none}
+.map-route.locked .route-core{stroke:#e5e1d8;opacity:.52}
 .map-route.available .route-glow{opacity:.30}
 .map-route.available .route-color{opacity:.94}
 .map-route.on .route-glow{opacity:.24}
 .map-route.on .route-color{opacity:.90}
 .map-route.gate{--map-color:#ead78d}
-.map-route.gate.locked{opacity:.22}
+.map-route.gate.locked{opacity:1}
 
 .map-node{
   position:absolute!important;
@@ -125,7 +128,7 @@ function addCss(){
   opacity:.78;
   pointer-events:none;
 }
-.map-node.locked{opacity:.34!important;filter:saturate(.38)}
+.map-node.locked{opacity:.76!important;filter:grayscale(1) saturate(.08) brightness(.94)!important}
 .map-node.on{opacity:1!important}
 .map-node.available::before{
   filter:brightness(1.12);
@@ -187,7 +190,7 @@ function addCss(){
 }
 .gate-mark .p1{left:6px}
 .gate-mark .p2{right:6px}
-.map-gate.locked{opacity:.32!important;filter:saturate(.35)}
+.map-gate.locked{opacity:.76!important;filter:grayscale(1) saturate(.08) brightness(.94)!important}
 .map-gate.available .gate-mark{animation:mapGatePulse 1.65s ease-in-out infinite}
 .map-gate.on .gate-mark{filter:drop-shadow(0 0 8px #ead78daa)}
 
