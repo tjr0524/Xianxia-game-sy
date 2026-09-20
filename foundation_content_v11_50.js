@@ -302,11 +302,11 @@ function activateTaixuTrial(api,bossMode=false){
 function completeTaixuTrial(api){
   const trial=taixuTrial(api);if(!trial||trial.state!=='active')return;
   trial.state='complete';trial.remaining=0;trial.completedAt=now(api);api.run.taixuTrials=(api.run.taixuTrials||0)+1;
-  api.run.taixuSigils=(api.run.taixuSigils||0)+1;
+  api.run.taixuSigils=(api.run.taixuSigils||0)+2;
   let bonus=0;
   if(trial.nodesTotal>0&&trial.nodesDestroyed>=trial.nodesTotal&&!trial.nodeBonus){trial.nodeBonus=1;bonus=1;api.run.taixuSigils++}
   api.ring(trial.x,trial.y,trial.radius,'#fff0b5',.9);
-  api.pop(trial.x,trial.y-68,`진법 붕괴 · 태허진문 +${1+bonus}`,'#fff0b5',1.15);
+  api.pop(trial.x,trial.y-68,`진법 붕괴 · 태허진문 +${2+bonus}`,'#fff0b5',1.15);
   if(trial.bossMode){
     const boss=(api.enemies||[]).find(e=>e.type==='taixu_boss'&&e.hp>0);
     if(boss){boss.taixuBrokenUntil=now(api)+4;api.pop(boss.x,boss.y-120,'파진 · 4초','#ffe2a6',1.0)}
