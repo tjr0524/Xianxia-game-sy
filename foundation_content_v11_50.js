@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.51.20-taixu-formation';
+const VERSION='11.51.21-taixu-economy';
 if(window.__xianxiaFoundationContent?.version===VERSION)return;
 
 const TYPES=new Set(['charging_boar','ranged_toad','exploding_beetle','command_ape','shield_pangolin','sword_sentinel','formation_warden','formation_node','foundation_guardian','taixu_boss']);
