@@ -55,9 +55,9 @@ button,label{border:1px solid #ffffff30;background:#262d36;color:#fff;border-rad
   <button class="nav" onclick="nextNode()">다음 노드</button>
  </div>
  <div id="step">이동폭
-  <button id="s20" class="step on" onclick="setStep(20)">20px</button>
-  <button id="s50" class="step" onclick="setStep(50)">50px</button>
-  <button id="s100" class="step" onclick="setStep(100)">100px</button>
+  <button id="s1" class="step" onclick="setStep(1)">1px</button>
+  <button id="s5" class="step on" onclick="setStep(5)">5px</button>
+  <button id="s10" class="step" onclick="setStep(10)">10px</button>
  </div>
  <div id="pad">
   <button id="u" class="mv" onclick="moveNode(0,-1)">▲</button>
@@ -67,12 +67,12 @@ button,label{border:1px solid #ffffff30;background:#262d36;color:#fff;border-rad
   <button id="d" class="mv" onclick="moveNode(0,1)">▼</button>
  </div>
  <button id="export" onclick="showExport()">좌표 내보내기</button>
- <div id="debug">버튼 테스트: <span id="count">0</span> · step <span id="stepText">20</span>px</div>
+ <div id="debug">버튼 테스트: <span id="count">0</span> · step <span id="stepText">5</span>px</div>
 </div>
 </div>
 <div id="sheet"><textarea id="out" readonly></textarea><div id="sheetBtns"><button onclick="copyOut()">복사</button><button onclick="document.getElementById('sheet').classList.remove('open')">닫기</button></div></div>
 <script>
-var IW=1536,IH=751,GW=1760,GH=860,step=20,selected=0,count=0;
+var IW=1536,IH=751,GW=1760,GH=860,step=5,selected=0,count=0;
 var DATA={
 qingyun:{name:"청운산 후산",root:[86,583],branches:{eco:[[155,556],[223,500],[291,437]]},gate:{blackwind:[350,330]}},
 blackwind:{name:"흑풍곡",root:[394,307],branches:{eco:[[351,290],[306,266],[257,247]],fate:[[455,305],[528,286],[603,244]]},gate:{blood:[473,360]}},
@@ -113,7 +113,7 @@ function updateInfo(){
 }
 function setStep(v){
  step=v;document.getElementById("stepText").textContent=v;
- [20,50,100].forEach(function(n){document.getElementById("s"+n).classList.toggle("on",n===v)});
+ [1,5,10].forEach(function(n){document.getElementById("s"+n).classList.toggle("on",n===v)});
 }
 function moveNode(dx,dy){
  count++;document.getElementById("count").textContent=count;
