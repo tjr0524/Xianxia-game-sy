@@ -1,12 +1,14 @@
 (()=>{
 'use strict';
-if(window.__xianxiaMapArtVersion==='11.52')return;
-window.__xianxiaMapArtVersion='11.52';
+if(window.__xianxiaMapArtVersion==='11.53')return;
+window.__xianxiaMapArtVersion='11.53';
 const $=s=>document.querySelector(s);
+const MAP_BG='assets/ink_v1/runtime/ui/bigeong_map_world_v2.webp?v=11.51.35';
+
 function addCss(){
-  if($('#v1152mapstyle'))return;
+  if($('#v1153mapstyle'))return;
   const s=document.createElement('style');
-  s.id='v1152mapstyle';
+  s.id='v1153mapstyle';
   s.textContent=`
 .map-viewport{
   background:#0b0e12!important;
@@ -15,11 +17,27 @@ function addCss(){
 }
 .map-world{
   isolation:isolate!important;
-  background:
-    linear-gradient(#00000010,#00000010),
-    url('assets/ink_v1/runtime/ui/bigeong_map_world_v2.webp?v=11.51.34') center/100% 100% no-repeat!important;
+  background:#101214!important;
 }
-.map-svg{position:absolute!important;inset:0!important;z-index:2!important;overflow:visible!important;pointer-events:none!important}
+.map-bg-v1153{
+  position:absolute!important;
+  left:0!important;
+  top:0!important;
+  width:1760px!important;
+  height:860px!important;
+  object-fit:fill!important;
+  z-index:0!important;
+  pointer-events:none!important;
+  user-select:none!important;
+  -webkit-user-drag:none!important;
+}
+.map-svg{
+  position:absolute!important;
+  inset:0!important;
+  z-index:2!important;
+  overflow:visible!important;
+  pointer-events:none!important;
+}
 .map-zone,.map-art-svg,.map-art-fog,.map-art-deco,.map-art-compass{display:none!important}
 
 .area-qingyun{--map-color:#61d49a}
@@ -31,9 +49,20 @@ function addCss(){
 .area-taixu{--map-color:#f2c47a}
 
 .map-route{pointer-events:none}
-.map-route .route-glow{stroke:var(--map-color,#8ea3c8);opacity:.17;filter:blur(2.6px)}
-.map-route .route-color{stroke:var(--map-color,#8ea3c8);opacity:.78;filter:drop-shadow(0 0 3px var(--map-color,#8ea3c8))}
-.map-route .route-core{stroke:#f7f4e9;opacity:.76}
+.map-route .route-glow{
+  stroke:var(--map-color,#8ea3c8);
+  opacity:.17;
+  filter:blur(2.6px);
+}
+.map-route .route-color{
+  stroke:var(--map-color,#8ea3c8);
+  opacity:.78;
+  filter:drop-shadow(0 0 3px var(--map-color,#8ea3c8));
+}
+.map-route .route-core{
+  stroke:#f7f4e9;
+  opacity:.76;
+}
 .map-route.locked{opacity:.28}
 .map-route.available .route-glow{opacity:.30}
 .map-route.available .route-color{opacity:.94}
@@ -58,9 +87,11 @@ function addCss(){
 .map-node::before{
   content:'';
   position:absolute;
-  left:50%;top:50%;
+  left:50%;
+  top:50%;
   transform:translate(-50%,-50%);
-  width:16px;height:16px;
+  width:16px;
+  height:16px;
   border-radius:50%;
   background:#f8f6e5;
   border:3px solid #111820;
@@ -73,7 +104,8 @@ function addCss(){
 .map-point{width:44px!important;height:44px!important}
 .map-root{width:52px!important;height:52px!important}
 .map-root::before{
-  width:22px;height:22px;
+  width:22px;
+  height:22px;
   border-width:3px;
   box-shadow:
     0 0 0 3px #111820,
@@ -86,7 +118,8 @@ function addCss(){
   position:absolute;
   left:calc(50% - 3px);
   top:calc(50% - 4px);
-  width:4px;height:4px;
+  width:4px;
+  height:4px;
   border-radius:50%;
   background:#fff;
   opacity:.78;
@@ -106,7 +139,9 @@ function addCss(){
     0 0 18px #f0c75ecc,
     0 4px 9px #0009;
 }
-.map-node:active::before{transform:translate(-50%,-50%) scale(.90)}
+.map-node:active::before{
+  transform:translate(-50%,-50%) scale(.90);
+}
 
 .map-gate{
   --map-color:#ead78d;
@@ -116,21 +151,49 @@ function addCss(){
 .map-gate::before,.map-gate::after{display:none!important}
 .gate-mark{
   position:absolute;
-  left:50%;top:50%;
-  width:30px;height:30px;
+  left:50%;
+  top:50%;
+  width:30px;
+  height:30px;
   transform:translate(-50%,-50%);
   filter:drop-shadow(0 0 7px #ead78d66);
 }
-.gate-mark i{position:absolute;display:block;background:#ead78d;box-shadow:0 0 0 2px #111820}
-.gate-mark .roof{left:2px;top:2px;width:26px;height:7px;border-radius:6px 6px 2px 2px}
-.gate-mark .beam{left:6px;top:11px;width:18px;height:4px;border-radius:2px;background:#f8f6e5}
-.gate-mark .post{top:16px;width:5px;height:12px;border-radius:2px}
-.gate-mark .p1{left:6px}.gate-mark .p2{right:6px}
+.gate-mark i{
+  position:absolute;
+  display:block;
+  background:#ead78d;
+  box-shadow:0 0 0 2px #111820;
+}
+.gate-mark .roof{
+  left:2px;
+  top:2px;
+  width:26px;
+  height:7px;
+  border-radius:6px 6px 2px 2px;
+}
+.gate-mark .beam{
+  left:6px;
+  top:11px;
+  width:18px;
+  height:4px;
+  border-radius:2px;
+  background:#f8f6e5;
+}
+.gate-mark .post{
+  top:16px;
+  width:5px;
+  height:12px;
+  border-radius:2px;
+}
+.gate-mark .p1{left:6px}
+.gate-mark .p2{right:6px}
 .map-gate.locked{opacity:.32!important;filter:saturate(.35)}
 .map-gate.available .gate-mark{animation:mapGatePulse 1.65s ease-in-out infinite}
 .map-gate.on .gate-mark{filter:drop-shadow(0 0 8px #ead78daa)}
 
-.map-point .rank,.map-root b,.area-symbol{display:none!important}
+.map-point .rank,.map-root b,.area-symbol,
+.map-point-glyph38,.map-root-seal38,.map-root-name38,
+.map-gate-mark38,.map-gate-name38{display:none!important}
 
 @keyframes mapNodePulse{
   0%,100%{filter:brightness(1.04) drop-shadow(0 0 2px var(--map-color,#8ea3c8))}
@@ -148,10 +211,39 @@ function addCss(){
 `;
   document.head.appendChild(s);
 }
+
+function ensureBg(){
+  const w=$('#mapWorld');
+  if(!w)return false;
+
+  let bg=w.querySelector('.map-bg-v1153');
+  if(!bg){
+    bg=document.createElement('img');
+    bg.className='map-bg-v1153';
+    bg.alt='';
+    bg.decoding='async';
+    bg.src=MAP_BG;
+    bg.onerror=()=>console.error('[map] background load failed:',MAP_BG);
+    w.insertBefore(bg,w.firstChild);
+  }else if(!bg.src.includes('bigeong_map_world_v2.webp')){
+    bg.src=MAP_BG;
+  }
+  return true;
+}
+
 function boot(){
   addCss();
-  if(!$('#mapWorld')){requestAnimationFrame(boot);return}
-  document.addEventListener('xianxia:progression-rendered',addCss);
+
+  if(!ensureBg()){
+    requestAnimationFrame(boot);
+    return;
+  }
+
+  document.addEventListener('xianxia:progression-rendered',()=>{
+    addCss();
+    ensureBg();
+  });
 }
+
 boot();
 })();
