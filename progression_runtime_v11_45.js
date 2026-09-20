@@ -98,7 +98,7 @@ function jumpPreset(id){
   M.skillUnlocks={};for(const s of SPELLS())if(reached(M,s.req))M.skillUnlocks[s.id]=1;
   for(const s of SPELLS()){const maxRank=p.fullSkills?5:1;M.skills[s.id]={u:M.skillUnlocks[s.id]?1:0,pow:M.skillUnlocks[s.id]?maxRank:0,range:0,cycle:0}}M.skills[BASIC_ID]={u:1,pow:0,range:0,cycle:0};
   if(p.formationTest)M.formationSkills={version:1,daoMarks:45,ranks:{shield:5,dash:5,burst:5},traits:{}};
-  M.unlocked={qingyun:1};for(const a of p.unlocked)M.unlocked[a]=1;M.area=p.area;M.stone=p.stone;[M.herb,M.herb2,M.herb3]=p.herbs;M.thunderMark=p.thunderMark||0;M.purpleEssence=p.purpleEssence||0;M.events={...(M.events||{}),foundationInsight:p.insight?1:0};
+  M.unlocked={qingyun:1};for(const a of p.unlocked)M.unlocked[a]=1;M.area=p.area;M.stone=p.stone;[M.herb,M.herb2,M.herb3]=p.herbs;M.thunderMark=p.thunderMark||0;M.purpleEssence=p.purpleEssence||0;M.taixuSigil=p.taixuSigil||0;M.events={...(M.events||{}),foundationInsight:p.insight?1:0};
   for(const a of C.AREAS){M.zones[a.id]??={tree:{}};M.zones[a.id].tree={}}
   const set=(a,t)=>Object.assign(M.zones[a].tree,t);set('qingyun',{eco1:5,eco2:5,eco3:5});
   if(p.idx>=2)set('blackwind',{eco1:5,eco2:5,eco3:5,fate1:5,fate2:5,fate3:5});
