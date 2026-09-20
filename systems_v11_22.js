@@ -109,7 +109,6 @@ function showPanel(tab){
   document.body.classList.add('v22-panel-mode');
   $('.v22-expedition-tab')?.classList.remove('active');
   settleClosed();syncAria();window.scrollTo?.({top:0,behavior:'smooth'});
-  requestAnimationFrame(()=>requestAnimationFrame(()=>tab.dataset.tab==='train'?tab.closest('body')?.querySelector('[data-c="fit"]')?.click():tab.dataset.tab==='skills'?tab.closest('body')?.querySelector('[data-s="fit"]')?.click():tab.dataset.tab==='tree'?tab.closest('body')?.querySelector('[data-m="fit"]')?.click():null));
 }
 
 function enterCombat(){
