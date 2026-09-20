@@ -229,33 +229,100 @@ const FOUNDATION_TIMING=[
   {id:'f4',stage:4,area:'marsh',gross:4800,targetRuns:17},{id:'f5',stage:5,area:'marsh',gross:5900,targetRuns:18},{id:'f6',stage:6,area:'marsh',gross:7200,targetRuns:18},
   {id:'f7',stage:7,area:'taixu',gross:8800,targetRuns:18},{id:'f8',stage:8,area:'taixu',gross:10800,targetRuns:19},{id:'f9',stage:9,area:'taixu',gross:13200,targetRuns:20}
 ];
-const PRESETS={q1:{label:'연기 1층',idx:0,area:'qingyun',unlocked:['qingyun'],stone:180,herbs:[45,0,0]},q3:{label:'연기 3층',idx:2,area:'blackwind',unlocked:['qingyun','blackwind'],stone:1100,herbs:[90,25,0]},q5:{label:'연기 5층',idx:4,area:'blackwind',unlocked:['qingyun','blackwind'],stone:3500,herbs:[130,65,15]},q7:{label:'연기 7층',idx:6,area:'blood',unlocked:['qingyun','blackwind','blood'],stone:11000,herbs:[170,110,60]},q9:{label:'연기 9층 · 축기 시련',idx:8,area:'foundation_trial',unlocked:['qingyun','blackwind','blood','foundation_trial'],stone:32000,herbs:[230,180,140]},...Object.fromEntries(FOUNDATION_TIMING.map(row=>[row.id,{...row,label:`축기 ${row.stage}층 · ${{thunder:'천뢰봉',marsh:'자운택',taixu:'태허유적'}[row.area]}`,idx:8+row.stage,unlocked:['qingyun','blackwind','blood','foundation_trial','thunder',...(row.stage>=4?['marsh']:[]),...(row.stage>=7?['taixu']:[])],stone:500000,herbs:[999,999,999],thunderMark:999,purpleEssence:999,taixuSigil:999,insight:1,fullSkills:1,formationTest:1}]))};
-function localRanks(local){return[local>=1?Math.min(5,local+2):0,local>=2?Math.min(5,local+1):0,local>=3?5:0]}
-function branchRanks(branch,local){const r=localRanks(local);return Object.fromEntries(r.map((value,i)=>[`${branch}${i+1}`,value]))}
+function presetAreaFor(stage){
+  if(stage.req.major===0){
+    if(stage.req.stage>=9)return'foundation_trial';
+    if(stage.req.stage>=6)return'blood';
+    if(stage.req.stage>=3)return'blackwind';
+    return'qingyun';
+  }
+  if(stage.req.major===1){
+    if(stage.req.stage>=7)return'taixu';
+    if(stage.req.stage>=4)return'marsh';
+    return'thunder';
+  }
+  return'qingyun';
+}
+const PRESETS=Object.fromEntries(TRAIN.map((stage,idx)=>{
+  const area=presetAreaFor(stage);
+  const areaName={qingyun:'청운산',blackwind:'흑풍곡',blood:'적혈비경',foundation_trial:'축기 시련',thunder:'천뢰봉',marsh:'자운택',taixu:'태허유적'}[area]||area;
+  return[stage.id,{label:`${stage.name} · ${areaName}`,idx,area}];
+}));
+const PRESET_ART_REQ={
+  shield:[{major:1,stage:1},{major:1,stage:2},{major:1,stage:4},{major:1,stage:8},{major:1,stage:9}],
+  dash:[{major:1,stage:1},{major:1,stage:3},{major:1,stage:6},{major:1,stage:7},{major:1,stage:9}],
+  burst:[{major:1,stage:3},{major:1,stage:5},{major:1,stage:7},{major:1,stage:8},{major:1,stage:9}]
+};
+function presetSpellCap(M,s){
+  if(!reached(M,s.req))return 0;
+  if(s.id==='thunder'&&(M.realm?.major??-1)>0)return 5;
+  if((M.realm?.major??-1)>s.req.major)return 5;
+  return Math.max(1,Math.min(5,(M.realm?.stage||0)-s.req.stage+1));
+}
+function presetUnlockedAreas(M){
+  const out=['qingyun'];
+  for(const id of ['blackwind','blood','foundation_trial','thunder','marsh','taixu']){
+    const g=AREA_UNLOCKS[id];
+    if(g&&reached(M,g.req))out.push(id);
+  }
+  return out;
+}
 function jumpPreset(id){
   const p=PRESETS[id];if(!p||snap().phase==='run')return;
-  const M=ensure(state());M.realm={...TRAIN[p.idx].req};M.cult={atk:1,mov:150,sen:1,hp:90};M.trainingNodes={};
-  for(let i=0;i<=p.idx;i++)for(const n of TRAIN[i].nodes){M.trainingNodes[n.id]=1;applyCult(M,n.effect)}
-  M.skillUnlocks={};for(const s of SPELLS())if(reached(M,s.req))M.skillUnlocks[s.id]=1;
-  for(const s of SPELLS()){const maxRank=p.fullSkills?5:1;M.skills[s.id]={u:M.skillUnlocks[s.id]?1:0,pow:M.skillUnlocks[s.id]?maxRank:0,range:0,cycle:0}}M.skills[BASIC_ID]={u:1,pow:0,range:0,cycle:0};
-  if(p.formationTest)M.formationSkills={version:1,daoMarks:66,ranks:{shield:5,dash:5,burst:5},traits:{}};
-  M.unlocked={qingyun:1};for(const a of p.unlocked)M.unlocked[a]=1;M.area=p.area;M.stone=p.stone;[M.herb,M.herb2,M.herb3]=p.herbs;M.thunderMark=p.thunderMark||0;M.purpleEssence=p.purpleEssence||0;M.taixuSigil=p.taixuSigil||0;M.events={...(M.events||{}),foundationInsight:p.insight?1:0};
-  for(const a of C.AREAS){M.zones[a.id]??={tree:{}};M.zones[a.id].tree={}}
-  const set=(a,t)=>Object.assign(M.zones[a].tree,t);set('qingyun',{eco1:5,eco2:5,eco3:5});
-  if(p.idx>=2)set('blackwind',{eco1:5,eco2:5,eco3:5,fate1:5,fate2:5,fate3:5});
-  if(p.idx>=5)set('blood',{eco1:5,eco2:5,eco3:5,fate1:5,fate2:5,fate3:5,res1:5,res2:5,res3:5});
-  if(p.idx>=9){const local=Math.min(3,Math.max(1,p.idx-8));set('thunder',{...branchRanks('eco',local),...branchRanks('fate',local),...branchRanks('res',local),...branchRanks('storm',local)})}
-  if(p.idx>=12){const local=Math.min(3,Math.max(1,p.idx-11));set('marsh',{...branchRanks('eco',local),...branchRanks('fate',local),...branchRanks('res',local),...branchRanks('miasma',local)})}
-  if(p.idx>=15){const local=Math.min(3,Math.max(1,p.idx-14));set('taixu',{...branchRanks('eco',local),...branchRanks('fate',local),...branchRanks('res',local),...branchRanks('formation',local)})}
-  window.__xianxiaMastery?.ensure?.(M);debug.replaceState(M);
-  document.dispatchEvent(new CustomEvent('xianxia:dev-preset-applied',{detail:{id,realm:{...M.realm},area:M.area}}));
+  const M=ensure(state()),target=TRAIN[p.idx];
+  M.realm={...target.req};
+
+  // "막 도착한 경지" 기준: 이전 경지 수련만 완료하고 현재 경지는 0부터 시작.
+  M.cult={atk:1,mov:150,sen:1,hp:90,basicRange:0,basicHits:0};
+  M.trainingNodes={};
+  for(let i=0;i<p.idx;i++)for(const n of TRAIN[i].nodes){M.trainingNodes[n.id]=1;applyCult(M,n.effect)}
+
+  // 법술/기법은 이 경지에서 정상적으로 도달 가능한 상한까지만 세팅.
+  M.skillUnlocks={};M.skills={};
+  for(const s of SPELLS()){
+    const cap=presetSpellCap(M,s),known=cap>0;
+    if(known)M.skillUnlocks[s.id]=1;
+    M.skills[s.id]={u:known?1:0,pow:cap,range:0,cycle:0};
+  }
+  M.skills[BASIC_ID]={u:1,pow:0,range:0,cycle:0};
+  M.formationSkills={version:1,daoMarks:0,ranks:{},traits:{}};
+  for(const [art,reqs] of Object.entries(PRESET_ART_REQ)){
+    M.formationSkills.ranks[art]=reqs.reduce((n,req)=>n+(reached(M,req)?1:0),0);
+  }
+
+  // 현재 경지에서 자연스럽게 열 수 있는 비경/개척만 해금하고, 가능한 노드는 현 경지 상한까지.
+  const unlocked=presetUnlockedAreas(M);
+  M.unlocked={};for(const a of unlocked)M.unlocked[a]=1;
+  M.area=p.area;
+  for(const a of C.AREAS){
+    M.zones[a.id]??={tree:{}};
+    M.zones[a.id].tree={};
+    if(!M.unlocked[a.id])continue;
+    for(const br of (BRANCHES[a.id]||[]))for(const d of (C.TREE[br]||[])){
+      M.zones[a.id].tree[d.id]=reached(M,nodeReq(a.id,d))?5:0;
+    }
+  }
+
+  // 축기 진입 이후 프리셋은 시련/실마리를 이미 통과한 상태로 본다.
+  const foundation=M.realm.major>=1;
+  M.events={...(M.events||{}),foundationInsight:foundation?1:0,foundationTrialCompleted:foundation?1:0};
+
+  // 테스트 시작 자본은 항상 0. 도흔 포함 모든 성장 재화를 비운다.
+  M.stone=0;M.herb=0;M.herb2=0;M.herb3=0;
+  M.thunderMark=0;M.purpleEssence=0;M.taixuSigil=0;
+  M.formationSkills.daoMarks=0;
+  M.mastery={version:2,areas:{}};
+  window.__xianxiaMastery?.ensure?.(M);
+
+  debug.replaceState(M);
+  document.dispatchEvent(new CustomEvent('xianxia:dev-preset-applied',{detail:{id,realm:{...M.realm},area:M.area,capital:0}}));
   scheduleRender();
 }
 function timingReport(){return FOUNDATION_TIMING.map(row=>({...row,runSeconds:window.__xianxiaFoundationContent?.runLimit?.(row.area,{major:1,stage:row.stage})||25,totalCombatMinutes:+(row.targetRuns*25/60).toFixed(2),netPerRun:+(row.gross*.93).toFixed(2)}))}
 function devTools(){
   const d=$('details.dev');if(!d)return;d.querySelector('.dev-milestones')?.remove();
   const w=document.createElement('div');w.className='dev-milestones';
-  w.innerHTML='<b>진행도 마일스톤</b><div class="dev-milestone-grid"></div><b style="display:block;margin-top:10px">축기 체류 시간 기준</b><div class="dev-timing" style="display:grid;grid-template-columns:auto 1fr auto;gap:4px 7px;align-items:center;margin-top:5px;padding:7px;border:1px solid #33484f;border-radius:8px"></div>';
+  w.innerHTML='<b>경지 테스트 프리셋</b><div class="small" style="margin:4px 0 7px">이전 경지 수련 완료 · 현재 경지 수련 0 · 해당 경지에서 가능한 법술/기법/개척만 상한 적용 · 영석/영초/특수재료/도흔 0</div><div class="dev-milestone-grid"></div><b style="display:block;margin-top:10px">축기 체류 시간 기준</b><div class="dev-timing" style="display:grid;grid-template-columns:auto 1fr auto;gap:4px 7px;align-items:center;margin-top:5px;padding:7px;border:1px solid #33484f;border-radius:8px"></div>';
   for(const[id,p]of Object.entries(PRESETS)){const b=document.createElement('button');b.textContent=p.label;b.onclick=()=>jumpPreset(id);w.querySelector('.dev-milestone-grid').appendChild(b)}
   w.querySelector('.dev-timing').innerHTML=timingReport().map(row=>`<span>축기 ${row.stage}층</span><b>${row.runSeconds}초 × ${row.targetRuns}판</b><em style="font-style:normal;color:#dfc77f">${row.totalCombatMinutes}분</em>`).join('');d.appendChild(w);
 }
