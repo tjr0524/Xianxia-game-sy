@@ -609,7 +609,7 @@ function rewardEnemy(enemy,api){
 function onFinish(reason,api){
   if(controls)controls.classList.remove('on');
   if(reason==='return'&&api.state.area==='foundation_trial'&&api.run?.foundation?.bossKilled){const first=!api.state.events.foundationTrialCompleted;api.state.events.foundationTrialCompleted=1;api.state.events.foundationInsight=1;api.save();if(first)return '<div class="event"><b>시련 완수 · 축기의 실마리</b><br>수문장을 넘어 천뢰봉으로 향할 자격을 얻었습니다.</div>'}
-  if(reason==='return'&&api.state.area==='jiedan_trial'&&api.run?.foundation?.bossKilled){const first=!api.state.events.jiedanTrialCompleted;api.state.events.jiedanTrialCompleted=1;api.save();if(first)return '<div class="event"><b>현재 이야기의 끝 · 결단의 문턱</b><br>태허진령을 넘어 결단의 문턱에 닿았습니다.<br><b>현재 공개된 여정은 여기까지입니다.</b><br>후일담 보상으로 결단 법술 선택지가 해방됩니다.</div>'}
+  if(reason==='return'&&api.state.area==='jiedan_trial'&&api.run?.foundation?.bossKilled){const first=!api.state.events.jiedanTrialCompleted;api.state.events.jiedanTrialCompleted=1;if((api.state.realm?.major??-1)<2)api.state.realm={major:2,stage:1};api.save();if(first)return '<div class="event"><b>현재 이야기의 끝 · 결단 1층</b><br>태허진령을 넘어 금단을 맺고 <b>결단 1층</b>에 올랐습니다.<br><b>현재 공개된 여정은 여기까지입니다.</b><br>후일담 성장 노드와 결단 법술 선택지가 해방됩니다.</div>'}
   return '';
 }
 function snapshotEnemy(enemy){return{chargeWindup:enemy.chargeWindup||0,chargeTime:enemy.chargeTime||0,mechanicCd:enemy.mechanicCd||0,detonating:enemy.detonating||0,formationNode:enemy.formationNode||0,trialNode:enemy.trialNode||0,nodeEffect:enemy.nodeEffect||'',nodeIndex:enemy.nodeIndex??-1,taixuBrokenUntil:enemy.taixuBrokenUntil||0}}
