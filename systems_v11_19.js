@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const D=window.__xianxiaDebug,P=window.__xianxiaProgression;if(!D||!P||window.__xianxiaSystemsVersion==='11.51.26')return;window.__xianxiaSystemsVersion='11.51.26';
+const D=window.__xianxiaDebug,P=window.__xianxiaProgression;if(!D||!P||window.__xianxiaSystemsVersion==='11.51.67')return;window.__xianxiaSystemsVersion='11.51.67';
 const $=s=>document.querySelector(s),C=D.constants,clone=v=>JSON.parse(JSON.stringify(v));
 function css(){if($('#v1119systems'))return;const s=document.createElement('style');s.id='v1119systems';s.textContent=`
 .v19-danger-svg{position:absolute;z-index:6;inset:0;width:100%;height:100%;pointer-events:none;display:none}.v19-danger-svg.show{display:block}.v19-return-line{stroke:#ffe29a;stroke-width:4;stroke-dasharray:11 9;animation:v19dash .65s linear infinite;filter:drop-shadow(0 0 5px #ffbc55)}.v19-exit-ring{fill:#39d9be18;stroke:#ffe09a;stroke-width:5;transform-box:fill-box;transform-origin:center;animation:v19ring .8s ease-in-out infinite alternate;filter:drop-shadow(0 0 8px #66e8cc)}.v19-exit-core{fill:#84f5d6;opacity:.8}.v19-exit-label{fill:#fff0bb;font:800 18px sans-serif;text-anchor:middle;paint-order:stroke;stroke:#071014;stroke-width:4}.v19-danger-banner{position:absolute;z-index:7;left:50%;top:42px;transform:translateX(-50%);display:none;padding:7px 12px;border:1px solid #ffcf78;border-radius:999px;background:#3a1b13e8;color:#ffe6ae;font-size:11px;font-weight:850;box-shadow:0 0 20px #ff8e4966;pointer-events:none;white-space:nowrap}.v19-danger-banner.show{display:block;animation:v19banner .45s ease-in-out 3 alternate}.v19-danger-ret{border-color:#ffd175!important;background:linear-gradient(180deg,#7f3a25,#542417)!important;color:#fff0c0!important;animation:v19ret .55s ease-in-out infinite alternate!important;box-shadow:0 0 0 2px #ffcf7544,0 0 22px #ff9b4d88!important}@keyframes v19dash{to{stroke-dashoffset:-20}}@keyframes v19ring{to{transform:scale(1.22);opacity:.75}}@keyframes v19ret{to{filter:brightness(1.35);transform:translateY(-1px)}}@keyframes v19banner{to{transform:translateX(-50%) scale(1.04)}}
@@ -33,7 +33,7 @@ function journalUi(){
   let p=$('#v19JournalPanel');
   if(!p){
     p=document.createElement('section');p.id='v19JournalPanel';p.className='panel';p.dataset.panel='daohang';
-    p.innerHTML='<div class="section"><div class="section-head"><b>도행록 · 비경 숙련</b><span class="small">업적을 새기고 도흔을 회수한다</span></div><div class="v19-journal-intro">각 비경의 숙련 업적을 달성하면 이곳에 기록됩니다. 기록된 보상에서 <b>도흔</b>을 직접 수령해 팔괘 진반의 선택 노드를 영구 해금할 수 있습니다. 비경 이름을 눌러 업적 목록을 펼치거나 접을 수 있습니다.<div id="v19JournalTotal" class="v19-journal-total"></div></div><div id="v19Journal" class="v19-journal"></div></div>';
+    p.innerHTML='<div class="section"><div class="section-head"><b>도행록 · 비경 숙련</b><span class="small">업적을 새기고 도흔을 회수한다</span></div><div class="v19-journal-intro">각 비경의 숙련 업적을 달성하면 이곳에 기록됩니다. 기록된 보상에서 <b>도흔</b>을 직접 수령해 팔괘 진반의 선택 노드를 영구 해금할 수 있습니다. <b>각 비경 5/5 완성 시 도흔 +1</b>이 자동 지급됩니다. 비경 이름을 눌러 업적 목록을 펼치거나 접을 수 있습니다.<div id="v19JournalTotal" class="v19-journal-total"></div></div><div id="v19Journal" class="v19-journal"></div></div>';
     $('.controls')?.insertBefore(p,$('details.dev'));
   }
 }
@@ -53,13 +53,22 @@ function openJournalArea(area){
   const d=$(`.v19-area[data-area="${area}"]`);
   if(d)d.open=true;
 }
+function settleJournalCompletionRewards(){
+  const api=MASTERY(),sh=D.snapshot();
+  if(!api?.settleCompletionRewards||sh.phase==='run')return 0;
+  const m=clone(sh.M),reward=api.settleCompletionRewards(m);
+  if(!reward)return 0;
+  D.replaceState(m);
+  const n=$('#notice');if(n)n.textContent=`비경 숙련 완성 보상 · 도흔 +${reward} 자동 지급`;
+  return reward;
+}
 function renderJournal(){
   journalUi();
   const box=$('#v19Journal'),tab=$('.v19-ach-tab'),total=$('#v19JournalTotal'),api=MASTERY();
   if(!box||!api?.summary)return;
   const sh=D.snapshot(),m=sh.M,summary=api.summary(m),first=!box.dataset.ready;
   const pendingAreas=api.areas.filter(area=>(summary.areas?.[area]?.pendingReward||0)>0);
-  const sig=JSON.stringify({dao:summary.daoMarks,earned:summary.earnedDaoMarks,pending:summary.pendingDaoMarks,area:m.area,unlocked:m.unlocked,rows:api.areas.map(area=>{const a=summary.areas?.[area];return[a?.done,a?.claimedFlags]})});
+  const sig=JSON.stringify({dao:summary.daoMarks,earned:summary.earnedDaoMarks,pending:summary.pendingDaoMarks,area:m.area,unlocked:m.unlocked,rows:api.areas.map(area=>{const a=summary.areas?.[area];return[a?.done,a?.claimedFlags,a?.areaCompletionClaimed]})});
   if(!forceOpenArea&&box.dataset.ready&&sig===journalSignature){
     tab?.classList.toggle('ready',summary.pendingDaoMarks>0);
     return;
@@ -90,6 +99,9 @@ function renderJournal(){
       btn.onclick=e=>{e.preventDefault();e.stopPropagation();claimMastery(area,i)};
       row.appendChild(btn);goals.appendChild(row);
     }
+    const complete=document.createElement('div');complete.className='v19-goal v19-completion '+(a.areaComplete?'done ':'')+(a.areaCompletionClaimed?'claimed':'');
+    complete.innerHTML=`<div class="v19-goal-rank">完</div><div class="v19-goal-main"><b>${a.name} 숙련 완성</b><span>${a.areaCompletionClaimed?'숙련 5/5 완성 · 보상 자동 지급 완료':'숙련 업적 5개를 모두 달성하면 자동 지급됩니다.'}</span><div class="v19-goal-reward">비경 완성 보상 · 도흔 +${a.areaCompletionReward||1}</div></div>`;
+    const completeState=document.createElement('button');completeState.type='button';completeState.disabled=true;completeState.textContent=a.areaCompletionClaimed?'지급 완료':a.areaComplete?'정산 대기':'미완성';complete.appendChild(completeState);goals.appendChild(complete);
     details.appendChild(goals);box.appendChild(details);
   }
   if(total)total.innerHTML=`<div><span>보유 도흔</span><b>${summary.daoMarks}</b></div><div><span>누적 수령</span><b>${summary.earnedDaoMarks}/${summary.maxDaoMarks}</b></div><div><span>수령 대기</span><b>${summary.pendingDaoMarks}</b></div>`;
@@ -97,5 +109,5 @@ function renderJournal(){
   forceOpenArea='';
 }
 window.__xianxiaJournal={render:renderJournal,openArea:openJournalArea,claim:claimMastery};
-function boot(){css();dangerUi();journalUi();renderJournal();setInterval(()=>{dangerRefresh();renderJournal()},350)}boot();
+function boot(){css();dangerUi();journalUi();settleJournalCompletionRewards();renderJournal();setTimeout(()=>{settleJournalCompletionRewards();renderJournal()},120);setInterval(()=>{dangerRefresh();renderJournal()},350)}boot();
 })();
