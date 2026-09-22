@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.51.63-taixu-boss-balance';
+const VERSION='11.51.64-jiedan-trial-ending';
 if(window.__xianxiaFoundationContent?.version===VERSION)return;
 
 const TYPES=new Set(['charging_boar','ranged_toad','exploding_beetle','command_ape','shield_pangolin','sword_sentinel','formation_warden','formation_node','foundation_guardian','taixu_boss']);
@@ -367,20 +367,21 @@ function onBegin(api){
   if(api.state.area==='foundation_trial')spawnAt(api,'foundation_guardian',api.W*.5,api.H*.34);
   if(api.state.area==='taixu'){
     const stage=taixuStage(api),a=-Math.PI/2+(Math.random()-.5)*.55,d=235;
-    if(stage===7||stage===8){
-      api.run.foundation.taixuTrial={stage,state:'dormant',x:clamp(api.player.x+Math.cos(a)*d,90,api.W-90),y:clamp(api.player.y+Math.sin(a)*d,90,api.H-90),radius:150,activateRadius:78,duration:stage===7?6:8,remaining:stage===7?6:8,nodesTotal:0,nodesDestroyed:0,inside:0};
+    if(stage>=7&&stage<=9){
+      const duration=stage===7?6:stage===8?8:10;
+      api.run.foundation.taixuTrial={stage,state:'dormant',x:clamp(api.player.x+Math.cos(a)*d,90,api.W-90),y:clamp(api.player.y+Math.sin(a)*d,90,api.H-90),radius:stage>=9?175:150,activateRadius:78,duration,remaining:duration,nodesTotal:0,nodesDestroyed:0,inside:0};
     }
-    if(stage>=9){
-      const boss=spawnAt(api,'taixu_boss',api.W*.5,api.H*.32);
-      api.run.foundation.taixuTrial={stage,state:'boss_wait',x:boss.x,y:boss.y,radius:210,activateRadius:0,duration:10,remaining:10,nodesTotal:0,nodesDestroyed:0,inside:0,bossMode:1};
-    }
+  }
+  if(api.state.area==='jiedan_trial'){
+    const boss=spawnAt(api,'taixu_boss',api.W*.5,api.H*.32);
+    api.run.foundation.taixuTrial={stage:9,state:'boss_wait',x:boss.x,y:boss.y,radius:210,activateRadius:0,duration:10,remaining:10,nodesTotal:0,nodesDestroyed:0,inside:0,bossMode:1};
   }
   updateControls(api);
 }
 
 function updateRun(dt,api){
   const arts=artState(api);if(!arts)return;
-  if(api.state.area==='taixu')updateTaixuTrial(dt,api);
+  if(api.state.area==='taixu'||api.state.area==='jiedan_trial')updateTaixuTrial(dt,api);
   arts.burstCd=Math.max(0,arts.burstCd-dt);arts.burstTime=Math.max(0,arts.burstTime-dt);arts.trueburstTime=Math.max(0,Math.min(arts.trueburstTime||0,arts.burstTime||0)-dt);arts.dashSpellBoost=Math.max(0,arts.dashSpellBoost-dt);
   const layers=ensureShieldLayers(api);
   for(const layer of layers){
@@ -608,14 +609,15 @@ function rewardEnemy(enemy,api){
 function onFinish(reason,api){
   if(controls)controls.classList.remove('on');
   if(reason==='return'&&api.state.area==='foundation_trial'&&api.run?.foundation?.bossKilled){const first=!api.state.events.foundationTrialCompleted;api.state.events.foundationTrialCompleted=1;api.state.events.foundationInsight=1;api.save();if(first)return '<div class="event"><b>시련 완수 · 축기의 실마리</b><br>수문장을 넘어 천뢰봉으로 향할 자격을 얻었습니다.</div>'}
+  if(reason==='return'&&api.state.area==='jiedan_trial'&&api.run?.foundation?.bossKilled){const first=!api.state.events.jiedanTrialCompleted;api.state.events.jiedanTrialCompleted=1;api.save();if(first)return '<div class="event"><b>현재 이야기의 끝 · 결단의 문턱</b><br>태허진령을 넘어 결단의 문턱에 닿았습니다.<br><b>현재 공개된 여정은 여기까지입니다.</b><br>후일담 보상으로 결단 법술 선택지가 해방됩니다.</div>'}
   return '';
 }
 function snapshotEnemy(enemy){return{chargeWindup:enemy.chargeWindup||0,chargeTime:enemy.chargeTime||0,mechanicCd:enemy.mechanicCd||0,detonating:enemy.detonating||0,formationNode:enemy.formationNode||0,trialNode:enemy.trialNode||0,nodeEffect:enemy.nodeEffect||'',nodeIndex:enemy.nodeIndex??-1,taixuBrokenUntil:enemy.taixuBrokenUntil||0}}
 
 window.__xianxiaFoundationContent={
   version:VERSION,base:BASE,isCombatType:type=>TYPES.has(type)&&type!=='formation_node',configureEnemy,spawnType,
-  bossOnly:(area,realm)=>area==='foundation_trial'||(area==='taixu'&&realm?.major===1&&(+realm.stage||0)>=9),
-  runLimit:(area,realm)=>area==='taixu'&&realm?.major===1&&(+realm.stage||0)>=9?35:25,
+  bossOnly:(area,realm)=>area==='foundation_trial'||area==='jiedan_trial',
+  runLimit:(area,realm)=>area==='jiedan_trial'?45:25,
   onBegin,updateRun,updateEnemy,updateHazards,modifyEnemyDamage,modifyPlayerDamage,playerSpeedMultiplier,onTrigger,beforeEnemyDeath,rewardEnemy,onFinish,snapshotEnemy
 };
 })();

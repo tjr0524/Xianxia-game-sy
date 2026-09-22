@@ -105,7 +105,9 @@ for(const [area,stage] of [['qingyun',1],['blackwind',1],['blood',1],['foundatio
     assert.ifError(runtime.startupError);
     const restored=runtime.D.snapshot().M;
     for(const key of ['stone','herb','herb2','herb3','thunderMark','purpleEssence','taixuSigil','area'])assert.equal(restored[key],saved[key],'preserve '+key);
-    for(const key of ['realm','cult','zones','trainingNodes','formationSkills','stats'])assert.equal(JSON.stringify(restored[key]),JSON.stringify(saved[key]),'preserve '+key);
+    for(const key of ['realm','cult','trainingNodes','formationSkills','stats'])assert.equal(JSON.stringify(restored[key]),JSON.stringify(saved[key]),'preserve '+key);
+    for(const [id,zone] of Object.entries(saved.zones||{}))assert.equal(JSON.stringify(restored.zones?.[id]),JSON.stringify(zone),'preserve zone '+id);
+    if(!saved.zones?.jiedan_trial)assert.equal(JSON.stringify(restored.zones?.jiedan_trial),JSON.stringify({tree:{},runs:0,safe:0,eliteWins:0,bestStone:0,bestHerb:0,bestKills:0}),'new Core Formation trial zone migrates in as an empty record');
     verifyMovement(runtime);
     runtime.D.finish('return');
     verifyMovement(runtime);
