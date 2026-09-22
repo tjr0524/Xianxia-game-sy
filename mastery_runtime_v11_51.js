@@ -11,7 +11,7 @@ const OBJECTIVES={
   blood:['영맥을 발견하고 귀환','영맥 하나를 완전 채굴','영맥 3단계 수호전 완수','영맥 4단계 대형 영맥 확보','영맥 5단계 다중 방어전 완수'],
   thunder:['천뢰에 1회 직격하고 귀환','한 원정에서 천뢰에 2회 직격','낙뢰 3단계에서 천뢰 직격 2회 후 귀환','낙뢰 4단계 연속 천뢰 직격 3회','낙뢰 5단계에서 천뢰 직격 3회와 정예 무리 돌파'],
   marsh:['폭렬형 격파','폭발 피해 없이 폭렬형 무리 격파','폭렬형·호령형 혼합 무리 격파','호체형이 포함된 특수 조합 격파','특수 3종 정예 무리를 돌파하고 생환'],
-  taixu:['진안 수성 1회 완수','진안 수성 중 수호령 5체 이상 격파','진법 결절 1개 이상 파괴 후 수성 완수','모든 결절을 파괴하고 진법 완전 해체','태허대진 파훼 후 태허진령 격파']
+  taixu:['진안 수성 1회 완수','진안 수성 중 수호령 5체 이상 격파','진법 결절 1개 이상 파괴 후 수성 완수','모든 결절을 파괴하고 진법 완전 해체','태허진령 격파']
 };
 
 const rank=(api,id,area=api.state.area)=>Math.max(0,Math.min(5,Math.round(+api.state.zones?.[area]?.tree?.[id]||0)));
@@ -50,6 +50,12 @@ function ensure(M){
     }
     M.formationSkills.daoJournalVersion=1;
   }
+  // The Taixu Sovereign now lives in the separate Core Formation trial.
+  // Backfill saves that already cleared that trial so Taixu mastery V is not lost.
+  if(M.events?.jiedanTrialCompleted&&!M.mastery.areas.taixu.marks[4]){
+    M.mastery.areas.taixu.marks[4]=1;
+    M.mastery.areas.taixu.claimed[4]=0;
+  }
   return M.mastery;
 }
 function marks(M,area){ensure(M);return rawMarks(M,area)}
@@ -66,7 +72,7 @@ function predicates(area,api){
   if(area==='marsh')return[killed(run,'exploding_beetle')>0,killed(run,'exploding_beetle')>=2&&!explosionDamage,killed(run,'exploding_beetle')>0&&killed(run,'command_ape')>0,killed(run,'shield_pangolin')>0&&m.specialKinds>=2,killed(run,'exploding_beetle')>0&&killed(run,'command_ape')>0&&killed(run,'shield_pangolin')>0&&anyRare(run)];
   if(area==='taixu'){
     const trial=run.foundation?.taixuTrial,complete=(run.taixuTrials||0)>=1,allNodes=(trial?.nodesTotal||0)>0&&(trial?.nodesDestroyed||0)>=(trial?.nodesTotal||0);
-    return[complete,complete&&kills>=5,complete&&m.formationNodes>=1,complete&&allNodes&&kills>=6,complete&&allNodes&&killed(run,'taixu_boss')>0];
+    return[complete,complete&&kills>=5,complete&&m.formationNodes>=1,complete&&allNodes&&kills>=6,false];
   }
   return[false,false,false,false,false];
 }
@@ -84,8 +90,19 @@ function onKill(enemy,api){
   if(enemy.type==='sword_sentinel'||enemy.type==='formation_warden')m.zoneExperienced=1;
 }
 function onFinish(reason,api){
-  if(reason!=='return'||!AREAS.includes(api.state.area))return'';
-  const M=api.state,area=M.area;ensure(M);
+  if(reason!=='return')return'';
+  const M=api.state;
+  if(M.area==='jiedan_trial'&&api.run?.foundation?.bossKilled){
+    ensure(M);
+    const row=M.mastery.areas.taixu;
+    if(row.marks[4])return'';
+    row.marks[4]=1;row.claimed[4]=0;
+    const reward=daoRewardFor('taixu',4);
+    api.save?.();
+    return `<div class="event"><b>비경 숙련 Ⅴ 기록</b><br>${AREA_NAME.taixu}: ${OBJECTIVES.taixu[4]}<br>도행록에서 도흔 +${reward} 수령 가능 · 숙련 ${marks(M,'taixu')}/5</div>`;
+  }
+  if(!AREAS.includes(M.area))return'';
+  const area=M.area;ensure(M);
   const row=M.mastery.areas[area],checks=predicates(area,api);
   let gained=-1;
   for(let i=0;i<5;i++)if(!row.marks[i]&&checks[i]){row.marks[i]=1;gained=i;break}
