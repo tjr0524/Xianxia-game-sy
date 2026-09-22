@@ -51,8 +51,7 @@ ok(game.includes("M.area==='jiedan_trial'"),'combat targeting and result messagi
 ok(game.includes("if(!bossOnlyRun)setupVein();else vein=null;"),'boss-only encounters suppress veins and expedition side content');
 ok(game.includes("if(phase==='run'&&bossEncounter&&run?.foundation?.bossKilled){finish('return');return}"),'boss-only encounters resolve at the kill itself');
 ok(progression.includes("jiedan_trial:{s:0,h:0"),'progression defines a separate Core Formation trial gate');
-ok(progression.includes("jiedan_trial:{s:0,h:0,hg:2,req:{major:1,stage:9},prereq:[]"),'final gate opens for free on reaching Foundation 9');
-ok(!progression.includes("축기 9층 수련 완성 필요"),'final gate does not require all Foundation 9 training nodes');
+ok(progression.includes("축기 9층 수련 완성 필요"),'final gate requires completed Foundation 9 training');
 ok(formation.includes('function traitReqReached(M,req)'),'formation UI supports ending-based Core Formation trait unlocks');
 ok(formation.includes("jiedanTrialCompleted&&req?.major===2&&req?.stage===1"),'only prepared Core Formation 1 trait tiers are unlocked by the ending');
 const taixuBossHp=5881*1.15*6,stage9Dps=1900;
