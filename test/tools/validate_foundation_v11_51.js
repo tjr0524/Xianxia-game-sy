@@ -7,6 +7,9 @@ const foundation=fs.readFileSync('foundation_content_v11_50.js','utf8');
 const mastery=fs.readFileSync('mastery_runtime_v11_51.js','utf8');
 const formation=fs.readFileSync('formation_skills_v11_49_35.js','utf8');
 const html=fs.readFileSync('index.html','utf8');
+const renderer=fs.readFileSync('foundation_content_renderer_v11_50.js','utf8');
+const ink=fs.readFileSync('ink_runtime_world_v11_45.js','utf8');
+const exploration=fs.readFileSync('exploration_runtime_v11_45.js','utf8');
 
 function ok(value,label){if(!value)throw new Error(label);console.log('OK  ',label)}
 function literal(source,start,end){const a=source.indexOf(start);if(a<0)throw new Error(`missing ${start}`);const b=source.indexOf(end,a+start.length);if(b<0)throw new Error(`missing ${end}`);return source.slice(a+start.length,b)}
@@ -51,6 +54,10 @@ ok(foundation.includes("api.state.area==='jiedan_trial'"),'Taixu Sovereign spawn
 ok(foundation.includes("enemy.hp*=trial.bossMode?0.70:1"),'Core Formation boss nodes use the tuned boss-phase HP');
 ok(foundation.includes("trial.remaining=Math.max(0,trial.remaining-1.5)"),'breaking a formation node removes 1.5 seconds');
 ok(foundation.includes("현재 이야기의 끝 · 결단의 문턱"),'first clear announces the current ending');
+ok(renderer.includes("areaAssets.jiedan_trial=areaAssets.taixu"),'Core Formation trial reuses the Taixu renderer asset set');
+ok(renderer.includes("['taixu','jiedan_trial'].includes(trialArea)"),'Taixu grand-formation renderer also draws in the final trial');
+ok(ink.includes("area==='jiedan_trial'")&&ink.includes("taixu_ruins_battlefield_1024x1536.png"),'generic ink layer does not fall back to Qingyun in the final trial');
+ok(exploration.includes("area==='jiedan_trial'")&&exploration.includes("taixu_ruins_battlefield_1024x1536.png"),'exploration backdrop uses the Taixu arena in the final trial');
 ok(game.includes("M.area==='jiedan_trial'"),'combat targeting and result messaging recognize the Core Formation trial');
 ok(game.includes("if(!bossOnlyRun)setupVein();else vein=null;"),'boss-only encounters suppress veins and expedition side content');
 ok(game.includes("if(phase==='run'&&bossEncounter&&run?.foundation?.bossKilled){finish('return');return}"),'boss-only encounters resolve at the kill itself');
