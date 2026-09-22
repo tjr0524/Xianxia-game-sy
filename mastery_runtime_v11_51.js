@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.51.25';
+const VERSION='11.51.67';
 const AREAS=['qingyun','blackwind','blood','thunder','marsh','taixu'];
 const AREA_NAME={qingyun:'청운산 후산',blackwind:'흑풍곡',blood:'적혈비경',thunder:'천뢰봉',marsh:'자운택',taixu:'태허유적'};
 const TYPE_NAME={charging_boar:'돌진형',ranged_toad:'원거리형',exploding_beetle:'폭렬형',command_ape:'호령형',shield_pangolin:'호체형',sword_sentinel:'검위',formation_warden:'진위',taixu_boss:'태허진령'};
@@ -18,12 +18,18 @@ const rank=(api,id,area=api.state.area)=>Math.max(0,Math.min(5,Math.round(+api.s
 const FOUNDATION_AREAS=new Set(['thunder','marsh','taixu']);
 const daoReward=area=>FOUNDATION_AREAS.has(area)?3:1;
 const daoCompletionBonus=area=>FOUNDATION_AREAS.has(area)?0:2;
+const AREA_COMPLETION_REWARD=1;
 const daoRewardFor=(area,index)=>daoReward(area)+(index===4?daoCompletionBonus(area):0);
 const rawMarks=(M,area)=>M?.mastery?.areas?.[area]?.marks?.reduce((a,b)=>a+(b?1:0),0)||0;
 const rawClaimed=(M,area)=>M?.mastery?.areas?.[area]?.claimed?.reduce((a,b)=>a+(b?1:0),0)||0;
-const maxDaoMarks=AREAS.reduce((sum,area)=>sum+Array.from({length:5},(_,i)=>daoRewardFor(area,i)).reduce((a,b)=>a+b,0),0);
-const completedDaoMarks=M=>AREAS.reduce((sum,area)=>sum+Array.from({length:5},(_,i)=>M?.mastery?.areas?.[area]?.marks?.[i]?daoRewardFor(area,i):0).reduce((a,b)=>a+b,0),0);
-const claimedDaoMarks=M=>AREAS.reduce((sum,area)=>sum+Array.from({length:5},(_,i)=>M?.mastery?.areas?.[area]?.claimed?.[i]?daoRewardFor(area,i):0).reduce((a,b)=>a+b,0),0);
+const objectiveMaxDaoMarks=AREAS.reduce((sum,area)=>sum+Array.from({length:5},(_,i)=>daoRewardFor(area,i)).reduce((a,b)=>a+b,0),0);
+const completedObjectiveDaoMarks=M=>AREAS.reduce((sum,area)=>sum+Array.from({length:5},(_,i)=>M?.mastery?.areas?.[area]?.marks?.[i]?daoRewardFor(area,i):0).reduce((a,b)=>a+b,0),0);
+const claimedObjectiveDaoMarks=M=>AREAS.reduce((sum,area)=>sum+Array.from({length:5},(_,i)=>M?.mastery?.areas?.[area]?.claimed?.[i]?daoRewardFor(area,i):0).reduce((a,b)=>a+b,0),0);
+const completedAreaCount=M=>AREAS.reduce((sum,area)=>sum+(rawMarks(M,area)>=5?1:0),0);
+const claimedAreaCompletionCount=M=>AREAS.reduce((sum,area)=>sum+(M?.mastery?.areas?.[area]?.areaCompletionClaimed?1:0),0);
+const maxDaoMarks=objectiveMaxDaoMarks+AREAS.length*AREA_COMPLETION_REWARD;
+const completedDaoMarks=M=>completedObjectiveDaoMarks(M)+completedAreaCount(M)*AREA_COMPLETION_REWARD;
+const claimedDaoMarks=M=>claimedObjectiveDaoMarks(M)+claimedAreaCompletionCount(M)*AREA_COMPLETION_REWARD;
 const legacyEarnedDaoMarks=M=>AREAS.reduce((sum,area)=>sum+rawMarks(M,area)*(FOUNDATION_AREAS.has(area)?2:1),0);
 function ensure(M){
   M.mastery||={version:2,areas:{}};
@@ -32,6 +38,7 @@ function ensure(M){
     const row=M.mastery.areas[area]||(M.mastery.areas[area]={marks:[0,0,0,0,0],claimed:[0,0,0,0,0]});
     row.marks=Array.from({length:5},(_,i)=>row.marks?.[i]?1:0);
     row.claimed=Array.from({length:5},(_,i)=>row.claimed?.[i]?1:0);
+    row.areaCompletionClaimed=row.areaCompletionClaimed?1:0;
   }
   M.formationSkills||={version:1,daoMarks:0,ranks:{},traits:{}};
   M.formationSkills.daoMarks=Math.max(0,Math.round(+M.formationSkills.daoMarks||0));
@@ -39,7 +46,7 @@ function ensure(M){
   // 66-mark economy, then mark already completed records as claimed so the journal
   // cannot pay them a second time.
   if((M.formationSkills.daoEconomyVersion||0)<2){
-    const delta=Math.max(0,completedDaoMarks(M)-legacyEarnedDaoMarks(M));
+    const delta=Math.max(0,completedObjectiveDaoMarks(M)-legacyEarnedDaoMarks(M));
     M.formationSkills.daoMarks+=delta;
     M.formationSkills.daoEconomyVersion=2;
   }
@@ -57,6 +64,19 @@ function ensure(M){
     M.mastery.areas.taixu.claimed[4]=0;
   }
   return M.mastery;
+}
+function settleCompletionRewards(M,onlyArea){
+  ensure(M);
+  const targets=onlyArea&&AREAS.includes(onlyArea)?[onlyArea]:AREAS;
+  let reward=0;
+  for(const area of targets){
+    const row=M.mastery.areas[area];
+    if(rawMarks(M,area)<5||row.areaCompletionClaimed)continue;
+    row.areaCompletionClaimed=1;
+    reward+=AREA_COMPLETION_REWARD;
+  }
+  if(reward)M.formationSkills.daoMarks=(+M.formationSkills.daoMarks||0)+reward;
+  return reward;
 }
 function marks(M,area){ensure(M);return rawMarks(M,area)}
 function daoists(M){return AREAS.reduce((sum,area)=>sum+(marks(M,area)>=5?1:0),0)}
@@ -97,9 +117,9 @@ function onFinish(reason,api){
     const row=M.mastery.areas.taixu;
     if(row.marks[4])return'';
     row.marks[4]=1;row.claimed[4]=0;
-    const reward=daoRewardFor('taixu',4);
+    const reward=daoRewardFor('taixu',4),completionReward=settleCompletionRewards(M,'taixu');
     api.save?.();
-    return `<div class="event"><b>비경 숙련 Ⅴ 기록</b><br>${AREA_NAME.taixu}: ${OBJECTIVES.taixu[4]}<br>도행록에서 도흔 +${reward} 수령 가능 · 숙련 ${marks(M,'taixu')}/5</div>`;
+    return `<div class="event"><b>비경 숙련 Ⅴ 기록</b><br>${AREA_NAME.taixu}: ${OBJECTIVES.taixu[4]}<br>도행록에서 도흔 +${reward} 수령 가능 · 숙련 ${marks(M,'taixu')}/5${completionReward?`<br><b>비경 숙련 완성</b> · 도흔 +${completionReward} 자동 지급`:''}</div>`;
   }
   if(!AREAS.includes(M.area))return'';
   const area=M.area;ensure(M);
@@ -107,9 +127,9 @@ function onFinish(reason,api){
   let gained=-1;
   for(let i=0;i<5;i++)if(!row.marks[i]&&checks[i]){row.marks[i]=1;gained=i;break}
   if(gained<0)return'';
-  const reward=daoRewardFor(area,gained);
+  const reward=daoRewardFor(area,gained),completionReward=settleCompletionRewards(M,area);
   api.save?.();
-  return `<div class="event"><b>비경 숙련 ${['Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ'][gained]} 기록</b><br>${AREA_NAME[area]}: ${OBJECTIVES[area][gained]}<br>도행록에서 도흔 +${reward} 수령 가능 · 숙련 ${marks(M,area)}/5</div>`;
+  return `<div class="event"><b>비경 숙련 ${['Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ'][gained]} 기록</b><br>${AREA_NAME[area]}: ${OBJECTIVES[area][gained]}<br>도행록에서 도흔 +${reward} 수령 가능 · 숙련 ${marks(M,area)}/5${completionReward?`<br><b>비경 숙련 완성</b> · 도흔 +${completionReward} 자동 지급`:''}</div>`;
 }
 function claim(M,area,index){
   ensure(M);
@@ -134,16 +154,16 @@ function summary(M){
     daoCompletionBonusByArea:Object.fromEntries(AREAS.map(area=>[area,daoCompletionBonus(area)])),
     daoists:daoists(M),
     areas:Object.fromEntries(AREAS.map(area=>{
-      const row=M.mastery.areas[area],completedCount=rawMarks(M,area),claimedCount=rawClaimed(M,area);
-      const totalReward=Array.from({length:5},(_,i)=>daoRewardFor(area,i)).reduce((a,b)=>a+b,0);
-      const claimedReward=Array.from({length:5},(_,i)=>row.claimed[i]?daoRewardFor(area,i):0).reduce((a,b)=>a+b,0);
-      const pendingReward=Array.from({length:5},(_,i)=>row.marks[i]&&!row.claimed[i]?daoRewardFor(area,i):0).reduce((a,b)=>a+b,0);
-      return[area,{name:AREA_NAME[area],marks:completedCount,claimed:claimedCount,totalReward,claimedReward,pendingReward,rewardPerMark:daoReward(area),completionBonus:daoCompletionBonus(area),objectives:OBJECTIVES[area],done:[...row.marks],claimedFlags:[...row.claimed],rewards:Array.from({length:5},(_,i)=>daoRewardFor(area,i))}]
+      const row=M.mastery.areas[area],completedCount=rawMarks(M,area),claimedCount=rawClaimed(M,area),areaComplete=completedCount>=5,areaCompletionClaimed=!!row.areaCompletionClaimed;
+      const totalReward=Array.from({length:5},(_,i)=>daoRewardFor(area,i)).reduce((a,b)=>a+b,0)+AREA_COMPLETION_REWARD;
+      const claimedReward=Array.from({length:5},(_,i)=>row.claimed[i]?daoRewardFor(area,i):0).reduce((a,b)=>a+b,0)+(areaCompletionClaimed?AREA_COMPLETION_REWARD:0);
+      const pendingReward=Array.from({length:5},(_,i)=>row.marks[i]&&!row.claimed[i]?daoRewardFor(area,i):0).reduce((a,b)=>a+b,0)+(areaComplete&&!areaCompletionClaimed?AREA_COMPLETION_REWARD:0);
+      return[area,{name:AREA_NAME[area],marks:completedCount,claimed:claimedCount,totalReward,claimedReward,pendingReward,rewardPerMark:daoReward(area),completionBonus:daoCompletionBonus(area),areaComplete,areaCompletionReward:AREA_COMPLETION_REWARD,areaCompletionClaimed,objectives:OBJECTIVES[area],done:[...row.marks],claimedFlags:[...row.claimed],rewards:Array.from({length:5},(_,i)=>daoRewardFor(area,i))}]
     }))
   };
 }
 
-window.__xianxiaMastery={version:VERSION,areas:AREAS,objectives:OBJECTIVES,ensure,marks,daoists,daoReward,daoCompletionBonus,daoRewardFor,maxDaoMarks,claim,summary,onBegin,onKill,onFinish};
+window.__xianxiaMastery={version:VERSION,areas:AREAS,objectives:OBJECTIVES,ensure,marks,daoists,daoReward,daoCompletionBonus,daoRewardFor,areaCompletionReward:AREA_COMPLETION_REWARD,maxDaoMarks,settleCompletionRewards,claim,summary,onBegin,onKill,onFinish};
 })();
 
 //# sourceURL=mastery_runtime_v11_51.js
