@@ -102,7 +102,7 @@ const TREE={
   ],
   formation:[
     {id:'formation1',n:'진안 공명',d:'진안 활성 시 수호령이 쇄도한다 · R3 추가 수호령 · R5 후반 웨이브 강화',tier:1,c:{s:1,h:0}},
-    {id:'formation2',n:'진법 결절',d:'축기 8층부터 결절 2개 · 파괴 시 방해효과 제거 + 수성 -1초 · R4 3번째 결절',tier:2,p:'formation1',c:{s:1,h:0}},
+    {id:'formation2',n:'진법 결절',d:'축기 8층부터 결절 2개 · 파괴 시 방해효과 제거 + 수성 -1.5초 · R4 3번째 결절',tier:2,p:'formation1',c:{s:1,h:0}},
     {id:'formation3',n:'태허대진',d:'축기 9층 태허진령 65%에서 대진 전개 · 결절당 피해감소 15% · 파훼 시 4초 파진',tier:3,p:'formation2',c:{s:1,h:0}}
   ]
 };
@@ -1686,19 +1686,19 @@ function begin(){
   P.hp=P.max;
   P.cd=0;
   run.minHp=P.max;
+  const bossOnlyRun=!!foundationContent()?.bossOnly?.(M.area,M.realm);
   for(let i=0;i<herbInitial;i++)randomHerb();
-  if(!foundationContent()?.bossOnly?.(M.area,M.realm))initEncounterPacks();else run.packs=[];
-  if(branches().includes('fate')&&rank('fate3')){
+  if(!bossOnlyRun)initEncounterPacks();else run.packs=[];
+  if(!bossOnlyRun&&branches().includes('fate')&&rank('fate3')){
     const normalCount=1+Math.floor((Math.min(4,rank('fate3'))-1)/2);
     for(let i=0;i<normalCount;i++)actor('spirit');
   }
-  setupVein();
+  if(!bossOnlyRun)setupVein();else vein=null;
   run.veinSeen=vein?1:0;
   foundationContent()?.onBegin?.(foundationApi());
   window.__xianxiaMastery?.onBegin?.(foundationApi());
   UI.ov.classList.add('hide');
   if(window.matchMedia?.('(max-width:920px)').matches)setMenuOpen(false);
-  const bossOnlyRun=!!foundationContent()?.bossOnly?.(M.area,M.realm);
   UI.ret.disabled=bossOnlyRun;
   UI.notice.textContent=bossOnlyRun
     ?(M.area==='taixu'?`${planCopy(plan)[0]} 시작. 태허진령을 격파하면 즉시 비경을 제압합니다.`:`${planCopy(plan)[0]} 시작. 수문장을 격파하면 즉시 시련이 종료됩니다.`)
@@ -1894,6 +1894,10 @@ function cast(skill,options={}){
     for(let i=0;i<limit;i++){
       let target=null,near=Infinity;
       if(i===0&&options.startTarget&&options.startTarget.hp>0&&distance(current,options.startTarget)<acquire){target=options.startTarget}
+      if(!target&&i===0){
+        const priority=candidates.filter(e=>!used.has(e.id)&&e.hp>0&&taixuFormationTarget(e)&&distance(current,e)<acquire).sort((a,b)=>distance(current,a)-distance(current,b));
+        if(priority.length){target=priority[0];near=distance(current,target)}
+      }
       if(!target)for(const e of candidates){if(used.has(e.id)||e.hp<=0)continue;const d=distance(current,e),allowed=i===0?acquire:jump;if(d<allowed&&d<near){near=d;target=e}}
       if(!target)break;
       const hitAt=queue(target,scale);

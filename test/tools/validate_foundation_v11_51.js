@@ -38,7 +38,22 @@ ok(sum('marsh')===130944,'Purple Cloud Marsh budget total is 130,944');
 ok(sum('taixu')===240064,'Taixu Ruins budget total is 240,064');
 
 const fctx={window:{},console};vm.runInNewContext(foundation,fctx);
-for(let stage=1;stage<=9;stage++)ok(fctx.window.__xianxiaFoundationContent.runLimit(stage<=3?'thunder':stage<=6?'marsh':'taixu',{major:1,stage})===25,`Foundation ${stage} run limit is 25 seconds`);
+for(let stage=1;stage<=8;stage++)ok(fctx.window.__xianxiaFoundationContent.runLimit(stage<=3?'thunder':stage<=6?'marsh':'taixu',{major:1,stage})===25,`Foundation ${stage} run limit is 25 seconds`);
+ok(fctx.window.__xianxiaFoundationContent.runLimit('taixu',{major:1,stage:9})===35,'Foundation 9 Taixu boss run limit is 35 seconds');
+ok(!fctx.window.__xianxiaFoundationContent.bossOnly('taixu',{major:1,stage:8}),'Taixu 8 remains a normal expedition');
+ok(fctx.window.__xianxiaFoundationContent.bossOnly('taixu',{major:1,stage:9}),'Taixu 9 is a boss-only encounter');
+ok(foundation.includes("enemy.hp*=trial.bossMode?0.70:1"),'Taixu boss formation nodes use reduced boss-phase HP');
+ok(foundation.includes("trial.remaining=Math.max(0,trial.remaining-1.5)"),'breaking a boss formation node removes 1.5 seconds');
+ok(foundation.includes("radius:210"),'Taixu grand formation uses the wider 210 radius');
+ok(game.includes('function taixuFormationTarget(enemy)'),'combat targeting exposes Taixu formation-node priority');
+ok(game.includes("if(!bossOnlyRun)setupVein();else vein=null;"),'boss-only encounters suppress veins and expedition side content');
+ok(game.includes("if(phase==='run'&&bossEncounter&&run?.foundation?.bossKilled){finish('return');return}"),'boss-only encounters resolve at the kill itself');
+const taixuBossHp=5881*1.15*6,stage9Dps=1900;
+const gateTime=taixuBossHp*.35/stage9Dps;
+const postBurstDamage=stage9Dps*1.35*4;
+const postTime=4+Math.max(0,taixuBossHp*.65-postBurstDamage)/stage9Dps;
+const conservativeTtk=gateTime+10+postTime;
+ok(conservativeTtk<=35*.86,`Taixu boss conservative ideal TTK ${conservativeTtk.toFixed(2)}s fits the 35s budget`);
 
 const mctx={window:{},console};vm.runInNewContext(mastery,mctx);
 const M={area:'qingyun',zones:{qingyun:{tree:{}}},formationSkills:{daoMarks:0,ranks:{},traits:{}}};

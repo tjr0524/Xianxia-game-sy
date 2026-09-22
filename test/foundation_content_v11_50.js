@@ -588,7 +588,6 @@ function onTrigger(event,payload,ctx,api){
 function beforeEnemyDeath(enemy,api){
   if(enemy?.formationNode)onFormationNodeDeath(enemy,api);
   if(enemy.boss)api.run.foundation.bossKilled=1;
-  if(enemy?.type==='taixu_boss')api.run.foundation.taixuBossDefeated=1;
 }
 function rewardEnemy(enemy,api){
   if(!TYPES.has(enemy.type))return false;
