@@ -1686,19 +1686,19 @@ function begin(){
   P.hp=P.max;
   P.cd=0;
   run.minHp=P.max;
+  const bossOnlyRun=!!foundationContent()?.bossOnly?.(M.area,M.realm);
   for(let i=0;i<herbInitial;i++)randomHerb();
-  if(!foundationContent()?.bossOnly?.(M.area,M.realm))initEncounterPacks();else run.packs=[];
-  if(branches().includes('fate')&&rank('fate3')){
+  if(!bossOnlyRun)initEncounterPacks();else run.packs=[];
+  if(!bossOnlyRun&&branches().includes('fate')&&rank('fate3')){
     const normalCount=1+Math.floor((Math.min(4,rank('fate3'))-1)/2);
     for(let i=0;i<normalCount;i++)actor('spirit');
   }
-  setupVein();
+  if(!bossOnlyRun)setupVein();else vein=null;
   run.veinSeen=vein?1:0;
   foundationContent()?.onBegin?.(foundationApi());
   window.__xianxiaMastery?.onBegin?.(foundationApi());
   UI.ov.classList.add('hide');
   if(window.matchMedia?.('(max-width:920px)').matches)setMenuOpen(false);
-  const bossOnlyRun=!!foundationContent()?.bossOnly?.(M.area,M.realm);
   UI.ret.disabled=bossOnlyRun;
   UI.notice.textContent=bossOnlyRun
     ?(M.area==='taixu'?`${planCopy(plan)[0]} 시작. 태허진령을 격파하면 즉시 비경을 제압합니다.`:`${planCopy(plan)[0]} 시작. 수문장을 격파하면 즉시 시련이 종료됩니다.`)
