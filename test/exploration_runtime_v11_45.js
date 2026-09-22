@@ -89,8 +89,10 @@ function syncBackdrop(s){
   const area=s?.M?.area||'qingyun';
   if(state.area===area)return;
   state.area=area;
-  const backdropArea=area==='jiedan_trial'?'taixu':area;
-  ensureBackdrop().style.backgroundImage=`url("assets/ink_v1/runtime/backgrounds/${backdropArea}.png")`;
+  const src=area==='jiedan_trial'
+    ?'assets/ink_v1/foundation_trial_v1/regions/taixu_ruins/background/taixu_ruins_battlefield_1024x1536.png'
+    :`assets/ink_v1/runtime/backgrounds/${area}.png`;
+  ensureBackdrop().style.backgroundImage=`url("${src}")`;
 }
 
 function makeHud(){
