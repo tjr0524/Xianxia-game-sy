@@ -9,6 +9,7 @@ function has(src,s){return src.includes(s)}
 function match(src,re){return re.test(src)}
 
 const index=read('index.html');
+const build=JSON.parse(read('version.json')).build;
 const baseCore=read('balance_core_v11_36.js');
 const encounter=require(path.join(root,'balance_core_v11_37.js'));
 const hotfix=read('balance_core_v11_37_1.js');
@@ -30,10 +31,9 @@ const extrasOriginal=read('progression_extras_v11_32.js');
 const world=read('worldscale_core_v11_34.js');
 
 ok('encounter transform + hotfix compiles',transformed);
-ok('index build 11.45.0',has(index,'BUILD 11.45.0'));
-ok('index loads encounter hotfix core',has(index,'balance_core_v11_37_1.js?v=11.45.0-safe1'));
+ok('index build matches version.json',has(index,`const BUILD='${build}'`));
+for(const f of ['runtime_kernel_v11_45.js','foundation_content_v11_50.js','game_runtime_v11_45.js','progression_runtime_v11_45.js','systems21_runtime_v11_45.js','progression_extras_runtime_v11_45.js'])ok('index loads flattened runtime '+f,has(index,f+`?v=${build}`));
 ok('hotfix wraps 11.37 core',has(hotfix,"const BASE='balance_core_v11_37.js';"));
-for(const f of ['balance_progression_v11_36.js','balance_systems21_v11_36.js','balance_progression_extras_v11_36.js'])ok('index loads '+f,has(index,f+'?v=11.36.0'));
 ok('old 11.36 core loader not directly loaded',!has(index,'<script src="balance_core_v11_36.js'));
 ok('unfixed 11.37 core loader not directly loaded',!has(index,'<script src="balance_core_v11_37.js'));
 ok('legacy world core loader removed',!has(index,'<script src="worldscale_core_v11_34.js'));
@@ -92,4 +92,4 @@ ok('UI single-rank wording',has(ui,"keys=['pow'],nm=['숙련']"));
 ok('extras disabled',has(extras,'const EXTRA=[];'));
 
 if(failures){console.error(`\n${failures} validation failure(s)`);process.exit(1)}
-console.log('\nBalance + encounter 11.37.1 patch anchors validated.');
+console.log('\nBalance + flattened runtime patch anchors validated.');
