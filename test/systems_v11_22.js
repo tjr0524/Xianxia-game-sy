@@ -140,12 +140,6 @@ function bindLifecycle(){controls.addEventListener('xianxia:panel-open',e=>{if(e
 function boot(){css();expeditionButton();installHandle();placeMobileNav();bindTabs();bindOutsideClose();bindLifecycle();if(compact())showExpedition();}
 boot();
 
-// v11.30: load verified brush-sprite runtime after the core UI scripts.
-if(!document.querySelector('script[data-sprite-v1130]')){
-  const s=document.createElement('script');
-  s.src='sprite_runtime_v11_30.js?v=11.30';
-  s.dataset.spriteV1130='1';
-  s.async=false;
-  document.head.appendChild(s);
-}
+// Sprites are owned by ink_runtime_world_v11_45.js. The retired 700x460
+// brush renderer fetched another atlas and ran a hidden, independent RAF.
 })();
