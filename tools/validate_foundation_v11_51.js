@@ -94,6 +94,13 @@ ok(mctx.window.__xianxiaMastery.claim(M,'qingyun',0)===0&&mctx.window.__xianxiaM
 ok(mctx.window.__xianxiaMastery.summary(M).daoists===0,'Daoist count requires five marks');
 for(const area of mctx.window.__xianxiaMastery.areas)M.mastery.areas[area].marks=[1,1,1,1,1];
 ok(mctx.window.__xianxiaMastery.summary(M).daoists===6,'six completed areas produce the six-Daoist cap');
+ok(mctx.window.__xianxiaMastery.maxDaoMarks===72,'six area-completion rewards raise the Dao Mark cap from 66 to 72');
+const completionBackfill={mastery:{version:2,areas:{}},formationSkills:{version:1,daoMarks:0,ranks:{},traits:{},daoEconomyVersion:2,daoJournalVersion:1}};
+mctx.window.__xianxiaMastery.ensure(completionBackfill);
+for(const area of mctx.window.__xianxiaMastery.areas){completionBackfill.mastery.areas[area].marks=[1,1,1,1,1];completionBackfill.mastery.areas[area].claimed=[1,1,1,1,1]}
+ok(mctx.window.__xianxiaMastery.settleCompletionRewards(completionBackfill)===6&&completionBackfill.formationSkills.daoMarks===6,'existing 5/5 area clears receive six completion Dao Marks immediately');
+ok(mctx.window.__xianxiaMastery.settleCompletionRewards(completionBackfill)===0&&completionBackfill.formationSkills.daoMarks===6,'area-completion Dao Marks cannot be paid twice');
+ok(mctx.window.__xianxiaMastery.summary(completionBackfill).earnedDaoMarks===72,'completion rewards are included in the 72-mark journal total');
 ok(mastery.includes("'태허진령 격파'"),'Taixu mastery V objective is the Sovereign defeat');
 ok(mastery.includes("M.area==='jiedan_trial'&&api.run?.foundation?.bossKilled"),'Core Formation trial clear awards Taixu mastery V');
 ok(mastery.includes("M.events?.jiedanTrialCompleted&&!M.mastery.areas.taixu.marks[4]"),'existing final-trial clears backfill Taixu mastery V');
