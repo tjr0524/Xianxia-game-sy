@@ -402,12 +402,17 @@ function effectiveSkillCooldown(id){
   if(id==='sword'&&hasFormationTrait('sword','heavy'))cd*=1.25;
   return cd;
 }
+function taixuFormationTarget(enemy){
+  const trial=run?.foundation?.taixuTrial;
+  return !!enemy&&enemy.type==='formation_node'&&enemy.hp>0&&M.area==='taixu'&&M.realm?.major===1&&(+M.realm.stage||0)>=9&&trial?.state==='active'&&trial?.bossMode;
+}
 function enemyStrengthScore(enemy){
   if(!enemy||enemy.hp<=0)return -Infinity;
-  return (enemy.boss?1e9:0)+(enemy.grade==='elite'||enemy.rare?2e8:0)+(enemy.shield>0?8e7:0)+(enemy.max||enemy.hp||0)*100+(enemy.hp||0);
+  return (taixuFormationTarget(enemy)?2e9:0)+(enemy.boss?1e9:0)+(enemy.grade==='elite'||enemy.rare?2e8:0)+(enemy.shield>0?8e7:0)+(enemy.max||enemy.hp||0)*100+(enemy.hp||0);
 }
 function swordCandidateScore(enemy,origin=P){
   let score=-distance(origin,enemy);
+  if(taixuFormationTarget(enemy))score+=2e9;
   if(hasFormationTrait('sword','break')&&(enemy.shield>0||enemy.type==='formation_node'||isSpecialEnemy(enemy)))score+=250000;
   if(hasFormationTrait('sword','heavy'))score+=enemyStrengthScore(enemy);
   return score;
@@ -1693,9 +1698,10 @@ function begin(){
   window.__xianxiaMastery?.onBegin?.(foundationApi());
   UI.ov.classList.add('hide');
   if(window.matchMedia?.('(max-width:920px)').matches)setMenuOpen(false);
-  UI.ret.disabled=!!foundationContent()?.bossOnly?.(M.area,M.realm);
-  UI.notice.textContent=foundationContent()?.bossOnly?.(M.area,M.realm)
-    ?`${planCopy(plan)[0]} 시작. 수문장을 격파하면 즉시 시련이 종료됩니다.`
+  const bossOnlyRun=!!foundationContent()?.bossOnly?.(M.area,M.realm);
+  UI.ret.disabled=bossOnlyRun;
+  UI.notice.textContent=bossOnlyRun
+    ?(M.area==='taixu'?`${planCopy(plan)[0]} 시작. 태허진령을 격파하면 즉시 비경을 제압합니다.`:`${planCopy(plan)[0]} 시작. 수문장을 격파하면 즉시 시련이 종료됩니다.`)
     :`${planCopy(plan)[0]} 시작. 배치를 읽고 목표와 귀환 동선을 함께 잡으세요.`;
   syncHud();
   window.__xianxiaFrameHub?.wake?.();
@@ -1769,6 +1775,8 @@ function bestClusterTarget(acquire,radius){
   const candidates=[];
   for(const enemy of enemies)if(enemy.type!=='spirit'&&enemy.hp>0&&distance(P,enemy)<acquire)candidates.push(enemy);
   if(!candidates.length)return null;
+  const priority=candidates.filter(taixuFormationTarget);
+  if(priority.length)return priority.sort((a,b)=>distance(P,a)-distance(P,b))[0];
   const rr=radius*1.35;let target=candidates[0],best=-1,nearest=Infinity;
   for(const enemy of candidates){
     let crowd=0;for(const other of candidates)if(distance(enemy,other)<rr)crowd++;
@@ -2180,7 +2188,7 @@ function update(dt){
   // Boss-only encounters end at the kill itself: rewards are already accounted above,
   // so there is no portal walk-back step.
   if(phase==='run'&&bossEncounter&&run?.foundation?.bossKilled){finish('return');return}
-  if(!isMortal()&&P.cd<=0){const range=basicAttackRange(),targets=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&distance(P,e)<range).sort((a,b)=>distance(P,a)-distance(P,b)).slice(0,basicAttackTargets());if(targets.length){const dmg=basicDamage()*combatPower(),scales=[1,.62,.48,.36];targets.forEach((target,i)=>{dealEnemyDamage(target,dmg*(scales[i]||.32),'basic');slash(P.x,P.y,target.x,target.y,i?'#e8d6a5':'#f7e5ad')});run.skillCasts.basic=(run.skillCasts.basic||0)+1;P.cd=basicInterval()}}
+  if(!isMortal()&&P.cd<=0){const range=basicAttackRange(),targets=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&distance(P,e)<range).sort((a,b)=>(Number(taixuFormationTarget(b))-Number(taixuFormationTarget(a)))||distance(P,a)-distance(P,b)).slice(0,basicAttackTargets());if(targets.length){const dmg=basicDamage()*combatPower(),scales=[1,.62,.48,.36];targets.forEach((target,i)=>{dealEnemyDamage(target,dmg*(scales[i]||.32),'basic');slash(P.x,P.y,target.x,target.y,i?'#e8d6a5':'#f7e5ad')});run.skillCasts.basic=(run.skillCasts.basic||0)+1;P.cd=basicInterval()}}
   for(const skill of SKILLS){const st=skillState(skill.id);if(!st.u)continue;if(run.skillCooldowns[skill.id]<=0&&cast(skill)){run.skillCasts[skill.id]=(run.skillCasts[skill.id]||0)+1;run.skillCooldowns[skill.id]=effectiveSkillCooldown(skill.id)}}
   updateHazards(dt);updateNonCombatRecovery(dt);if(P.hp<=0){P.hp=0;finish('dead');return}syncHud();
 }
