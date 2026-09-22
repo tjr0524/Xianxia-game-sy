@@ -1894,6 +1894,10 @@ function cast(skill,options={}){
     for(let i=0;i<limit;i++){
       let target=null,near=Infinity;
       if(i===0&&options.startTarget&&options.startTarget.hp>0&&distance(current,options.startTarget)<acquire){target=options.startTarget}
+      if(!target&&i===0){
+        const priority=candidates.filter(e=>!used.has(e.id)&&e.hp>0&&taixuFormationTarget(e)&&distance(current,e)<acquire).sort((a,b)=>distance(current,a)-distance(current,b));
+        if(priority.length){target=priority[0];near=distance(current,target)}
+      }
       if(!target)for(const e of candidates){if(used.has(e.id)||e.hp<=0)continue;const d=distance(current,e),allowed=i===0?acquire:jump;if(d<allowed&&d<near){near=d;target=e}}
       if(!target)break;
       const hitAt=queue(target,scale);
