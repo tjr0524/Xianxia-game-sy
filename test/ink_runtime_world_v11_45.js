@@ -180,7 +180,8 @@ function ensureViewport(m){
   activeBounds={x:Math.max(0,m.camX-m.viewW/2-pad),y:Math.max(0,m.camY-m.viewH/2-pad),w:Math.min(W,m.camX+m.viewW/2+pad)-Math.max(0,m.camX-m.viewW/2-pad),h:Math.min(H,m.camY+m.viewH/2+pad)-Math.max(0,m.camY-m.viewH/2-pad)};
 }
 function applyBackground(area,m){
-  const img=S.images['bg_'+area]||S.images.bg_qingyun;if(!S.layer||!img)return;
+  const bgArea=area==='jiedan_trial'?'taixu':area;
+  const img=S.images['bg_'+bgArea]||S.images.bg_qingyun;if(!S.layer||!img)return;
   S.layer.style.backgroundImage=`linear-gradient(rgba(247,243,229,.04),rgba(20,31,28,.06)),url("${img.src}")`;
   S.layer.style.backgroundSize=`100% 100%,${W*m.worldScale}px ${H*m.worldScale}px`;
   S.layer.style.backgroundRepeat='no-repeat';

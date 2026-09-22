@@ -89,7 +89,8 @@ function syncBackdrop(s){
   const area=s?.M?.area||'qingyun';
   if(state.area===area)return;
   state.area=area;
-  ensureBackdrop().style.backgroundImage=`url("assets/ink_v1/runtime/backgrounds/${area}.png")`;
+  const backdropArea=area==='jiedan_trial'?'taixu':area;
+  ensureBackdrop().style.backgroundImage=`url("assets/ink_v1/runtime/backgrounds/${backdropArea}.png")`;
 }
 
 function makeHud(){
