@@ -180,8 +180,16 @@ function ensureViewport(m){
   activeBounds={x:Math.max(0,m.camX-m.viewW/2-pad),y:Math.max(0,m.camY-m.viewH/2-pad),w:Math.min(W,m.camX+m.viewW/2+pad)-Math.max(0,m.camX-m.viewW/2-pad),h:Math.min(H,m.camY+m.viewH/2+pad)-Math.max(0,m.camY-m.viewH/2-pad)};
 }
 function applyBackground(area,m){
-  const bgArea=area==='jiedan_trial'?'taixu':area;
-  const img=S.images['bg_'+bgArea]||S.images.bg_qingyun;if(!S.layer||!img)return;
+  if(!S.layer)return;
+  if(area==='jiedan_trial'){
+    const src='assets/ink_v1/foundation_trial_v1/regions/taixu_ruins/background/taixu_ruins_battlefield_1024x1536.png';
+    S.layer.style.backgroundImage=`linear-gradient(rgba(247,243,229,.04),rgba(20,31,28,.06)),url("${src}")`;
+    S.layer.style.backgroundSize=`100% 100%,${W*m.worldScale}px ${H*m.worldScale}px`;
+    S.layer.style.backgroundRepeat='no-repeat';
+    S.layer.style.backgroundPosition=`0 0,${m.left}px ${m.top}px`;
+    return;
+  }
+  const img=S.images['bg_'+area]||S.images.bg_qingyun;if(!img)return;
   S.layer.style.backgroundImage=`linear-gradient(rgba(247,243,229,.04),rgba(20,31,28,.06)),url("${img.src}")`;
   S.layer.style.backgroundSize=`100% 100%,${W*m.worldScale}px ${H*m.worldScale}px`;
   S.layer.style.backgroundRepeat='no-repeat';
