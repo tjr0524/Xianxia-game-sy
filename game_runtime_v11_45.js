@@ -102,7 +102,7 @@ const TREE={
   ],
   formation:[
     {id:'formation1',n:'진안 공명',d:'진안 활성 시 수호령이 쇄도한다 · R3 추가 수호령 · R5 후반 웨이브 강화',tier:1,c:{s:1,h:0}},
-    {id:'formation2',n:'진법 결절',d:'축기 8층부터 결절 2개 · 파괴 시 방해효과 제거 + 수성 -1초 · R4 3번째 결절',tier:2,p:'formation1',c:{s:1,h:0}},
+    {id:'formation2',n:'진법 결절',d:'축기 8층부터 결절 2개 · 파괴 시 방해효과 제거 + 수성 -1.5초 · R4 3번째 결절',tier:2,p:'formation1',c:{s:1,h:0}},
     {id:'formation3',n:'태허대진',d:'축기 9층 태허진령 65%에서 대진 전개 · 결절당 피해감소 15% · 파훼 시 4초 파진',tier:3,p:'formation2',c:{s:1,h:0}}
   ]
 };
