@@ -1,0 +1,28 @@
+name: Saved area startup regression
+
+on:
+  push:
+    branches: [main, test]
+    paths:
+      - '*.js'
+      - 'index.html'
+      - 'version.json'
+      - 'tools/validate_saved_area_boot.js'
+      - '.github/workflows/runtime-startup.yml'
+  pull_request:
+    branches: [main, test]
+
+jobs:
+  saved-area-startup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Check saved-area startup, movement, reload and lifecycle
+        run: node tools/validate_saved_area_boot.js
+      - name: Check build and frame ownership
+        run: |
+          node tools/validate_cache_versions.js
+          node tools/validate_frame_ownership.js

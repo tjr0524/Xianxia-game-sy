@@ -61,6 +61,7 @@ jobs:
           node testsrc/tools/validate_desktop_entry.js testsrc
           node testsrc/tools/validate_tree_interaction.js testsrc
           node testsrc/tools/validate_cache_versions.js testsrc
+          node testsrc/tools/validate_saved_area_boot.js testsrc
 
       - name: Build /test channel
         shell: bash

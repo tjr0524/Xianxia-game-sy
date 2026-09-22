@@ -17,6 +17,10 @@ const cooldown=read('combat_cooldown_hud_v11_43.js');
 const resultFlow=read('result_flow_v11_41.js');
 const visual=read('visual_v11_25.js');
 const tutorial=read('tutorial_runtime_v11_49.js');
+const mobileUi=read('systems_v11_22.js');
+
+if(/sprite_runtime_v11_(?:28|29|30)\.js/.test(mobileUi))
+  throw new Error('mobile UI loads a retired sprite renderer with its own hidden RAF');
 
 const hubPos=index.indexOf('runtime_frame_hub_v11_47.js');
 const gamePos=index.indexOf('game_runtime_v11_45.js');
