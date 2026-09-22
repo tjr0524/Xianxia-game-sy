@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const BUILD='11.51.62';
+const BUILD='11.51.64';
 const SESSION_KEY='xianxia_runtime_safety_11_49_9_test';
 
 function setCanonicalBuild(){
@@ -26,10 +26,9 @@ function cleanLegacyRefreshParams(){
   try{
     const url=new URL(location.href);
     let changed=false;
-    for(const key of ['__build','__refresh','__fresh']){
+    for(const key of ['__build','__refresh']){
       if(url.searchParams.has(key)){url.searchParams.delete(key);changed=true}
     }
-    if(url.searchParams.get('v')!==BUILD){url.searchParams.set('v',BUILD);changed=true}
     if(changed)history.replaceState(history.state,'',url.pathname+url.search+url.hash);
   }catch(_){}
 }

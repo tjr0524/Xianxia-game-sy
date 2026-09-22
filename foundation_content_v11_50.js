@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.51.22-final-audit';
+const VERSION='11.51.64-jiedan-trial-ending';
 if(window.__xianxiaFoundationContent?.version===VERSION)return;
 
 const TYPES=new Set(['charging_boar','ranged_toad','exploding_beetle','command_ape','shield_pangolin','sword_sentinel','formation_warden','formation_node','foundation_guardian','taixu_boss']);
@@ -275,7 +275,7 @@ function spawnFormationNode(api,trial,index,effect){
   const enemy=spawnAt(api,'formation_node',x,y,{environmentObjective:1,trialNode:1,nodeEffect:effect,nodeIndex:index});
   enemy.environmentObjective=1;enemy.formationNode=1;enemy.trialNode=1;enemy.nodeEffect=effect;enemy.nodeIndex=index;
   enemy.name=effect==='summon'?'소환 결절':effect==='zone'?'검진 결절':'호체 결절';
-  enemy.speed=0;enemy.homeX=enemy.x;enemy.homeY=enemy.y;enemy.hp*=trial.bossMode?1.25:1;enemy.max=enemy.hp;enemy.mechanicCd=999;
+  enemy.speed=0;enemy.homeX=enemy.x;enemy.homeY=enemy.y;enemy.hp*=trial.bossMode?0.70:1;enemy.max=enemy.hp;enemy.mechanicCd=999;
   return enemy;
 }
 function spawnTrialWave(api,trial,waveIndex){
@@ -316,8 +316,8 @@ function onFormationNodeDeath(enemy,api){
   const trial=taixuTrial(api);if(!trial||!enemy?.trialNode||!['active','complete'].includes(trial.state))return;
   trial.nodesDestroyed=Math.min(trial.nodesTotal,(trial.nodesDestroyed||0)+1);
   if(trial.state==='active'){
-    trial.remaining=Math.max(0,trial.remaining-1);
-    api.pop(enemy.x,enemy.y-42,`결절 파괴 · 수성 -1.0초`,'#e9dcff',.8);
+    trial.remaining=Math.max(0,trial.remaining-1.5);
+    api.pop(enemy.x,enemy.y-42,`결절 파괴 · 수성 -1.5초`,'#e9dcff',.8);
   }else api.pop(enemy.x,enemy.y-42,'결절 파괴','#e9dcff',.65);
   api.ring(enemy.x,enemy.y,52,'#e9dcff',.45);
   const completionGrace=trial.state==='complete'&&now(api)-(+trial.completedAt||0)<=.12;
@@ -367,20 +367,21 @@ function onBegin(api){
   if(api.state.area==='foundation_trial')spawnAt(api,'foundation_guardian',api.W*.5,api.H*.34);
   if(api.state.area==='taixu'){
     const stage=taixuStage(api),a=-Math.PI/2+(Math.random()-.5)*.55,d=235;
-    if(stage===7||stage===8){
-      api.run.foundation.taixuTrial={stage,state:'dormant',x:clamp(api.player.x+Math.cos(a)*d,90,api.W-90),y:clamp(api.player.y+Math.sin(a)*d,90,api.H-90),radius:150,activateRadius:78,duration:stage===7?6:8,remaining:stage===7?6:8,nodesTotal:0,nodesDestroyed:0,inside:0};
+    if(stage>=7&&stage<=9){
+      const duration=stage===7?6:stage===8?8:10;
+      api.run.foundation.taixuTrial={stage,state:'dormant',x:clamp(api.player.x+Math.cos(a)*d,90,api.W-90),y:clamp(api.player.y+Math.sin(a)*d,90,api.H-90),radius:stage>=9?175:150,activateRadius:78,duration,remaining:duration,nodesTotal:0,nodesDestroyed:0,inside:0};
     }
-    if(stage>=9){
-      const boss=spawnAt(api,'taixu_boss',api.W*.5,api.H*.32);
-      api.run.foundation.taixuTrial={stage,state:'boss_wait',x:boss.x,y:boss.y,radius:165,activateRadius:0,duration:10,remaining:10,nodesTotal:0,nodesDestroyed:0,inside:0,bossMode:1};
-    }
+  }
+  if(api.state.area==='jiedan_trial'){
+    const boss=spawnAt(api,'taixu_boss',api.W*.5,api.H*.32);
+    api.run.foundation.taixuTrial={stage:9,state:'boss_wait',x:boss.x,y:boss.y,radius:210,activateRadius:0,duration:10,remaining:10,nodesTotal:0,nodesDestroyed:0,inside:0,bossMode:1};
   }
   updateControls(api);
 }
 
 function updateRun(dt,api){
   const arts=artState(api);if(!arts)return;
-  if(api.state.area==='taixu')updateTaixuTrial(dt,api);
+  if(api.state.area==='taixu'||api.state.area==='jiedan_trial')updateTaixuTrial(dt,api);
   arts.burstCd=Math.max(0,arts.burstCd-dt);arts.burstTime=Math.max(0,arts.burstTime-dt);arts.trueburstTime=Math.max(0,Math.min(arts.trueburstTime||0,arts.burstTime||0)-dt);arts.dashSpellBoost=Math.max(0,arts.dashSpellBoost-dt);
   const layers=ensureShieldLayers(api);
   for(const layer of layers){
@@ -469,7 +470,13 @@ function updateEnemy(enemy,dt,api){
     }return true;
   }
   if(enemy.type==='taixu_boss'){
-    rangedMovement(enemy,dt,api,245);if(enemy.mechanicCd<=0){
+    const trial=taixuTrial(api);
+    rangedMovement(enemy,dt,api,245);
+    if(trial?.state==='active'&&trial.bossMode){
+      const dx=enemy.x-trial.x,dy=enemy.y-trial.y,d=Math.hypot(dx,dy),leash=115;
+      if(d>leash){enemy.x=clamp(trial.x+dx/d*leash,36,api.W-36);enemy.y=clamp(trial.y+dy/d*leash,36,api.H-36)}
+    }
+    if(enemy.mechanicCd<=0){
       enemy.action='special';const fr=uniqueRanks(api,'taixu').capstone,a=Math.random()*Math.PI*2;
       addTargetHazard(api,'moving_zone',api.player.x+Math.cos(a)*90,api.player.y+Math.sin(a)*90,72,.95,ratioDamage(api,.66),enemy.type,{vx:Math.cos(a+Math.PI*.55)*95,vy:Math.sin(a+Math.PI*.55)*95});
       if(fr>=5){const b=a+Math.PI*.72;addTargetHazard(api,'moving_zone',clamp(api.player.x+Math.cos(b)*145,50,api.W-50),clamp(api.player.y+Math.sin(b)*145,50,api.H-50),58,1.35,ratioDamage(api,.18),enemy.type,{vx:Math.cos(b+1.2)*80,vy:Math.sin(b+1.2)*80})}
@@ -602,13 +609,15 @@ function rewardEnemy(enemy,api){
 function onFinish(reason,api){
   if(controls)controls.classList.remove('on');
   if(reason==='return'&&api.state.area==='foundation_trial'&&api.run?.foundation?.bossKilled){const first=!api.state.events.foundationTrialCompleted;api.state.events.foundationTrialCompleted=1;api.state.events.foundationInsight=1;api.save();if(first)return '<div class="event"><b>시련 완수 · 축기의 실마리</b><br>수문장을 넘어 천뢰봉으로 향할 자격을 얻었습니다.</div>'}
+  if(reason==='return'&&api.state.area==='jiedan_trial'&&api.run?.foundation?.bossKilled){const first=!api.state.events.jiedanTrialCompleted;api.state.events.jiedanTrialCompleted=1;if((api.state.realm?.major??-1)<2)api.state.realm={major:2,stage:1};api.save();if(first)return '<div class="event"><b>현재 이야기의 끝 · 결단 1층</b><br>태허진령을 넘어 금단을 맺고 <b>결단 1층</b>에 올랐습니다.<br><b>현재 공개된 여정은 여기까지입니다.</b><br>후일담 성장 노드와 결단 법술 선택지가 해방됩니다.</div>'}
   return '';
 }
 function snapshotEnemy(enemy){return{chargeWindup:enemy.chargeWindup||0,chargeTime:enemy.chargeTime||0,mechanicCd:enemy.mechanicCd||0,detonating:enemy.detonating||0,formationNode:enemy.formationNode||0,trialNode:enemy.trialNode||0,nodeEffect:enemy.nodeEffect||'',nodeIndex:enemy.nodeIndex??-1,taixuBrokenUntil:enemy.taixuBrokenUntil||0}}
 
 window.__xianxiaFoundationContent={
   version:VERSION,base:BASE,isCombatType:type=>TYPES.has(type)&&type!=='formation_node',configureEnemy,spawnType,
-  bossOnly:area=>area==='foundation_trial',runLimit:()=>25,
+  bossOnly:(area,realm)=>area==='foundation_trial'||area==='jiedan_trial',
+  runLimit:(area,realm)=>area==='jiedan_trial'?45:25,
   onBegin,updateRun,updateEnemy,updateHazards,modifyEnemyDamage,modifyPlayerDamage,playerSpeedMultiplier,onTrigger,beforeEnemyDeath,rewardEnemy,onFinish,snapshotEnemy
 };
 })();

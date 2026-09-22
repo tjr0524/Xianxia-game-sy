@@ -71,7 +71,8 @@ const AREAS=[
   {id:'foundation_trial',name:'축기 시련',desc:'축기에 오르기 전 수문장과 맞서는 단일 보스 시련.',enemy:1,reward:1,rewardTier:2,killStone:90,herbs:9,env:{move:.77,pick:.60},baseStage:9,rec:'연기 9층',req:{major:0,stage:9,prev:'blood',nodes:0},palette:['#171d1c','#32403a','#708574']},
   {id:'thunder',name:'천뢰봉',desc:'낙뢰 전조와 돌진 요수를 함께 읽는 축기 첫 비경.',enemy:1,reward:1,rewardTier:2,killStone:420,herbs:9,env:{move:.77,pick:.60},baseStage:1,rec:'축기 1층 이상',req:{major:1,stage:1,prev:'foundation_trial',nodes:0},palette:['#11182b','#24284b','#555c91']},
   {id:'marsh',name:'자운택',desc:'폭발·호령·수호 특수몹 조합을 공략하는 습지 비경.',enemy:1,reward:1,rewardTier:2,killStone:738,herbs:9,env:{move:.77,pick:.60},baseStage:4,rec:'축기 4층 이상',req:{major:1,stage:4,prev:'thunder',nodes:0},palette:['#172422','#31483f','#758c79']},
-  {id:'taixu',name:'태허유적',desc:'움직이는 진법과 수호령, 태허진령이 지키는 최종 비경.',enemy:1,reward:1,rewardTier:2,killStone:1354,herbs:9,env:{move:.77,pick:.60},baseStage:7,rec:'축기 7층 이상',req:{major:1,stage:7,prev:'marsh',nodes:0},palette:['#171a24','#30354a','#747b9a']}
+  {id:'taixu',name:'태허유적',desc:'움직이는 진법과 수호령이 얽힌 축기 후기 비경.',enemy:1,reward:1,rewardTier:2,killStone:1354,herbs:9,env:{move:.77,pick:.60},baseStage:7,rec:'축기 7층 이상',req:{major:1,stage:7,prev:'marsh',nodes:0},palette:['#171a24','#30354a','#747b9a']},
+  {id:'jiedan_trial',name:'결단 시련',desc:'축기 원만의 끝에서 태허진령과 맞서는 최종 단일 보스 시련.',enemy:1,reward:1,rewardTier:2,killStone:2030,herbs:0,env:{move:1,pick:1},baseStage:9,rec:'축기 9층 · 최종 관문',req:{major:1,stage:9,prev:'taixu',nodes:0},palette:['#171520','#342a42','#8a76a0']}
 ];
 
 const TREE={
@@ -102,8 +103,8 @@ const TREE={
   ],
   formation:[
     {id:'formation1',n:'진안 공명',d:'진안 활성 시 수호령이 쇄도한다 · R3 추가 수호령 · R5 후반 웨이브 강화',tier:1,c:{s:1,h:0}},
-    {id:'formation2',n:'진법 결절',d:'축기 8층부터 결절 2개 · 파괴 시 방해효과 제거 + 수성 -1초 · R4 3번째 결절',tier:2,p:'formation1',c:{s:1,h:0}},
-    {id:'formation3',n:'태허대진',d:'축기 9층 태허진령 65%에서 대진 전개 · 결절당 피해감소 15% · 파훼 시 4초 파진',tier:3,p:'formation2',c:{s:1,h:0}}
+    {id:'formation2',n:'진법 결절',d:'축기 8층부터 결절 2개 · 파괴 시 방해효과 제거 + 수성 -1.5초 · R4 3번째 결절',tier:2,p:'formation1',c:{s:1,h:0}},
+    {id:'formation3',n:'태허대진',d:'축기 9층 3결절 대진 · 결절 파괴로 수성 단축 · 결단 시련에서 태허진령이 완성형 대진 전개',tier:3,p:'formation2',c:{s:1,h:0}}
   ]
 };
 
@@ -130,7 +131,8 @@ const BAL={
     foundation_trial:{hp:380,hit:95,period:1.10,chaserSpeed:150,total:1,sim:1},
     thunder:{hp:1300,hit:300,period:1.00,chaserSpeed:190,total:6,sim:3},
     marsh:{hp:2229,hit:442,period:1.00,chaserSpeed:207,total:6,sim:3},
-    taixu:{hp:3962,hit:659,period:1.00,chaserSpeed:224,total:6,sim:3}
+    taixu:{hp:3962,hit:659,period:1.00,chaserSpeed:224,total:6,sim:3},
+    jiedan_trial:{hp:5881,hit:864,period:1.00,chaserSpeed:235,total:1,sim:1}
   },
   foundationCurve:{
     1:{playerHp:760,dps:420,enemyHp:1300,enemyHit:300,enemySpeed:190},
@@ -177,7 +179,7 @@ const fresh=()=>({
   area:'qingyun',
   unlocked:{qingyun:1},
   zones:Object.fromEntries(AREAS.map(area=>[area.id,zoneBlank()])),
-  events:{foundationInsight:0,foundationTrialCompleted:0},
+  events:{foundationInsight:0,foundationTrialCompleted:0,jiedanTrialCompleted:0},
   settings:{plan:'harvest',tab:'train'},
   stats:{totalRuns:0,totalSafe:0,totalKills:0}
 });
@@ -402,12 +404,17 @@ function effectiveSkillCooldown(id){
   if(id==='sword'&&hasFormationTrait('sword','heavy'))cd*=1.25;
   return cd;
 }
+function taixuFormationTarget(enemy){
+  const trial=run?.foundation?.taixuTrial;
+  return !!enemy&&enemy.type==='formation_node'&&enemy.hp>0&&M.area==='jiedan_trial'&&trial?.state==='active'&&trial?.bossMode;
+}
 function enemyStrengthScore(enemy){
   if(!enemy||enemy.hp<=0)return -Infinity;
-  return (enemy.boss?1e9:0)+(enemy.grade==='elite'||enemy.rare?2e8:0)+(enemy.shield>0?8e7:0)+(enemy.max||enemy.hp||0)*100+(enemy.hp||0);
+  return (taixuFormationTarget(enemy)?2e9:0)+(enemy.boss?1e9:0)+(enemy.grade==='elite'||enemy.rare?2e8:0)+(enemy.shield>0?8e7:0)+(enemy.max||enemy.hp||0)*100+(enemy.hp||0);
 }
 function swordCandidateScore(enemy,origin=P){
   let score=-distance(origin,enemy);
+  if(taixuFormationTarget(enemy))score+=2e9;
   if(hasFormationTrait('sword','break')&&(enemy.shield>0||enemy.type==='formation_node'||isSpecialEnemy(enemy)))score+=250000;
   if(hasFormationTrait('sword','heavy'))score+=enemyStrengthScore(enemy);
   return score;
@@ -732,6 +739,7 @@ function foundationStageForArea(area=M.area){
   if(area==='thunder')return clamp(stage,1,3);
   if(area==='marsh')return clamp(stage,4,6);
   if(area==='taixu')return clamp(stage,7,9);
+  if(area==='jiedan_trial')return 9;
   return 0;
 }
 function foundationTarget(area=M.area){
@@ -759,9 +767,9 @@ function uniqueRewardMultiplier(area=M.area){
   return 1;
 }
 function playerProgressTier(){return M.realm.major>0?9+(M.realm.stage||1):(M.realm.stage||1)}
-function areaBaseTier(){return({qingyun:1,blackwind:3,blood:6,foundation_trial:9,thunder:10,marsh:13,taixu:16}[M.area]||1)}
+function areaBaseTier(){return({qingyun:1,blackwind:3,blood:6,foundation_trial:9,thunder:10,marsh:13,taixu:16,jiedan_trial:18}[M.area]||1)}
 function areaOverlevelGap(){return Math.max(0,playerProgressTier()-areaBaseTier())}
-function incomingDamageScale(){const slots=Math.max(1,({qingyun:2,blackwind:3,blood:3,foundation_trial:1,thunder:3,marsh:3,taixu:3}[M.area]||3));const multi=1/(1+.25*(slots-1));const over=Math.pow(.85,areaOverlevelGap());return multi*over}
+function incomingDamageScale(){const slots=Math.max(1,({qingyun:2,blackwind:3,blood:3,foundation_trial:1,thunder:3,marsh:3,taixu:3,jiedan_trial:1}[M.area]||3));const multi=1/(1+.25*(slots-1));const over=Math.pow(.85,areaOverlevelGap());return multi*over}
 function takePlayerDamage(dmg,grantGrace=false,source='enemy'){
   dmg=Math.max(0,+dmg||0);
   dmg=foundationContent()?.modifyPlayerDamage?.(dmg,source,foundationApi())??dmg;
@@ -1681,21 +1689,22 @@ function begin(){
   P.hp=P.max;
   P.cd=0;
   run.minHp=P.max;
+  const bossOnlyRun=!!foundationContent()?.bossOnly?.(M.area,M.realm);
   for(let i=0;i<herbInitial;i++)randomHerb();
-  if(!foundationContent()?.bossOnly?.(M.area,M.realm))initEncounterPacks();else run.packs=[];
-  if(branches().includes('fate')&&rank('fate3')){
+  if(!bossOnlyRun)initEncounterPacks();else run.packs=[];
+  if(!bossOnlyRun&&branches().includes('fate')&&rank('fate3')){
     const normalCount=1+Math.floor((Math.min(4,rank('fate3'))-1)/2);
     for(let i=0;i<normalCount;i++)actor('spirit');
   }
-  setupVein();
+  if(!bossOnlyRun)setupVein();else vein=null;
   run.veinSeen=vein?1:0;
   foundationContent()?.onBegin?.(foundationApi());
   window.__xianxiaMastery?.onBegin?.(foundationApi());
   UI.ov.classList.add('hide');
   if(window.matchMedia?.('(max-width:920px)').matches)setMenuOpen(false);
-  UI.ret.disabled=!!foundationContent()?.bossOnly?.(M.area,M.realm);
-  UI.notice.textContent=foundationContent()?.bossOnly?.(M.area,M.realm)
-    ?`${planCopy(plan)[0]} 시작. 수문장을 격파하면 즉시 시련이 종료됩니다.`
+  UI.ret.disabled=bossOnlyRun;
+  UI.notice.textContent=bossOnlyRun
+    ?(M.area==='jiedan_trial'?`${planCopy(plan)[0]} 시작. 태허진령을 격파하면 결단 시련을 완수합니다.`:`${planCopy(plan)[0]} 시작. 수문장을 격파하면 즉시 시련이 종료됩니다.`)
     :`${planCopy(plan)[0]} 시작. 배치를 읽고 목표와 귀환 동선을 함께 잡으세요.`;
   syncHud();
   window.__xianxiaFrameHub?.wake?.();
@@ -1769,6 +1778,8 @@ function bestClusterTarget(acquire,radius){
   const candidates=[];
   for(const enemy of enemies)if(enemy.type!=='spirit'&&enemy.hp>0&&distance(P,enemy)<acquire)candidates.push(enemy);
   if(!candidates.length)return null;
+  const priority=candidates.filter(taixuFormationTarget);
+  if(priority.length)return priority.sort((a,b)=>distance(P,a)-distance(P,b))[0];
   const rr=radius*1.35;let target=candidates[0],best=-1,nearest=Infinity;
   for(const enemy of candidates){
     let crowd=0;for(const other of candidates)if(distance(enemy,other)<rr)crowd++;
@@ -1886,6 +1897,10 @@ function cast(skill,options={}){
     for(let i=0;i<limit;i++){
       let target=null,near=Infinity;
       if(i===0&&options.startTarget&&options.startTarget.hp>0&&distance(current,options.startTarget)<acquire){target=options.startTarget}
+      if(!target&&i===0){
+        const priority=candidates.filter(e=>!used.has(e.id)&&e.hp>0&&taixuFormationTarget(e)&&distance(current,e)<acquire).sort((a,b)=>distance(current,a)-distance(current,b));
+        if(priority.length){target=priority[0];near=distance(current,target)}
+      }
       if(!target)for(const e of candidates){if(used.has(e.id)||e.hp<=0)continue;const d=distance(current,e),allowed=i===0?acquire:jump;if(d<allowed&&d<near){near=d;target=e}}
       if(!target)break;
       const hitAt=queue(target,scale);
@@ -2180,7 +2195,7 @@ function update(dt){
   // Boss-only encounters end at the kill itself: rewards are already accounted above,
   // so there is no portal walk-back step.
   if(phase==='run'&&bossEncounter&&run?.foundation?.bossKilled){finish('return');return}
-  if(!isMortal()&&P.cd<=0){const range=basicAttackRange(),targets=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&distance(P,e)<range).sort((a,b)=>distance(P,a)-distance(P,b)).slice(0,basicAttackTargets());if(targets.length){const dmg=basicDamage()*combatPower(),scales=[1,.62,.48,.36];targets.forEach((target,i)=>{dealEnemyDamage(target,dmg*(scales[i]||.32),'basic');slash(P.x,P.y,target.x,target.y,i?'#e8d6a5':'#f7e5ad')});run.skillCasts.basic=(run.skillCasts.basic||0)+1;P.cd=basicInterval()}}
+  if(!isMortal()&&P.cd<=0){const range=basicAttackRange(),targets=enemies.filter(e=>e.type!=='spirit'&&e.hp>0&&distance(P,e)<range).sort((a,b)=>(Number(taixuFormationTarget(b))-Number(taixuFormationTarget(a)))||distance(P,a)-distance(P,b)).slice(0,basicAttackTargets());if(targets.length){const dmg=basicDamage()*combatPower(),scales=[1,.62,.48,.36];targets.forEach((target,i)=>{dealEnemyDamage(target,dmg*(scales[i]||.32),'basic');slash(P.x,P.y,target.x,target.y,i?'#e8d6a5':'#f7e5ad')});run.skillCasts.basic=(run.skillCasts.basic||0)+1;P.cd=basicInterval()}}
   for(const skill of SKILLS){const st=skillState(skill.id);if(!st.u)continue;if(run.skillCooldowns[skill.id]<=0&&cast(skill)){run.skillCasts[skill.id]=(run.skillCasts[skill.id]||0)+1;run.skillCooldowns[skill.id]=effectiveSkillCooldown(skill.id)}}
   updateHazards(dt);updateNonCombatRecovery(dt);if(P.hp<=0){P.hp=0;finish('dead');return}syncHud();
 }
@@ -2257,8 +2272,9 @@ function finish(reason){
 
   UI.ov.classList.remove('hide');
   UI.ret.disabled=true;
-  UI.ot.textContent=safe?'무사 귀환':reason==='dead'?'육신 중상':'비경 붕괴 · 강제 이탈';
-  const resultLead=safe?'전리품 전량 확보':reason==='dead'?'전투 불능 · 전리품 40% 회수':'비경이 무너지며 강제로 튕겨났습니다.<br><b>전리품 60% 소실</b> · 40%만 회수';
+  const endingClear=safe&&M.area==='jiedan_trial'&&!!run?.foundation?.bossKilled;
+  UI.ot.textContent=endingClear?'결단 시련 완수':safe?'무사 귀환':reason==='dead'?'육신 중상':'비경 붕괴 · 강제 이탈';
+  const resultLead=endingClear?'태허진령 격파 · <b>현재 버전의 최종 시련을 완수했습니다.</b>':safe?'전리품 전량 확보':reason==='dead'?'전투 불능 · 전리품 40% 회수':'비경이 무너지며 강제로 튕겨났습니다.<br><b>전리품 60% 소실</b> · 40%만 회수';
   const specialLoot=[thunderMarks?`뢰흔 ${thunderMarks}`:'',purpleEssence?`자운정수 ${purpleEssence}`:'',taixuSigils?`태허진문 ${taixuSigils}`:''].filter(Boolean).join(' · ');
   UI.ox.innerHTML=`${resultLead}<br><b>영석 ${stone}${h0+h1+h2?` · 영초 下${h0} 中${h1} 上${h2}`:''}${specialLoot?` · ${specialLoot}`:''}</b>${objective}${event}`;
   render();

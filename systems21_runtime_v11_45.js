@@ -18,8 +18,8 @@ function currentStageIndex(m){
 }
 function completed(m,stage){return stage?.nodes?.filter(n=>m.trainingNodes?.[n.id]).length||0}
 
-// 돌파 비용/조건은 progression runtime 하나만 소유한다.
-// UI 레이어가 자체 가격표를 가지면 축기 이후 단계가 마지막 구형 값으로 fallback될 수 있다.
+// 경지 비용/조건의 단일 소유자는 progression runtime이다.
+// 이 UI 호환 레이어가 별도 가격표를 가지면 축기 이후 모든 단계가 f1 비용으로 fallback된다.
 function breakthroughCost(i){
   return P.breakthroughCost?.(i)||null;
 }
