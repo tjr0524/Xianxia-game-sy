@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 
-const VERSION='11.51.22-final-audit';
+const VERSION='11.51.63-taixu-boss-balance';
 if(window.__xianxiaFoundationContent?.version===VERSION)return;
 
 const TYPES=new Set(['charging_boar','ranged_toad','exploding_beetle','command_ape','shield_pangolin','sword_sentinel','formation_warden','formation_node','foundation_guardian','taixu_boss']);
@@ -275,7 +275,7 @@ function spawnFormationNode(api,trial,index,effect){
   const enemy=spawnAt(api,'formation_node',x,y,{environmentObjective:1,trialNode:1,nodeEffect:effect,nodeIndex:index});
   enemy.environmentObjective=1;enemy.formationNode=1;enemy.trialNode=1;enemy.nodeEffect=effect;enemy.nodeIndex=index;
   enemy.name=effect==='summon'?'소환 결절':effect==='zone'?'검진 결절':'호체 결절';
-  enemy.speed=0;enemy.homeX=enemy.x;enemy.homeY=enemy.y;enemy.hp*=trial.bossMode?1.25:1;enemy.max=enemy.hp;enemy.mechanicCd=999;
+  enemy.speed=0;enemy.homeX=enemy.x;enemy.homeY=enemy.y;enemy.hp*=trial.bossMode?0.70:1;enemy.max=enemy.hp;enemy.mechanicCd=999;
   return enemy;
 }
 function spawnTrialWave(api,trial,waveIndex){
@@ -316,8 +316,8 @@ function onFormationNodeDeath(enemy,api){
   const trial=taixuTrial(api);if(!trial||!enemy?.trialNode||!['active','complete'].includes(trial.state))return;
   trial.nodesDestroyed=Math.min(trial.nodesTotal,(trial.nodesDestroyed||0)+1);
   if(trial.state==='active'){
-    trial.remaining=Math.max(0,trial.remaining-1);
-    api.pop(enemy.x,enemy.y-42,`결절 파괴 · 수성 -1.0초`,'#e9dcff',.8);
+    trial.remaining=Math.max(0,trial.remaining-1.5);
+    api.pop(enemy.x,enemy.y-42,`결절 파괴 · 수성 -1.5초`,'#e9dcff',.8);
   }else api.pop(enemy.x,enemy.y-42,'결절 파괴','#e9dcff',.65);
   api.ring(enemy.x,enemy.y,52,'#e9dcff',.45);
   const completionGrace=trial.state==='complete'&&now(api)-(+trial.completedAt||0)<=.12;
@@ -372,7 +372,7 @@ function onBegin(api){
     }
     if(stage>=9){
       const boss=spawnAt(api,'taixu_boss',api.W*.5,api.H*.32);
-      api.run.foundation.taixuTrial={stage,state:'boss_wait',x:boss.x,y:boss.y,radius:165,activateRadius:0,duration:10,remaining:10,nodesTotal:0,nodesDestroyed:0,inside:0,bossMode:1};
+      api.run.foundation.taixuTrial={stage,state:'boss_wait',x:boss.x,y:boss.y,radius:210,activateRadius:0,duration:10,remaining:10,nodesTotal:0,nodesDestroyed:0,inside:0,bossMode:1};
     }
   }
   updateControls(api);
@@ -469,7 +469,13 @@ function updateEnemy(enemy,dt,api){
     }return true;
   }
   if(enemy.type==='taixu_boss'){
-    rangedMovement(enemy,dt,api,245);if(enemy.mechanicCd<=0){
+    const trial=taixuTrial(api);
+    rangedMovement(enemy,dt,api,245);
+    if(trial?.state==='active'&&trial.bossMode){
+      const dx=enemy.x-trial.x,dy=enemy.y-trial.y,d=Math.hypot(dx,dy),leash=115;
+      if(d>leash){enemy.x=clamp(trial.x+dx/d*leash,36,api.W-36);enemy.y=clamp(trial.y+dy/d*leash,36,api.H-36)}
+    }
+    if(enemy.mechanicCd<=0){
       enemy.action='special';const fr=uniqueRanks(api,'taixu').capstone,a=Math.random()*Math.PI*2;
       addTargetHazard(api,'moving_zone',api.player.x+Math.cos(a)*90,api.player.y+Math.sin(a)*90,72,.95,ratioDamage(api,.66),enemy.type,{vx:Math.cos(a+Math.PI*.55)*95,vy:Math.sin(a+Math.PI*.55)*95});
       if(fr>=5){const b=a+Math.PI*.72;addTargetHazard(api,'moving_zone',clamp(api.player.x+Math.cos(b)*145,50,api.W-50),clamp(api.player.y+Math.sin(b)*145,50,api.H-50),58,1.35,ratioDamage(api,.18),enemy.type,{vx:Math.cos(b+1.2)*80,vy:Math.sin(b+1.2)*80})}
@@ -582,6 +588,7 @@ function onTrigger(event,payload,ctx,api){
 function beforeEnemyDeath(enemy,api){
   if(enemy?.formationNode)onFormationNodeDeath(enemy,api);
   if(enemy.boss)api.run.foundation.bossKilled=1;
+  if(enemy?.type==='taixu_boss')api.run.foundation.taixuBossDefeated=1;
 }
 function rewardEnemy(enemy,api){
   if(!TYPES.has(enemy.type))return false;
@@ -608,7 +615,8 @@ function snapshotEnemy(enemy){return{chargeWindup:enemy.chargeWindup||0,chargeTi
 
 window.__xianxiaFoundationContent={
   version:VERSION,base:BASE,isCombatType:type=>TYPES.has(type)&&type!=='formation_node',configureEnemy,spawnType,
-  bossOnly:area=>area==='foundation_trial',runLimit:()=>25,
+  bossOnly:(area,realm)=>area==='foundation_trial'||(area==='taixu'&&realm?.major===1&&(+realm.stage||0)>=9),
+  runLimit:(area,realm)=>area==='taixu'&&realm?.major===1&&(+realm.stage||0)>=9?35:25,
   onBegin,updateRun,updateEnemy,updateHazards,modifyEnemyDamage,modifyPlayerDamage,playerSpeedMultiplier,onTrigger,beforeEnemyDeath,rewardEnemy,onFinish,snapshotEnemy
 };
 })();
