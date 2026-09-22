@@ -35,6 +35,8 @@ jobs:
         run: |
           set -euo pipefail
           node --check testsrc/game_runtime_v11_45.js
+          node --check testsrc/foundation_content_v11_50.js
+          node --check testsrc/formation_skills_v11_49_35.js
           node --check testsrc/ink_runtime_world_v11_45.js
           node --check testsrc/progression_runtime_v11_45.js
           node --check testsrc/systems21_runtime_v11_45.js
@@ -62,6 +64,7 @@ jobs:
           node testsrc/tools/validate_tree_interaction.js testsrc
           node testsrc/tools/validate_cache_versions.js testsrc
           node testsrc/tools/validate_saved_area_boot.js testsrc
+          (cd testsrc && node tools/validate_foundation_v11_51.js)
 
       - name: Build /test channel
         shell: bash

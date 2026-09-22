@@ -221,6 +221,11 @@ function realmLabel(req){
   if(!req)return'';
   return `${REALMS[req.major]||'후기'} ${req.stage}층`;
 }
+function traitReqReached(M,req){
+  if(reached(M,req))return true;
+  return !!M.events?.jiedanTrialCompleted&&req?.major===2&&req?.stage===1;
+}
+function endingTraitUnlock(M,req){return !!M.events?.jiedanTrialCompleted&&req?.major===2&&req?.stage===1&&!reached(M,req)}
 function herbHave(M,g){return +M[HERB_KEYS[g]]||0}
 function foundationMaterial(M){
   if((M.realm?.major??-1)!==1)return null;
@@ -294,7 +299,7 @@ function traitState(M,id,tier,create=false){
 function traitStatus(M,s,tierIndex,optId){
   const t=TRAITS[s.id]?.[tierIndex];
   if(!t)return'locked';
-  if(!mainUnlocked(M,s)||!reached(M,t.req))return'locked';
+  if(!mainUnlocked(M,s)||!traitReqReached(M,t.req))return'locked';
   const st=traitState(M,s.id,tierIndex+1);
   if(st.selected===optId)return'selected';
   if(st.owned?.includes(optId))return'owned';
@@ -304,7 +309,7 @@ function traitLockReason(M,s,tierIndex){
   const t=TRAITS[s.id]?.[tierIndex];
   if(!t)return'특성 데이터 없음';
   const reasons=[];
-  if(!reached(M,t.req))reasons.push(`경지 · ${realmLabel(t.req)} 필요`);
+  if(!traitReqReached(M,t.req))reasons.push(`경지 · ${realmLabel(t.req)} 필요 또는 결단 시련 완수`);
   if(!mainUnlocked(M,s)){
     reasons.push(s.kind==='spell'?`본체 · ${s.name} 전승 필요`:`본체 · ${s.name} Rank 1 활성화 필요`);
   }
@@ -369,7 +374,7 @@ function chooseTrait(id,tier,optId){
   const s=sys(id),t=TRAITS[id]?.[tier-1];
   if(!s||!t)return;
   mutation(M=>{
-    if(!mainUnlocked(M,s)||!reached(M,t.req)){notice(`${realmLabel(t.req)} 및 ${s.name} 해금이 필요합니다.`);return false}
+    if(!mainUnlocked(M,s)||!traitReqReached(M,t.req)){notice(`${realmLabel(t.req)} 또는 결단 시련 완수 및 ${s.name} 해금이 필요합니다.`);return false}
     if(t.reserved){notice('후기 경지용 예약 슬롯입니다. 밸런스 수치는 아직 확정하지 않았습니다.');return false}
     const st=traitState(M,id,tier,true);
     if(st.selected===optId){notice('이미 선택 중인 특성입니다.');return false}
@@ -539,7 +544,7 @@ function traitPanel(M,s,tier,opt,phase){
   const statusLabel={locked:'봉인',available:'해금 가능',owned:'보유',selected:'장착 중'}[status]||status;
   const condition=status==='locked'||t.reserved
     ?`<small class="fs49-lock-reason"><b>잠금 조건</b> · ${lockReason||'조건 확인 필요'}</small>`
-    :`<small>${realmLabel(t.req)} 개방 · 조건 충족</small>`;
+    :endingTraitUnlock(M,t.req)?'<small><b>결단 시련 완수</b> · 엔딩 보상으로 해방</small>':`<small>${realmLabel(t.req)} 개방 · 조건 충족</small>`;
   return `<div class="fs49-detail-head"><b>${s.name} · Tier ${['Ⅰ','Ⅱ','Ⅲ'][tier-1]}</b><span>${statusLabel}</span></div>
     <div class="fs49-detail-main fs49-detail-trait"><img src="${traitIcon(s.id,opt[1])}" alt=""><div><strong>${opt[1]}</strong>${effectPresentation(opt[2])}${condition}</div></div>
     <div class="fs49-detail-actions"><span>${owned?'영구 보유 · 비경 밖 무료 교체':`선택 노드 영구 해금 · 도흔 ${daoCost}`}</span>

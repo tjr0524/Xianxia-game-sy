@@ -9,6 +9,8 @@ const areaAssets={
   marsh:{bg:'regions/purple_cloud_marsh/background/purple_cloud_marsh_battlefield_1024x1536.png',decor:'regions/purple_cloud_marsh/decor/purple_cloud_marsh_decor_atlas_2x2.png',ambient:'regions/purple_cloud_marsh/fx/purple_cloud_marsh_fx_atlas_2x2.png',ranged_toad:'enemies/celadon_mist_toad/celadon_mist_toad_sheet_6x3.png',projectile:'enemies/celadon_mist_toad/celadon_qi_projectile_sheet_8x1.png',projectileTarget:'enemies/celadon_mist_toad/ranged_impact_telegraph_256.png',exploding_beetle:'enemies/cracked_stone_beetle/cracked_stone_beetle_sheet_6x3.png',explosion:'enemies/cracked_stone_beetle/circular_burst_sheet_6x1.png',explosionTarget:'enemies/cracked_stone_beetle/explosion_telegraph_256.png',command_ape:'enemies/ink_command_ape/ink_command_ape_sheet_6x3.png',command:'enemies/ink_command_ape/command_buff_marker_sheet_4x1.png',shield_pangolin:'enemies/jade_scale_pangolin/jade_scale_pangolin_sheet_6x3.png',shield:'enemies/jade_scale_pangolin/ally_shield_overlay_sheet_4x1.png',shieldBreak:'fx/common/shield_break/shield_break_sheet_6x1.png'},
   taixu:{bg:'regions/taixu_ruins/background/taixu_ruins_battlefield_1024x1536.png',decor:'regions/taixu_ruins/decor/taixu_ruins_decor_atlas_2x2.png',node:'regions/taixu_ruins/objects/taixu_formation_node_512.png',sword_sentinel:'enemies/taixu_sword_sentinel/taixu_sword_sentinel_sheet_6x3.png',swordTarget:'enemies/taixu_sword_sentinel/sword_zone_telegraph_256.png',swordImpact:'enemies/taixu_sword_sentinel/sword_ground_impact_sheet_6x1.png',formation_warden:'enemies/taixu_formation_warden/taixu_formation_warden_sheet_6x3.png',formationTarget:'enemies/taixu_formation_warden/formation_target_telegraph_256.png',formationBolt:'enemies/taixu_formation_warden/formation_bolt_sheet_6x1.png',taixu_boss:'boss/taixu_formation_sovereign/taixu_formation_sovereign_sheet_6x4.png',portrait:'ui/taixu_formation_sovereign_portrait.png',movingZone:'boss/taixu_formation_sovereign/moving_formation_zone_256.png',grandFloor:'boss/taixu_formation_sovereign/grand_formation_floor_sheet_6x1.png',areaActivation:'fx/common/area_field/area_field_activation_sheet_6x1.png'}
 };
+// Final Core Formation trial reuses the complete Taixu visual set.
+areaAssets.jiedan_trial=areaAssets.taixu;
 const state={version:VERSION,canvas:null,ctx:null,images:{},loading:{},area:'',cache:'foundation-assets-v1',prevFoundation:new Map(),deaths:[],damageFloats:[],lastArea:''};
 window.__xianxiaFoundationRenderer=state;
 function layer(){
@@ -33,12 +35,13 @@ function drawEnvironment(area,t){
   const c=state.ctx,atlas=image(area,'decor'),ambient=image(area,'ambient'),node=image(area,'node');
   if(atlas?.naturalWidth){const positions=[[170,330,0],[1630,420,1],[220,2070,2],[1580,2140,3]];for(const[x,y,index]of positions){const sw=atlas.naturalWidth/2,sh=atlas.naturalHeight/2;c.save();c.globalAlpha=.48;c.drawImage(atlas,index%2*sw,Math.floor(index/2)*sh,sw,sh,x-100,y-100,200,200);c.restore()}}
   if(ambient?.naturalWidth){const sw=ambient.naturalWidth/2,sh=ambient.naturalHeight/2;for(let i=0;i<4;i++){const x=280+i*410,y=520+(i%2)*850;c.save();c.globalAlpha=.13+.05*Math.sin(t+i);c.drawImage(ambient,i%2*sw,Math.floor(i/2)*sh,sw,sh,x-130,y-130,260,260);c.restore()}}
-  if(node?.naturalWidth&&area!=='taixu'){for(const[x,y]of[[330,720],[1470,760],[380,1800],[1420,1760]]){c.save();c.globalAlpha=.55;c.drawImage(node,x-52,y-72,104,104);c.restore()}}
+  if(node?.naturalWidth&&!['taixu','jiedan_trial'].includes(area)){for(const[x,y]of[[330,720],[1470,760],[380,1800],[1420,1760]]){c.save();c.globalAlpha=.55;c.drawImage(node,x-52,y-72,104,104);c.restore()}}
 }
 function drawTaixuTrial(snapshot,t){
-  if(snapshot.M?.area!=='taixu')return;
+  const trialArea=snapshot.M?.area;if(!['taixu','jiedan_trial'].includes(trialArea))return;
   const trial=snapshot.run?.foundation?.taixuTrial;if(!trial)return;
-  const c=state.ctx,node=image('taixu','node'),floor=image('taixu','grandFloor'),activation=image('taixu','areaActivation');
+  const assetArea=trialArea==='jiedan_trial'?'jiedan_trial':'taixu';
+  const c=state.ctx,node=image(assetArea,'node'),floor=image(assetArea,'grandFloor'),activation=image(assetArea,'areaActivation');
   const elapsed=+snapshot.elapsed||0,pulse=.5+.5*Math.sin(t*4.6),x=+trial.x||0,y=+trial.y||0,r=+trial.radius||150;
   if(trial.state==='boss_wait')return;
   if(trial.state==='complete'){
