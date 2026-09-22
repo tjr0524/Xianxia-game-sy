@@ -53,7 +53,8 @@ ok(fctx.window.__xianxiaFoundationContent.runLimit('jiedan_trial',{major:1,stage
 ok(foundation.includes("api.state.area==='jiedan_trial'"),'Taixu Sovereign spawns only in the separate Core Formation trial');
 ok(foundation.includes("enemy.hp*=trial.bossMode?0.70:1"),'Core Formation boss nodes use the tuned boss-phase HP');
 ok(foundation.includes("trial.remaining=Math.max(0,trial.remaining-1.5)"),'breaking a formation node removes 1.5 seconds');
-ok(foundation.includes("현재 이야기의 끝 · 결단의 문턱"),'first clear announces the current ending');
+ok(foundation.includes("현재 이야기의 끝 · 결단 1층"),'first clear announces Core Formation 1 as the current ending');
+ok(foundation.includes("api.state.realm={major:2,stage:1}"),'final boss clear promotes the character to Core Formation 1');
 ok(renderer.includes("areaAssets.jiedan_trial=areaAssets.taixu"),'Core Formation trial reuses the Taixu renderer asset set');
 ok(renderer.includes("['taixu','jiedan_trial'].includes(trialArea)"),'Taixu grand-formation renderer also draws in the final trial');
 ok(ink.includes("area==='jiedan_trial'")&&ink.includes("taixu_ruins_battlefield_1024x1536.png"),'generic ink layer does not fall back to Qingyun in the final trial');
@@ -63,6 +64,14 @@ ok(game.includes("if(!bossOnlyRun)setupVein();else vein=null;"),'boss-only encou
 ok(game.includes("if(phase==='run'&&bossEncounter&&run?.foundation?.bossKilled){finish('return');return}"),'boss-only encounters resolve at the kill itself');
 ok(progression.includes("jiedan_trial:{s:0,h:0"),'progression defines a separate Core Formation trial gate');
 ok(progression.includes("축기 9층 수련 완성 필요"),'final gate requires completed Foundation 9 training');
+const training=vm.runInNewContext('('+literal(progression,'const TRAIN=',";\nconst TRAIN_WORLD_H")+')');
+const core1=training.find(stage=>stage.id==='c1');
+ok(core1&&core1.req.major===2&&core1.req.stage===1,'training path ends with Core Formation 1');
+ok(core1.nodes.length===6,'Core Formation 1 exposes six post-ending growth nodes');
+ok(core1.nodes.some(node=>node.effect.basicRange===48),'Core Formation 1 includes the expanded basic attack range node');
+ok(core1.nodes.some(node=>node.effect.basicHits===1),'Core Formation 1 includes an extra basic attack target node');
+ok(progression.includes("TRAIN_WORLD_H=3000,TRAIN_ROOT_Y=2910"),'training map expands to fit Core Formation 1');
+ok(progression.includes("결단 시련 완수 시 자동 돌파"),'Core Formation 1 cannot be manually bypassed before the final trial');
 ok(formation.includes('function traitReqReached(M,req)'),'formation UI supports ending-based Core Formation trait unlocks');
 ok(formation.includes("jiedanTrialCompleted&&req?.major===2&&req?.stage===1"),'only prepared Core Formation 1 trait tiers are unlocked by the ending');
 const taixuBossHp=5881*1.15*6,stage9Dps=1900;
