@@ -53,15 +53,15 @@ const sw=read('sw.js');
 if(/addEventListener\(\s*['"]fetch['"]/.test(sw))fail('sw.js must not intercept runtime fetches');
 
 const version=JSON.parse(read('version.json'));
-if(version.paused!==true||String(version.build||'').trim()!==''){
-  fail('version.json must remain paused with an empty build while automatic updates are retired');
+if(version.paused!==false||!String(version.build||'').trim()){
+  fail('version.json must expose an active non-empty stable build');
 }
 
 const index=read('index.html');
 const kernelPos=index.indexOf('runtime_kernel_v11_45.js');
-const entryPos=index.indexOf('balance_core_v11_37_1.js');
+const entryPos=index.indexOf('game_runtime_v11_45.js');
 if(kernelPos<0||entryPos<0||kernelPos>entryPos){
-  fail('runtime kernel must load before the balance entrypoint');
+  fail('runtime kernel must load before the flattened game runtime');
 }
 
 if(process.exitCode){
