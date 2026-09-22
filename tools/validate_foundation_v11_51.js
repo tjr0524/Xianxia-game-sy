@@ -94,5 +94,17 @@ ok(mctx.window.__xianxiaMastery.claim(M,'qingyun',0)===0&&mctx.window.__xianxiaM
 ok(mctx.window.__xianxiaMastery.summary(M).daoists===0,'Daoist count requires five marks');
 for(const area of mctx.window.__xianxiaMastery.areas)M.mastery.areas[area].marks=[1,1,1,1,1];
 ok(mctx.window.__xianxiaMastery.summary(M).daoists===6,'six completed areas produce the six-Daoist cap');
+ok(mastery.includes("'태허진령 격파'"),'Taixu mastery V objective is the Sovereign defeat');
+ok(mastery.includes("M.area==='jiedan_trial'&&api.run?.foundation?.bossKilled"),'Core Formation trial clear awards Taixu mastery V');
+ok(mastery.includes("M.events?.jiedanTrialCompleted&&!M.mastery.areas.taixu.marks[4]"),'existing final-trial clears backfill Taixu mastery V');
+const oldClear={events:{jiedanTrialCompleted:1},mastery:{version:2,areas:{}},formationSkills:{version:1,daoMarks:0,ranks:{},traits:{},daoEconomyVersion:2,daoJournalVersion:1}};
+mctx.window.__xianxiaMastery.ensure(oldClear);
+ok(oldClear.mastery.areas.taixu.marks[4]===1&&oldClear.mastery.areas.taixu.claimed[4]===0,'existing clear becomes an unclaimed Taixu V reward');
+const clearState={area:'jiedan_trial',events:{},mastery:{version:2,areas:{}},formationSkills:{version:1,daoMarks:0,ranks:{},traits:{},daoEconomyVersion:2,daoJournalVersion:1}};
+const clearRun={foundation:{bossKilled:1},mastery:{kills:{taixu_boss:1},types:{},specialKinds:0,rareKill:1,formationNodes:0},h0:0,h1:0,h2:0,kills:1,damageBySource:{}};
+const clearApi={state:clearState,run:clearRun,save(){}};
+const clearMessage=mctx.window.__xianxiaMastery.onFinish('return',clearApi);
+ok(clearState.mastery.areas.taixu.marks[4]===1&&clearMessage.includes('태허진령 격파'),'final trial kill records Taixu mastery V immediately');
+
 
 console.log('foundation 11.51 validation: OK');
