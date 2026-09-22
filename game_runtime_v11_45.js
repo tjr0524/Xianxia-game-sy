@@ -1704,7 +1704,7 @@ function begin(){
   if(window.matchMedia?.('(max-width:920px)').matches)setMenuOpen(false);
   UI.ret.disabled=bossOnlyRun;
   UI.notice.textContent=bossOnlyRun
-    ?(M.area==='taixu'?`${planCopy(plan)[0]} 시작. 태허진령을 격파하면 즉시 비경을 제압합니다.`:`${planCopy(plan)[0]} 시작. 수문장을 격파하면 즉시 시련이 종료됩니다.`)
+    ?(M.area==='jiedan_trial'?`${planCopy(plan)[0]} 시작. 태허진령을 격파하면 결단 시련을 완수합니다.`:`${planCopy(plan)[0]} 시작. 수문장을 격파하면 즉시 시련이 종료됩니다.`)
     :`${planCopy(plan)[0]} 시작. 배치를 읽고 목표와 귀환 동선을 함께 잡으세요.`;
   syncHud();
   window.__xianxiaFrameHub?.wake?.();
@@ -2272,8 +2272,9 @@ function finish(reason){
 
   UI.ov.classList.remove('hide');
   UI.ret.disabled=true;
-  UI.ot.textContent=safe?'무사 귀환':reason==='dead'?'육신 중상':'비경 붕괴 · 강제 이탈';
-  const resultLead=safe?'전리품 전량 확보':reason==='dead'?'전투 불능 · 전리품 40% 회수':'비경이 무너지며 강제로 튕겨났습니다.<br><b>전리품 60% 소실</b> · 40%만 회수';
+  const endingClear=safe&&M.area==='jiedan_trial'&&!!run?.foundation?.bossKilled;
+  UI.ot.textContent=endingClear?'결단 시련 완수':safe?'무사 귀환':reason==='dead'?'육신 중상':'비경 붕괴 · 강제 이탈';
+  const resultLead=endingClear?'태허진령 격파 · <b>현재 버전의 최종 시련을 완수했습니다.</b>':safe?'전리품 전량 확보':reason==='dead'?'전투 불능 · 전리품 40% 회수':'비경이 무너지며 강제로 튕겨났습니다.<br><b>전리품 60% 소실</b> · 40%만 회수';
   const specialLoot=[thunderMarks?`뢰흔 ${thunderMarks}`:'',purpleEssence?`자운정수 ${purpleEssence}`:'',taixuSigils?`태허진문 ${taixuSigils}`:''].filter(Boolean).join(' · ');
   UI.ox.innerHTML=`${resultLead}<br><b>영석 ${stone}${h0+h1+h2?` · 영초 下${h0} 中${h1} 上${h2}`:''}${specialLoot?` · ${specialLoot}`:''}</b>${objective}${event}`;
   render();
