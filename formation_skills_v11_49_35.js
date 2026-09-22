@@ -374,7 +374,7 @@ function chooseTrait(id,tier,optId){
   const s=sys(id),t=TRAITS[id]?.[tier-1];
   if(!s||!t)return;
   mutation(M=>{
-    if(!mainUnlocked(M,s)||!reached(M,t.req)){notice(`${realmLabel(t.req)} 및 ${s.name} 해금이 필요합니다.`);return false}
+    if(!mainUnlocked(M,s)||!traitReqReached(M,t.req)){notice(`${realmLabel(t.req)} 또는 결단 시련 완수 및 ${s.name} 해금이 필요합니다.`);return false}
     if(t.reserved){notice('후기 경지용 예약 슬롯입니다. 밸런스 수치는 아직 확정하지 않았습니다.');return false}
     const st=traitState(M,id,tier,true);
     if(st.selected===optId){notice('이미 선택 중인 특성입니다.');return false}
