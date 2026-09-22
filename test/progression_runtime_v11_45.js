@@ -26,9 +26,10 @@ const TRAIN=[
 {id:'f6',name:'축기 6층',req:{major:1,stage:6},nodes:[T('f6_atk','진원 · 관통','劍','검결계수 +1.73',K(6450),{atk:1.7285714286}),T('f6_hp','축기 육신','體','HP +117',K(3330),{hp:117}),T('f6_guard','진원 호체','盾','HP +63',K(2080),{hp:63}),T('f6_mov','경신 · 유영','步','Raw 이동 +10',K(2910),{mov:10}),T('f6_sen','신식 · 확장','識','신식력 +0.25',K(2910),{sen:.25}),T('f6_method','경지 심법','法','축지 특성 II 해금',K(3120),{})]},
 {id:'f7',name:'축기 7층',req:{major:1,stage:7},nodes:[T('f7_atk','진원 · 대주천','劍','검결계수 +2.21',K(7880),{atk:2.2087301587}),T('f7_hp','축기 육신','體','HP +136',K(4070),{hp:136}),T('f7_guard','진원 호체','盾','HP +74',K(2540),{hp:74}),T('f7_mov','경신 · 유영','步','Raw 이동 +10',K(3560),{mov:10}),T('f7_sen','신식 · 확장','識','신식력 +0.30',K(3560),{sen:.30}),T('f7_method','경지 심법','法','축지 2충전 + 진기폭주 특성 II 해금',K(3810),{})]},
 {id:'f8',name:'축기 8층',req:{major:1,stage:8},nodes:[T('f8_atk','진원 · 귀원','劍','검결계수 +2.69',K(10200),{atk:2.6888888889}),T('f8_hp','축기 육신','體','HP +156',K(5270),{hp:156}),T('f8_guard','진원 호체','盾','HP +84',K(3290),{hp:84}),T('f8_mov','경신 · 유영','步','Raw 이동 +10',K(4610),{mov:10}),T('f8_sen','신식 · 확장','識','신식력 +0.30',K(4610),{sen:.30}),T('f8_method','경지 심법','法','호체 최대 3층 + 호체 특성 II 해금',K(4940),{})]},
-{id:'f9',name:'축기 9층',req:{major:1,stage:9},nodes:[T('f9_atk','진원 · 원만','劍','검결계수 +3.27',K(13130),{atk:3.2650793651}),T('f9_hp','축기 육신','體','HP +182',K(6780),{hp:182}),T('f9_guard','진원 호체','盾','HP +98',K(4240),{hp:98}),T('f9_mov','경신 · 유영','步','Raw 이동 +10',K(5930),{mov:10}),T('f9_sen','신식 · 확장','識','신식력 +0.35',K(5930),{sen:.35}),T('f9_method','경지 심법','法','축지 특성 III 해금 / 축기 빌드 완성',K(6350),{})]}
+{id:'f9',name:'축기 9층',req:{major:1,stage:9},nodes:[T('f9_atk','진원 · 원만','劍','검결계수 +3.27',K(13130),{atk:3.2650793651}),T('f9_hp','축기 육신','體','HP +182',K(6780),{hp:182}),T('f9_guard','진원 호체','盾','HP +98',K(4240),{hp:98}),T('f9_mov','경신 · 유영','步','Raw 이동 +10',K(5930),{mov:10}),T('f9_sen','신식 · 확장','識','신식력 +0.35',K(5930),{sen:.35}),T('f9_method','경지 심법','法','축지 특성 III 해금 / 축기 빌드 완성',K(6350),{})]},
+{id:'c1',name:'결단 1층',req:{major:2,stage:1},nodes:[T('c1_atk','금단 · 진원승화','丹','검결계수 +5.00',K(18000),{atk:5.00}),T('c1_hp','금단옥체','體','HP +320',K(14000),{hp:320}),T('c1_mov','허공보 · 결단','步','Raw 이동 +35',K(12000),{mov:35}),T('c1_sen','금단신식','識','신식력 +0.90',K(12000),{sen:.90}),T('c1_range','검역 전개','域','기본 공격 거리 +48',K(15000),{basicRange:48}),T('c1_hits','분광검','劍','기본 공격 추가 타수 +1',K(18000),{basicHits:1})]}
 ];
-const TRAIN_WORLD_H=2800,TRAIN_ROOT_Y=2710;
+const TRAIN_WORLD_H=3000,TRAIN_ROOT_Y=2910;
 const NODE=Object.fromEntries(TRAIN.flatMap(stage=>stage.nodes.map(node=>[node.id,{...node,stage}])))
 const AREA_UNLOCKS={blackwind:{s:200,h:8,hg:0,req:{major:0,stage:3},prereq:[['qingyun','eco2',3]],label:'흑풍곡 개방'},blood:{s:400,h:10,hg:1,req:{major:0,stage:6},prereq:[['blackwind','eco2',3],['blackwind','fate2',3]],label:'적혈비경 개방'},foundation_trial:{s:0,h:0,hg:0,req:{major:0,stage:9},prereq:[],label:'축기 시련 도전'},thunder:{s:0,h:0,hg:2,req:{major:1,stage:1},prereq:[],insight:1,label:'천뢰봉 개방'},marsh:{s:0,h:0,hg:2,req:{major:1,stage:4},prereq:[],label:'자운택 개방'},taixu:{s:0,h:0,hg:2,req:{major:1,stage:7},prereq:[],label:'태허유적 개방'},jiedan_trial:{s:0,h:0,hg:2,req:{major:1,stage:9},prereq:[['taixu','formation3',1]],label:'결단 시련 도전'}};
 const BRANCHES={qingyun:['eco'],blackwind:['eco','fate'],blood:['eco','fate','res'],foundation_trial:[],thunder:['eco','fate','res','storm'],marsh:['eco','fate','res','miasma'],taixu:['eco','fate','res','formation'],jiedan_trial:[]},BRANCH_GLYPH={eco:'獸',fate:'緣',res:'脈',storm:'雷',miasma:'氣',formation:'陣'};
@@ -69,7 +70,7 @@ function secondaryInfo(M,c){
 function secondaryHave(M,c){const q=secondaryInfo(M,c);if(!q.amount)return true;return q.kind==='foundation'?(+M[q.key]||0)>=q.amount:herbHave(M,q.grade)>=q.amount}
 function secondarySpend(M,c){const q=secondaryInfo(M,c);if(!q.amount)return;if(q.kind==='foundation')M[q.key]=Math.max(0,(+M[q.key]||0)-q.amount);else M[herbKey(q.grade)]=Math.max(0,herbHave(M,q.grade)-q.amount)}
 function reached(M,req){return M.realm?.major>=0&&(M.realm.major>req.major||(M.realm.major===req.major&&M.realm.stage>=req.stage))}function realmLabel(req){return `${MAJORS[req.major]||'상위경지'} ${req.stage}층`}
-function ensure(M){M.trainingNodes||={};M.skills||={};M.skillUnlocks||={};if(M.balanceVersion!=='training-v0.6'){const legacy=M.balanceVersion==='core-v0.1';if(legacy){for(const[oldGuard,mergedHp]of[['q4_guard','q4_hp'],['q5_guard','q5_hp'],['q6_guard','q6_hp'],['q7_guard','q7_hp'],['q8_guard','q8_hp'],['q9_guard','q9_hp']])if(M.trainingNodes[oldGuard]&&!M.trainingNodes[mergedHp])M.trainingNodes[mergedHp]=1}const oldSkills=M.skills||{};M.cult={atk:1,mov:150,sen:1,hp:90,basicRange:0,basicHits:0};for(const st of TRAIN)for(const n of st.nodes)if(M.trainingNodes[n.id])applyCult(M,n.effect);for(const s of SPELLS()){const old=oldSkills?.[s.id]||{},known=!!M.skillUnlocks[s.id]||!!old.u;M.skillUnlocks[s.id]=known?1:0;const oldRank=Math.max(+old.pow||0,+old.range||0,+old.cycle||0);M.skills[s.id]={u:known?1:0,pow:known?Math.max(1,Math.min(5,Math.round(+old.pow||oldRank||1))):0,range:known?Math.max(0,Math.min(5,Math.round(+old.range||0))):0,cycle:known?Math.max(0,Math.min(5,Math.round(+old.cycle||0))):0}}M.trainingExtras={};M.balanceVersion='training-v0.6'}M.cult||={atk:1,mov:150,sen:1,hp:90,basicRange:0,basicHits:0};M.cult.basicRange=+M.cult.basicRange||0;M.cult.basicHits=+M.cult.basicHits||0;M.skills[BASIC_ID]||={u:1,pow:0,range:0,cycle:0};M.skills[BASIC_ID].u=1;for(const s of SPELLS()){M.skills[s.id]||={u:0,pow:0,range:0,cycle:0};M.skills[s.id].u=M.skillUnlocks[s.id]?1:0}return M}
+function ensure(M){M.trainingNodes||={};M.skills||={};M.skillUnlocks||={};if(M.balanceVersion!=='training-v0.6'){const legacy=M.balanceVersion==='core-v0.1';if(legacy){for(const[oldGuard,mergedHp]of[['q4_guard','q4_hp'],['q5_guard','q5_hp'],['q6_guard','q6_hp'],['q7_guard','q7_hp'],['q8_guard','q8_hp'],['q9_guard','q9_hp']])if(M.trainingNodes[oldGuard]&&!M.trainingNodes[mergedHp])M.trainingNodes[mergedHp]=1}const oldSkills=M.skills||{};M.cult={atk:1,mov:150,sen:1,hp:90,basicRange:0,basicHits:0};for(const st of TRAIN)for(const n of st.nodes)if(M.trainingNodes[n.id])applyCult(M,n.effect);for(const s of SPELLS()){const old=oldSkills?.[s.id]||{},known=!!M.skillUnlocks[s.id]||!!old.u;M.skillUnlocks[s.id]=known?1:0;const oldRank=Math.max(+old.pow||0,+old.range||0,+old.cycle||0);M.skills[s.id]={u:known?1:0,pow:known?Math.max(1,Math.min(5,Math.round(+old.pow||oldRank||1))):0,range:known?Math.max(0,Math.min(5,Math.round(+old.range||0))):0,cycle:known?Math.max(0,Math.min(5,Math.round(+old.cycle||0))):0}}M.trainingExtras={};M.balanceVersion='training-v0.6'}M.cult||={atk:1,mov:150,sen:1,hp:90,basicRange:0,basicHits:0};M.cult.basicRange=+M.cult.basicRange||0;M.cult.basicHits=+M.cult.basicHits||0;M.skills[BASIC_ID]||={u:1,pow:0,range:0,cycle:0};M.skills[BASIC_ID].u=1;for(const s of SPELLS()){M.skills[s.id]||={u:0,pow:0,range:0,cycle:0};M.skills[s.id].u=M.skillUnlocks[s.id]?1:0}if(M.events?.jiedanTrialCompleted&&(M.realm?.major??-1)===1&&(M.realm?.stage||0)>=9)M.realm={major:2,stage:1};return M}
 function normalizeSkillUnlocks(){let M=state(),had=!!M.skillUnlocks;M.skillUnlocks||={};if(!had){for(const s of SPELLS()){const st=M.skills?.[s.id];if(st?.u&&(s.id!=='sword'||(+st.pow||0)+(+st.range||0)+(+st.cycle||0)>0))M.skillUnlocks[s.id]=1}}ensure(M);debug.replaceState(M)}
 function currentStageIndex(M){let idx=-1;for(let i=0;i<TRAIN.length;i++)if(reached(M,TRAIN[i].req))idx=i;return idx}function completed(M,stage){return stage?.nodes.filter(n=>M.trainingNodes?.[n.id]).length||0}
 const STAT_LABEL={atk:'공격력',hp:'최대 체력',mov:'이동 속도',sen:'감지 범위',basicRange:'기본 공격 거리',basicHits:'기본 공격 추가 타수'};function effectText(e){return Object.entries(e).map(([k,v])=>`${STAT_LABEL[k]||k} +${v}`).join(' · ')}function costHtml(c){if(!c)return'<span class="cost-chip free">돌파 비용 미적용</span>';const M=state(),a=[];if(c.s)a.push(`<span class="cost-chip stone"><i>◆</i>${c.s}</span>`);if(c.h){const q=secondaryInfo(M,c),have=q.kind==='foundation'?(+M[q.key]||0):herbHave(M,q.grade);a.push(`<span class="cost-chip herb g${c.hg}"><i>❧</i>${q.name} ${q.amount} <small>(보유 ${have})</small></span>`)}return a.join('')||'<span class="cost-chip free">무료</span>'}function needCount(i){return TRAIN[i]?.nodes.length||0}
@@ -116,6 +117,7 @@ function stageStatus(i){
   if(!target)return{can:false,text:'경지 정보 없음'};
   if(i<=cur)return{can:false,reached:true,text:i===cur?'현재 경지':'도달 완료'};
   if(i!==cur+1)return{can:false,text:'이전 경지 필요'};
+  if(target.id==='c1')return{can:false,text:'결단 시련 완수 시 자동 돌파',price:null,trial:true};
   const price=breakthroughCost(target);
   if(!price)return{can:false,text:'다음 경지 돌파 비용 미설계',price:null};
   if(sh.phase==='run')return{can:false,text:'원정 중',price};
@@ -242,11 +244,12 @@ function presetAreaFor(stage){
     if(stage.req.stage>=4)return'marsh';
     return'thunder';
   }
+  if(stage.req.major===2)return'jiedan_trial';
   return'qingyun';
 }
 const PRESETS=Object.fromEntries(TRAIN.map((stage,idx)=>{
   const area=presetAreaFor(stage);
-  const areaName={qingyun:'청운산',blackwind:'흑풍곡',blood:'적혈비경',foundation_trial:'축기 시련',thunder:'천뢰봉',marsh:'자운택',taixu:'태허유적'}[area]||area;
+  const areaName={qingyun:'청운산',blackwind:'흑풍곡',blood:'적혈비경',foundation_trial:'축기 시련',thunder:'천뢰봉',marsh:'자운택',taixu:'태허유적',jiedan_trial:'결단 시련'}[area]||area;
   return[stage.id,{label:`${stage.name} · ${areaName}`,idx,area}];
 }));
 const PRESET_ART_REQ={
@@ -262,7 +265,7 @@ function presetSpellCap(M,s){
 }
 function presetUnlockedAreas(M){
   const out=['qingyun'];
-  for(const id of ['blackwind','blood','foundation_trial','thunder','marsh','taixu']){
+  for(const id of ['blackwind','blood','foundation_trial','thunder','marsh','taixu','jiedan_trial']){
     const g=AREA_UNLOCKS[id];
     if(g&&reached(M,g.req))out.push(id);
   }
@@ -306,7 +309,7 @@ function jumpPreset(id){
 
   // 축기 진입 이후 프리셋은 시련/실마리를 이미 통과한 상태로 본다.
   const foundation=M.realm.major>=1;
-  M.events={...(M.events||{}),foundationInsight:foundation?1:0,foundationTrialCompleted:foundation?1:0};
+  M.events={...(M.events||{}),foundationInsight:foundation?1:0,foundationTrialCompleted:foundation?1:0,jiedanTrialCompleted:M.realm.major>=2?1:(M.events?.jiedanTrialCompleted||0)};
 
   // 테스트 시작 자본은 항상 0. 도흔 포함 모든 성장 재화를 비운다.
   M.stone=0;M.herb=0;M.herb2=0;M.herb3=0;
