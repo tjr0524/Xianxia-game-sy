@@ -46,6 +46,7 @@ ok(foundation.includes("enemy.hp*=trial.bossMode?0.70:1"),'Taixu boss formation 
 ok(foundation.includes("trial.remaining=Math.max(0,trial.remaining-1.5)"),'breaking a boss formation node removes 1.5 seconds');
 ok(foundation.includes("radius:210"),'Taixu grand formation uses the wider 210 radius');
 ok(game.includes('function taixuFormationTarget(enemy)'),'combat targeting exposes Taixu formation-node priority');
+ok(game.includes("if(!bossOnlyRun)setupVein();else vein=null;"),'boss-only encounters suppress veins and expedition side content');
 ok(game.includes("if(phase==='run'&&bossEncounter&&run?.foundation?.bossKilled){finish('return');return}"),'boss-only encounters resolve at the kill itself');
 const taixuBossHp=5881*1.15*6,stage9Dps=1900;
 const gateTime=taixuBossHp*.35/stage9Dps;
