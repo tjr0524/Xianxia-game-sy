@@ -31,6 +31,10 @@ for(let stage=1;stage<=9;stage++){
 const map=vm.runInNewContext('('+literal(progression,'const MAP=',";\nconst AFF_HINT")+')');
 for(const area of ['marsh','taixu'])ok(Object.values(map[area].branches).flat().length===12,`${area} map renders twelve node positions`);
 ok(map.taixu.gate.jiedan_trial&&map.jiedan_trial.root,'Taixu map connects to the separate Core Formation trial');
+ok(map.taixu.gate.jiedan_trial.x===map.taixu.root.x&&map.taixu.gate.jiedan_trial.y>map.taixu.root.y,'Core Formation trial gate sits directly below Taixu');
+ok(map.jiedan_trial.root.x===map.taixu.root.x&&map.jiedan_trial.root.y>map.taixu.gate.jiedan_trial.y,'Core Formation trial node continues vertically below its gate');
+ok(progression.includes("function jumpJiedanReady()"),'developer preset exists for a trial-ready Foundation 9 state');
+ok(progression.includes("M.unlocked.jiedan_trial=1")&&progression.includes("M.area='jiedan_trial'"),'trial-ready preset unlocks and selects the Core Formation trial');
 
 const affinity=vm.runInNewContext('('+literal(progression,'const AFFINITY_COST=',";\nfunction affinityRankCap")+')');
 for(const area of ['marsh','taixu'])ok(Object.keys(affinity[area]).length===12,`${area} has twelve priced nodes`);
