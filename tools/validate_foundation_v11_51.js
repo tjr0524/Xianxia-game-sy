@@ -64,7 +64,7 @@ ok(game.includes("if(!bossOnlyRun)setupVein();else vein=null;"),'boss-only encou
 ok(game.includes("if(phase==='run'&&bossEncounter&&run?.foundation?.bossKilled){finish('return');return}"),'boss-only encounters resolve at the kill itself');
 ok(progression.includes("jiedan_trial:{s:0,h:0"),'progression defines a separate Core Formation trial gate');
 ok(progression.includes("축기 9층 수련 완성 필요"),'final gate requires completed Foundation 9 training');
-const training=vm.runInNewContext('('+literal(progression,'const TRAIN=',";\nconst TRAIN_WORLD_H")+')');
+const training=vm.runInNewContext('('+literal(progression,'const TRAIN=',";\nconst TRAIN_WORLD_H")+')',{T:(id,name,glyph,desc,cost,effect)=>({id,name,glyph,desc,cost,effect}),K:(s=0,h=0,hg=0)=>({s,h,hg})});
 const core1=training.find(stage=>stage.id==='c1');
 ok(core1&&core1.req.major===2&&core1.req.stage===1,'training path ends with Core Formation 1');
 ok(core1.nodes.length===6,'Core Formation 1 exposes six post-ending growth nodes');
