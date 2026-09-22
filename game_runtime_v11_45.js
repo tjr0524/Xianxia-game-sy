@@ -1191,12 +1191,14 @@ function renderTree(){
   UI.tree.style.gridTemplateColumns=`repeat(${activeBranches.length},minmax(90px,1fr))`;
   UI.tree.style.setProperty?.('--branch-count',activeBranches.length);
   const names={
-    eco:['생태','🩸'],fate:['산수·기연','✦'],res:['영맥','⛏'],storm:['천뢰','⚡']
+    eco:['생태','🩸'],fate:['산수·기연','✦'],res:['영맥','⛏'],storm:['천뢰','⚡'],
+    miasma:['요기','☁'],formation:['진법','◇']
   };
+  const branchName=key=>names[key]||[key,'◇'];
   for(const key of activeBranches){
     const branch=document.createElement('div');
     branch.className='branch';
-    branch.innerHTML=`<div class="branch-title">${names[key][1]} ${names[key][0]}</div>`;
+    branch.innerHTML=`<div class="branch-title">${branchName(key)[1]} ${branchName(key)[0]}</div>`;
     for(const node of TREE[key]){
       const level=rank(node.id);
       const ready=nodeReady(node);
@@ -1235,7 +1237,7 @@ function renderTree(){
     else if(!meets(req))status=`해금 조건 · ${MAJORS[req.major]} ${req.stage}층`;
     else if(selected.p&&rank(selected.p)<3)status=`선행 조건 · ${NODES.find(node=>node.id===selected.p)?.n||'이전 노드'} 3/5`;
     else status=`다음 단계 비용 · 영석 ${price.s}${price.h?` · ${HN[price.hg]} 영초 ${price.h}`:''}`;
-    UI.treeDetail.innerHTML=`<div class="tree-detail-head"><b>${selected.n}</b><span>${level}/5 · ${names[branchOf(selected.id)][0]}</span></div><p>${selected.d}</p><div class="tree-detail-state">${status}</div>`;
+    UI.treeDetail.innerHTML=`<div class="tree-detail-head"><b>${selected.n}</b><span>${level}/5 · ${branchName(branchOf(selected.id))[0]}</span></div><p>${selected.d}</p><div class="tree-detail-state">${status}</div>`;
     const upgrade=document.createElement('button');
     upgrade.className='tree-upgrade'+(ready?' ready':'');
     upgrade.textContent=level>=5?'인연 완성':ready?`${level+1}단계 강화`:'조건 미충족';
@@ -2805,9 +2807,8 @@ function loadNormalized(value){
   return state;
 }
 
-render();
-syncHud();
-draw();
+// Register simulation before rendering UI. A display error must not leave a
+// usable entry button and renderer with no clock/movement subscriber.
 const frameHub=window.__xianxiaFrameHub;
 if(frameHub?.subscribe){
   frameHub.subscribe('game-simulation',frameStep,-100);
@@ -2815,6 +2816,9 @@ if(frameHub?.subscribe){
 }else{
   console.error('[xianxia] shared frame hub missing; simulation not started');
 }
+render();
+syncHud();
+draw();
 })();
 
 //# sourceURL=game_runtime_v11_45.js
